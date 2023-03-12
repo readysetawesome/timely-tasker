@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import Timer from './Timer';
 
 test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/Welcome to the Timely Tasker!/i);
+  render(<Timer />);
+  const linkElement = screen.getByText(/Timer Component/i);
   expect(linkElement).toBeInTheDocument();
 });
