@@ -7,7 +7,6 @@ const Timer: FC<TimerProps> = () => {
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {
-    
     fetch('/greet', {mode:'cors'})
         .then(async  response => {
           const foo = await response.text();
