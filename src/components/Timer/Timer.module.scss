@@ -1,1 +1,22 @@
-.Timer {}
+.Timer {
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 18px);
+    grid-template-rows: repeat(10, 28px);
+  }
+
+  .tictac {
+    width: 10px;
+    height: 20px;
+    background-color: blue;
+    margin: 8px 8px 8px 8px;
+  }
+
+  .tictac:nth-child(8n),
+  .tictac:nth-child(8n-1),
+  .tictac:nth-child(8n-2),
+  .tictac:nth-child(8n-3), {
+    background-color: #f5f5f5;
+  }
+
+}
