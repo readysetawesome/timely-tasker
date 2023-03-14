@@ -7,7 +7,7 @@ const Timer: FC<TimerProps> = () => {
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {
-    
+    // TODO for local dev mode prefix with http://127.0.0.1:8788
     fetch('/greet', {mode:'cors'})
         .then(async  response => {
           const foo = await response.text();
