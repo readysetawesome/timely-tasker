@@ -7,5 +7,5 @@ export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
     await data.cloudflareAccess.JWT.getIdentity() :
     {name: "dev user"}
 
-  return new Response(`Hello, ${identity.name || "service user"}!`);
+  return new Response(JSON.stringify(identity));
 };

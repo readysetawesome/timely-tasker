@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import styles from './Timer.module.scss';
+import React, { useEffect, useState } from "react";
+import styles from "./Timer.module.scss";
 
 interface TimerProps {}
 
@@ -7,8 +7,8 @@ const Timer = ({ TimerProps }) => {
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {
-    // TODO for local dev mode prefix with http://127.0.0.1:8788
-    fetch('/greet', {mode:'cors'})
+    const prefix = process.env.NODE_ENV === "development" ? "http://127.0.0.1:8788" : "";
+    fetch( prefix + "/greet", {mode:"cors"})
         .then(async  response => {
           const foo = await response.text();
           setGreeting(foo);
@@ -16,7 +16,7 @@ const Timer = ({ TimerProps }) => {
   });
 
   return <>
-    <div>{greeting || 'loading...'}</div>
+    <div>{greeting || "loading..."}</div>
     <div className={styles.Timer}>
       Timer Component
 
