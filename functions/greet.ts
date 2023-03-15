@@ -45,5 +45,5 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
     if (!results[1].success) return errorResponse("unable to insert new  User & Identity mapping");
   }
 
-  return new Response(JSON.stringify(identity || jwtIdentity, null, 2), JsonHeader);
+  return new Response(JSON.stringify(identity, null, 2), JsonHeader);
 };

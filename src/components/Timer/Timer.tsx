@@ -14,7 +14,7 @@ const Timer = ({ TimerProps: props }) => {
           console.log(foo);
           setGreeting(JSON.stringify(foo));
         });
-  });
+  }, []);
 
   return <>
     <div>{greeting || "loading..."}</div>
