@@ -1,0 +1,9 @@
+{
+  "user_uuid": "xxxx-12345",
+  "name": "dev user",
+  "idp": {
+    "id": "6a2cf522-5232-46c9-9da2-528e6ece1842",
+    "type": "github"
+  },
+  "email": "foo@zoo.dev.com"
+}
