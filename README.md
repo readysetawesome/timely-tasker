@@ -1,33 +1,27 @@
-# Getting Started with Create React App
+## Example App (WIP)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Commands
 
-## Available Scripts
+### `npx wrangler pages dev --d1=DB --persist -- npm start`
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
+Runs the app in the development mode, with sqlite persistence enabled.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### `wrangler d1 migrations apply timely-tasker-dev --local`
 
-### `npm test`
+Runs migrations on local dev
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### `wrangler d1 migrations apply timely-tasker-dev`
 
-### `npm run build`
+Runs migrations in preview/staging.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `bin/migrate-prod-db`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+!!RUNS MIGRATIONS IN PRODUCTION!!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### `sqlite3 .wrangler/state/d1/DB.sqlite3`
+
+Loads a local dev DB console.
 
 ### `npm run eject`
 
