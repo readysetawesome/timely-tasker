@@ -39,13 +39,13 @@ export const GetIdentity = async ( data: PluginData, env: Env ): Promise<Identit
     }
   }
 
-  const identityQuery = env.DB.prepare(`
+  const identity = await env.DB.prepare(`
     SELECT * FROM Identities, Providers, Users
     WHERE CFProviderID = ?
       AND Users.ID = UserID
       AND Providers.ID = ?
       AND ProviderIdentityID = ?
-  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid);
+  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid).first();
 
-  return { identity: await identityQuery.first(), jwtIdentity, provider };
+  return { identity, jwtIdentity, provider };
 }
