@@ -52,13 +52,21 @@ export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
   const identity = await identityQuery.first();
 
   if (identity === null) {
-    // TODO: check if email already exists! if it does, throw a
-    // notification and suggest they login with that provider instead.
-
+    // Check if email already exists, if it does, suggest login with orig provider.
     // Why? Users will forget which provider they logged in with,
     // and if their data disappears because they switch providers, they are unhappy.
 
-    // Prevent this until we provide a mechanism to securely "link" 2 different providers
+    const existingUser = await env.DB.prepare(`
+      SELECT * FROM  Identities, Providers, Users
+      WHERE Email = ?
+        AND Users.ID = UserID
+        AND Providers.ID = ProviderID
+    `).bind(jwtIdentity.email).first();
+
+    if (existingUser) return errorResponse(`
+      A user already signed up with this email address using ${existingUser.ProviderName}.
+      Was it you? If it was you, try logging in with ${existingUser.ProviderName} instead.
+    `);
 
     const results = await env.DB.batch([
       env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`)
@@ -67,9 +75,7 @@ export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
         .bind(provider.ID, jwtIdentity.user_uuid)
     ])
 
-    if (!results[1].success) {
-      return errorResponse("unable to insert new  User & Identity mapping");
-    }
+    if (!results[1].success) return errorResponse("unable to insert new  User & Identity mapping");
   }
 
   return new Response(JSON.stringify(identity || jwtIdentity, null, 2), JsonHeader);
