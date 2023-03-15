@@ -3,7 +3,7 @@ import styles from "./Timer.module.scss";
 
 interface TimerProps {}
 
-const Timer = ({ TimerProps }) => {
+const Timer = ({ TimerProps: props }) => {
   const [greeting, setGreeting] = useState("");
 
   useEffect(() => {

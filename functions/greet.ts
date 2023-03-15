@@ -1,10 +1,7 @@
 import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
-import { ServerResponse } from "http";
-import devUserJson from "../fixtures/devUser.json";
-
-interface Env {
-  DB: D1Database;
-}
+import type { Env } from "../lib/Identity"
+import { GetIdentity } from "../lib/Identity"
+import { PagesFunction } from "@cloudflare/workers-types";
 
 const JsonHeader = {
   headers: {
@@ -14,49 +11,19 @@ const JsonHeader = {
 
 const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
+export const onRequest: PagesFunction<Env, any, PluginData> = async ({
   data, env
 }) => {
-  const pluginEnabled = typeof data.cloudflareAccess !== "undefined";
-  const jwtIdentity = pluginEnabled ?
-    await data.cloudflareAccess.JWT.getIdentity() :
-    devUserJson
+  const { identity, jwtIdentity, provider, error } = await GetIdentity(data, env);
 
-  // does this provider exist? User & Identity? lazy initialize everything
-
-  const providerQuery = env.DB.prepare(`
-    SELECT ROWID, * FROM Providers WHERE CFProviderID = ?
-  `);
-
-  let provider = await providerQuery.bind(jwtIdentity.idp.id).first();
-
-  if (provider === null)  {
-    const { success } = await env.DB.prepare(`
-      INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?)
-    `).bind(jwtIdentity.idp.type, jwtIdentity.idp.id).run()
-
-    if (!success) {
-      return errorResponse("unable to insert new IDP");
-    } else {
-      provider = await providerQuery.bind(jwtIdentity.idp.id).first();
-    }
-  }
-
-  const identityQuery = env.DB.prepare(`
-    SELECT * FROM Identities, Providers, Users
-    WHERE CFProviderID = ?
-      AND Users.ID = UserID
-      AND Providers.ID = ?
-      AND ProviderIdentityID = ?
-  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid);
-  const identity = await identityQuery.first();
+  if (error) return errorResponse(error);
 
   if (identity === null) {
     // Check if email already exists, if it does, suggest login with orig provider.
-    // Why? Users will forget which provider they logged in with,
-    // and if their data disappears because they switch providers, they are unhappy.
+    // Why? Users will forget which provider they logged in with.
+    // If their data "disappears" because they switch providers, they are confused.
 
-    const existingUser = await env.DB.prepare(`
+    const existingUser: any = await env.DB.prepare(`
       SELECT * FROM  Identities, Providers, Users
       WHERE Email = ?
         AND Users.ID = UserID

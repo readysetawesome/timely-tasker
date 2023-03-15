@@ -44,6 +44,7 @@
     ]
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230307.0",
     "enzyme": "^3.11.0",
     "react-scripts": "^5.0.1"
   }
