@@ -1,9 +1,18 @@
 import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import { ServerResponse } from "http";
+import devUserJson from "../fixtures/devUser.json";
 
 interface Env {
   DB: D1Database;
 }
+
+const JsonHeader = {
+  headers: {
+    'content-type': 'application/json;charset=UTF-8'
+  }
+}
+
+const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
 export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
   data, env
@@ -11,11 +20,57 @@ export const onRequest: PagesFunction<unknown, any, PluginData> = async ({
   const pluginEnabled = typeof data.cloudflareAccess !== "undefined";
   const jwtIdentity = pluginEnabled ?
     await data.cloudflareAccess.JWT.getIdentity() :
-    { id: 'xxxx-12345', name: "dev user", idp: { id: "6a2cf522-5232-46c9-9da2-528e6ece1842", type: "github" }, email: 'foo@zoo.dev.com' }
+    devUserJson
 
-    return new Response(JSON.stringify(jwtIdentity, null, 2), {
-			headers: {
-				'content-type': 'application/json;charset=UTF-8'
-			}
-    });
+  // does this provider exist? User & Identity? lazy initialize everything
+
+  const providerQuery = env.DB.prepare(`
+    SELECT ROWID, * FROM Providers WHERE CFProviderID = ?
+  `);
+
+  let provider = await providerQuery.bind(jwtIdentity.idp.id).first();
+
+  if (provider === null)  {
+    const { success } = await env.DB.prepare(`
+      INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?)
+    `).bind(jwtIdentity.idp.type, jwtIdentity.idp.id).run()
+
+    if (!success) {
+      return errorResponse("unable to insert new IDP");
+    } else {
+      provider = await providerQuery.bind(jwtIdentity.idp.id).first();
+    }
+  }
+
+  const identityQuery = env.DB.prepare(`
+    SELECT * FROM Identities, Providers, Users
+    WHERE CFProviderID = ?
+      AND Users.ID = UserID
+      AND Providers.ID = ?
+      AND ProviderIdentityID = ?
+  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid);
+  const identity = await identityQuery.first();
+
+  if (identity === null) {
+    // TODO: check if email already exists! if it does, throw a
+    // notification and suggest they login with that provider instead.
+
+    // Why? Users will forget which provider they logged in with,
+    // and if their data disappears because they switch providers, they are unhappy.
+
+    // Prevent this until we provide a mechanism to securely "link" 2 different providers
+
+    const results = await env.DB.batch([
+      env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`)
+        .bind(jwtIdentity.name, jwtIdentity.email),
+      env.DB.prepare(`INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`)
+        .bind(provider.ID, jwtIdentity.user_uuid)
+    ])
+
+    if (!results[1].success) {
+      return errorResponse("unable to insert new  User & Identity mapping");
+    }
+  }
+
+  return new Response(JSON.stringify(identity || jwtIdentity, null, 2), JsonHeader);
 };
