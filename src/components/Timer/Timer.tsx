@@ -10,8 +10,9 @@ const Timer = ({ TimerProps }) => {
     const prefix = process.env.NODE_ENV === "development" ? "http://127.0.0.1:8788" : "";
     fetch( prefix + "/greet", {mode:"cors"})
         .then(async  response => {
-          const foo = await response.text();
-          setGreeting(foo);
+          const foo = await response.json();
+          console.log(foo);
+          setGreeting(JSON.stringify(foo));
         });
   });
 
