@@ -1,7 +1,7 @@
 import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import type { Env } from "../lib/Identity"
 import { GetIdentity } from "../lib/Identity"
-import { PagesFunction, Response } from "@cloudflare/workers-types";
+import { PagesFunction } from "@cloudflare/workers-types";
 
 const JsonHeader = {
   headers: {

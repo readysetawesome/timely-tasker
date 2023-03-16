@@ -6,5 +6,5 @@ CREATE TABLE Identities (
   UserID INT,
   ProviderIdentityID TEXT,
   FOREIGN KEY (ProviderID) REFERENCES Providers(ID),
-  FOREIGN KEY (ID) REFERENCES Users(ID)
+  FOREIGN KEY (UserID) REFERENCES Users(ID)
 );

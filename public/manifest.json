@@ -8,6 +8,9 @@
       "type": "image/x-icon"
     }
   ],
+  "web_accessible_resources": [
+    "schema_info.html"
+  ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",

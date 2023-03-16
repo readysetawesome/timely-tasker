@@ -1,6 +1,27 @@
-## Example App (WIP)
+# Example App (WIP)
 
-Commands
+## Overview
+
+Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
+https://davidseah.com/node/the-emergent-task-timer/
+
+## Database Schema
+
+http://timely-tasker.com/schema_info.html
+
+Each Summary is one horizontal line with a topic at the beginning,
+each TimerTick is one of the 96 quarter-hour slots in a day.
+TimerTicks will be displayed horizontally next to their summary,
+offering a simple way to track work items and the push/pull
+between scheduled work and distractions.
+
+TimerTicks can have 2 states: Distracted = 0, Distracted = 1
+A TimerTick is created for any "occupied" tick, i.e. whenever
+the user clicks a tick. Clicking 2 ticks in the same column
+shall result in the state of both ticks being saved as
+Distracted = 1, to indicate that time was spread between tasks.
+
+## Commands
 
 ### `npx wrangler pages dev --d1=DB --persist -- npm start`
 

@@ -6,9 +6,26 @@ export interface Env {
   DB: D1Database;
 }
 
-type IdentityResponse = {
+export type Identity = {
+  ID: number,
+  DisplayName: string,
+  Email: string,
+  ProviderName: string,
+  CFProviderID: string,
+  ProviderID: number,
+  UserID: number,
+  ProviderIdentityID: string,
+}
+
+export type Provider = {
+  ID: number,
+  ProviderName: string,
+  CFProviderID: string,
+}
+
+export type IdentityResponse = {
   error?: string,
-  identity?: any,
+  identity?: Identity,
   jwtIdentity?: any,
   provider?: any,
 }
@@ -23,19 +40,19 @@ export const GetIdentity = async ( data: PluginData, env: Env ): Promise<Identit
     SELECT * FROM Providers WHERE CFProviderID = ?
   `);
 
-  let provider: any = await providerQuery.bind(jwtIdentity.idp.id).first();
+  let provider: any = await providerQuery.bind(jwtIdentity.idp.id).first<Provider>();
 
   if (provider === null)  {
     // provider does not exist, lazy initialize
 
     const { success } = await env.DB.prepare(`
       INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?)
-    `).bind(jwtIdentity.idp.type, jwtIdentity.idp.id).run()
+    `).bind(jwtIdentity.idp.type, jwtIdentity.idp.id).run();
 
     if (!success) {
       return { error: "unable to insert new IDP" };
     } else {
-      provider = await providerQuery.bind(jwtIdentity.idp.id).first();
+      provider = await providerQuery.bind(jwtIdentity.idp.id).first<Provider>();
     }
   }
 
@@ -45,7 +62,7 @@ export const GetIdentity = async ( data: PluginData, env: Env ): Promise<Identit
       AND Users.ID = UserID
       AND Providers.ID = ?
       AND ProviderIdentityID = ?
-  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid).first();
+  `).bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid).first<Identity>();
 
   return { identity, jwtIdentity, provider };
 }
