@@ -3,7 +3,7 @@ import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 
-interface TimerProps {}
+/// interface TimerProps {}
 
 const isDevMode = process.env.NODE_ENV === "development";
 const fetchPrefix = isDevMode ? "http://127.0.0.1:8788" : "";
@@ -14,9 +14,9 @@ const todaysDateInt = () => {
   return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
 }
 
-const Timer = ({ TimerProps: props }) => {
+const Timer = (/*{ TimerProps: props }*/) => {
   const [identity, setIdentity] = useState({} as Identity);
-  const [useDate, setUseDate] = useState(todaysDateInt);
+  const [useDate] = useState(todaysDateInt);
   const [greeting, setGreeting] = useState("");
   const [summaries, setSummaries] = useState(new Array<Summary>());
 
@@ -26,13 +26,6 @@ const Timer = ({ TimerProps: props }) => {
       .then(data => setIdentity(data));
   }, []);
 
-  const doFetchSummaries = () => {
-    // List all summaries for the target date
-    fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions)
-      .then(response => response.json())
-      .then(data => setSummaries(data));
-  }
-
   useEffect(() => {
     if (identity.ID !== undefined) {
       setGreeting(`
@@ -40,7 +33,10 @@ const Timer = ({ TimerProps: props }) => {
         Found your login info via ${identity.ProviderName}, lets get started!
       `);
 
-      doFetchSummaries();
+      // List all summaries for the target date
+      fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions)
+        .then(response => response.json())
+        .then(data => setSummaries(data));
 
       // TODO COMMENT THIS OUT
       // fetch(fetchPrefix + `/summaries?date=${useDate}&text=zooooo&slot=1`, { ...fetchOptions, method: 'POST' })
