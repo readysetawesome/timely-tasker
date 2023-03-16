@@ -5,7 +5,7 @@ CREATE TABLE Summaries (
   ID INTEGER PRIMARY KEY,
   UserID INT,
   Content TEXT,
-  Date DATE,
+  Date INTEGER,
   Slot INT, -- order of the list item
   FOREIGN KEY (UserID) REFERENCES Users(ID)
 );

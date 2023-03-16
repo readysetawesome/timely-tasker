@@ -4,7 +4,6 @@ DROP TABLE IF EXISTS TimerTicks;
 CREATE TABLE TimerTicks (
   ID INTEGER PRIMARY KEY,
   UserID INT,
-  Date DATE,
   TickNumber INT,
   Distracted INT,
   SummaryID INT,
