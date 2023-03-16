@@ -11,6 +11,10 @@ jobs:
           domain: ${{ github.repository_owner }}
       - name: Do testing stuff
         run: npm install && npm test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+         files: ./coverage/coverage-final.json
       - name: Push result to Testspace server
         run: |
           testspace junit.xml
