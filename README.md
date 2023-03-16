@@ -1,5 +1,7 @@
 # Example App (WIP)
 
+![Coverage Badge](https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message)
+
 ## Overview
 
 Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
