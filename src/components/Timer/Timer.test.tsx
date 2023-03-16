@@ -3,6 +3,6 @@ import Timer from './Timer';
 
 test('renders learn react link', () => {
   render(<Timer />);
-  const linkElement = screen.getByText(/Timer Component/i);
+  const linkElement = screen.getByText(/Showing data for /i);
   expect(linkElement).toBeInTheDocument();
 });
