@@ -9,6 +9,8 @@ jobs:
       - uses: testspace-com/setup-testspace@v1
         with:
           domain: ${{ github.repository_owner }}
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
       - name: Do testing stuff
         run: npm install && npm test
       - name: Push result to Testspace server
