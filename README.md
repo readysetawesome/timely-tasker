@@ -1,6 +1,8 @@
 # Example App (WIP)
 
-![Coverage Badge](https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message)
+<p align="center">
+  <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
+</p>
 
 ## Overview
 
