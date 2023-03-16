@@ -1,6 +1,15 @@
-## Example App (WIP)
+# Example App (WIP)
 
-Commands
+## Overview
+
+Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
+https://davidseah.com/node/the-emergent-task-timer/
+
+## Database Schema
+
+http://timely-tasker.com/schema_info.html
+
+## Commands
 
 ### `npx wrangler pages dev --d1=DB --persist -- npm start`
 
