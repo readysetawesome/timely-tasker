@@ -22,7 +22,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --ci --coverage --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -46,6 +46,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230307.0",
     "enzyme": "^3.11.0",
+    "jest-junit": "^15.0.0",
     "react-scripts": "^5.0.1"
   }
 }
