@@ -2,6 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
+  <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
 </p>
 
 ## Overview
