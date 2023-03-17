@@ -3,6 +3,9 @@
 <p align="center">
   <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
   <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
+  <a href="https://github.com/readysetawesome/timely-tasker/issues">
+    <img src="https://img.shields.io/github/issues/readysetawesome/timely-tasker" />
+  </a>
 </p>
 
 ## Overview
@@ -12,6 +15,17 @@ https://davidseah.com/node/the-emergent-task-timer/
 
 Try the app out here right now: (github login or single use code login required)
 http://timely-tasker.com/timer
+
+#### Features:
+* modern react front-end using hooks and all the latest goodies I can get my hands on
+* strong user Identity and data ownership via CloudFlare Access plugin integration and JWT assertions
+* backend data stored using Functions & D1
+* pipeline integration with codecov and testspace, ++README badges!
+
+#### Coming:
+* make the tick boxes work as intended
+* navigate to prevoius dates (read only no cheating)
+* something to highlight the current hour and bring attention
 
 ## Database Schema
 
