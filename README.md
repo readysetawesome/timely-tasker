@@ -1,4 +1,4 @@
-# Example App (WIP)
+# The Timely Tasker App (WIP)
 
 <p align="center">
   <a href="https://readysetawesome.testspace.com/spaces/208089/current/303007">
