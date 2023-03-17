@@ -4,7 +4,7 @@ import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import debounce from "lodash.debounce";
 import Tick from "./Tick.tsx";
-import { createSummary, createTick } from "../../RestApi.ts";
+import RestApi from "../../RestApi.ts";
 
 export interface RowProps {
   summary?: Summary;
@@ -25,7 +25,7 @@ export type TimerTick = {
 const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
   // TODO: error handle this
   const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
-    createSummary(useDate, value, slot,  callback)
+    RestApi.createSummary(useDate, value, slot,  callback)
   }, [slot, useDate]);
 
   const debouncedChangeHandler = useCallback(
@@ -36,9 +36,9 @@ const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
 
   const tickChangeCallback = useCallback((tickChangeEvent) => {
     if (tickChangeEvent.summary === undefined) {
-      setSummary('', (summary) => createTick(summary.ID, tickChangeEvent.tickNumber, refreshSummary));
+      setSummary('', (summary) => RestApi.createTick(summary.ID, tickChangeEvent.tickNumber, refreshSummary));
     } else {
-      createTick(tickChangeEvent.summary.ID, tickChangeEvent.tickNumber, refreshSummary)
+      RestApi.createTick(tickChangeEvent.summary.ID, tickChangeEvent.tickNumber, refreshSummary)
     }
   }, [refreshSummary, setSummary]);
 

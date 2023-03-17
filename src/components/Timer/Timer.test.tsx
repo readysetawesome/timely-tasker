@@ -1,27 +1,42 @@
-import { render, fireEvent, getByTestId, screen } from '@testing-library/react';
+import { render, fireEvent, getByTestId, screen, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import React, { Dispatch } from 'react';
+import { act } from 'react-dom/test-utils';
+import { Identity, Provider } from '../../../lib/Identity.tsx';
 import Timer from './Timer';
+import { Summary } from '../../../functions/summaries';
+import RestApi from "../../RestApi";
+import fakeIdentity from "../../../fixtures/identity.json";
 
-test('renders learn react link', () => {
+const fakeSummaries = [{
+  ID: 321,
+  UserID: fakeIdentity.UserID,
+  Content: "summary",
+  Date: 1679011200000,
+  Slot: 0
+} as Summary ];
+
+
+const original = RestApi;
+const restoreApi = () => {
+  return global.RestApi = original;
+}
+
+beforeEach(() => {
+  RestApi.greet = (callback) => callback(fakeIdentity);
+  RestApi.getSummaries = (_, callback) => callback([]);
+});
+
+afterEach(() => {
+  restoreApi();
+});
+
+test('renders the greeting', async () => {
   render(<Timer />);
-  const linkElement = screen.getByText(/Showing data for /i);
-  expect(linkElement).toBeInTheDocument();
-});
-/*
-it("App loads with initial state of 0", () => {
-  const { timer } = render(<Timer />);
-  const countValue = screen.getByTestId("countvalue");
-
-  expect(countValue.textContent).toBe("0");
+  expect(await screen.findByText(/Found your login info via github/i)).toBeInTheDocument()
 });
 
-`
-const countValue = getByTestId(container, "countvalue");
-const increment = getByTestId(container, "incrementButton");
-const decrement = getByTestId(container, "decrementButton");
-expect(countValue.textContent).toBe("0");
-fireEvent.click(increment);
-expect(countValue.textContent).toBe("1");
-fireEvent.click(decrement);
-expect(countValue.textContent).toBe("0");
-`
-*/
+test('renders the date', async () => {
+  render(<Timer />);
+  expect(await screen.findByText(/Showing data for 3-17-2023/i)).toBeInTheDocument()
+});
