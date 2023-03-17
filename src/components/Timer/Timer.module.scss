@@ -11,25 +11,57 @@
     grid-template-columns: 200px repeat(24, 72px);
   }
 
-  .tictacCell {
+  .tictac_cell {
     background-color: lightblue;
   }
 
-  .tictacCell:nth-child(8n+1),
-  .tictacCell:nth-child(8n),
-  .tictacCell:nth-child(8n-1),
-  .tictacCell:nth-child(8n-2) {
+  .tictac_cell:nth-child(8n+1),
+  .tictac_cell:nth-child(8n),
+  .tictac_cell:nth-child(8n-1),
+  .tictac_cell:nth-child(8n-2) {
     background-color: beige;
   }
 
+  .tictac_empty,
+  .tictac_distracted,
+  .tictac_focused {
+    cursor: pointer;
+  }
 
-  .tictac {
+  .tictac_empty {
     width: 8px;
     height: 14px;
-
     margin: 2px 2px 2px 2px;
     border-radius: 3px;
-    border: 2px solid grey;
+    border: 2px solid darkgray;
+  }
+
+  .tictac_distracted {
+    width: 8px;
+    height: 14px;
+    margin: 2px 2px 2px 2px;
+    border-radius: 3px;
+    border:2px solid darkgray;
+    position:relative;
+  }
+  .tictac_distracted:after{
+    content:"";
+    position:absolute;
+    border-top:2px solid darkslategray;
+    width:13px;
+    padding-right: 2px;
+    left: 0px;
+    transform: rotate(45deg);
+    transform-origin: 0% 0%;
+  }
+
+  .tictac_focused {
+    width: 8px;
+    height: 14px;
+    margin: 2px 2px 2px 2px;
+    border-radius: 3px;
+    background-color: darkslategray;
+    border: 2px solid darkgray;
   }
 
 }

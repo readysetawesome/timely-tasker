@@ -2,19 +2,12 @@ import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import type { Env } from "../lib/Identity"
 import { GetIdentity } from "../lib/Identity"
 import { PagesFunction } from "@cloudflare/workers-types";
+import { TimerTick } from "./ticks";
 
 const JsonHeader = {
   headers: {
     'content-type': 'application/json;charset=UTF-8'
   }
-}
-
-export type TimerTick = {
-  ID: number,
-  UserID: number,
-  TickNumber: number,
-  Distracted: number,
-  SummaryID: number,
 }
 
 export type Summary = {
