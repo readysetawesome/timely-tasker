@@ -1,22 +1,35 @@
 .Timer {
   .grid {
     display: grid;
-    grid-template-columns: repeat(12, 18px);
-    grid-template-rows: repeat(10, 28px);
+    grid-template-columns: 200px repeat(96, 18px);
+
   }
+
+
+  .tictac_header_row {
+    display: grid;
+    grid-template-columns: 200px repeat(24, 72px);
+  }
+
+  .tictacCell {
+    background-color: lightblue;
+  }
+
+  .tictacCell:nth-child(8n+1),
+  .tictacCell:nth-child(8n),
+  .tictacCell:nth-child(8n-1),
+  .tictacCell:nth-child(8n-2) {
+    background-color: beige;
+  }
+
 
   .tictac {
-    width: 10px;
-    height: 20px;
-    background-color: blue;
-    margin: 8px 8px 8px 8px;
-  }
+    width: 8px;
+    height: 14px;
 
-  .tictac:nth-child(8n),
-  .tictac:nth-child(8n-1),
-  .tictac:nth-child(8n-2),
-  .tictac:nth-child(8n-3), {
-    background-color: #f5f5f5;
+    margin: 2px 2px 2px 2px;
+    border-radius: 3px;
+    border: 2px solid grey;
   }
 
 }
