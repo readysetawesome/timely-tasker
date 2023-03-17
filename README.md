@@ -1,8 +1,12 @@
 # Example App (WIP)
 
 <p align="center">
-  <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
-  <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
+  <a href="https://readysetawesome.testspace.com/spaces/208089/current/303007">
+    <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
+  </a>
+  <a href="https://app.codecov.io/gh/readysetawesome/timely-tasker">
+    <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
+  </a>
   <a href="https://github.com/readysetawesome/timely-tasker/issues">
     <img src="https://img.shields.io/github/issues/readysetawesome/timely-tasker" />
   </a>
@@ -17,10 +21,11 @@ Try the app out here right now: (github login or single use code login required)
 http://timely-tasker.com/timer
 
 #### Features:
+* built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
 * modern react front-end using hooks and all the latest goodies I can get my hands on
-* strong user Identity and data ownership via CloudFlare Access plugin integration and JWT assertions
-* backend data stored using Functions & D1
-* pipeline integration with codecov and testspace, ++README badges!
+* strong user Identity and data ownership via [CloudFlare Access plugin](https://developers.cloudflare.com/pages/platform/functions/plugins/cloudflare-access/) integration and JWT assertions
+* backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
+* pipeline integration with [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker) and [testspace](https://readysetawesome.testspace.com/spaces/208089/current/303007), ++README badges!
 
 #### Coming:
 * make the tick boxes work as intended
