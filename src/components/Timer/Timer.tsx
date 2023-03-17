@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import TaskRow from "./TaskRow.tsx";
-import { TickChangeEvent } from "./Tick";
-import { getSummaries, greet, createTick } from "../../RestApi.ts";
+import { getSummaries, greet } from "../../RestApi.ts";
 
 const todaysDateInt = () => {
   const now = new Date();

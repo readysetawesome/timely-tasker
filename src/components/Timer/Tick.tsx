@@ -1,14 +1,9 @@
 
 import React, { useCallback, useState } from "react";
-import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
-import debounce from "lodash.debounce";
 import { TimerTick } from "./TaskRow";
 
-const isDevMode = process.env.NODE_ENV === "development";
-const fetchPrefix = isDevMode ? "http://127.0.0.1:8788" : "";
-const fetchOptions = (isDevMode ? { mode: "cors" } : {}) as RequestInit;
 
 export type TickChangeEvent = {
   tickNumber: number;
