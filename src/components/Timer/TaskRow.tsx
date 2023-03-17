@@ -1,24 +1,32 @@
 import React, { useCallback } from "react";
-import { Identity } from "../../../lib/Identity";
+
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import debounce from "lodash.debounce";
-
-const isDevMode = process.env.NODE_ENV === "development";
-const fetchPrefix = isDevMode ? "http://127.0.0.1:8788" : "";
-const fetchOptions = (isDevMode ? { mode: "cors" } : {}) as RequestInit;
+import Tick from "./Tick.tsx";
+import { createSummary, createTick } from "../../RestApi.ts";
 
 export interface RowProps {
   summary?: Summary;
   slot: number;
   useDate: number;
+  refreshSummary: () => void;
 };
 
-const TaskRow = ({ summary, slot, useDate }: RowProps) => {
-  const setSummary = (value: string) => fetch(
-    fetchPrefix + `/summaries?date=${useDate}&text=${encodeURIComponent(value)}&slot=${slot}`,
-    { ...fetchOptions, method: 'POST' }
-  ); // TODO: error handle this
+export type TimerTick = {
+  ID: number;
+  Date: number;
+  UserID: number;
+  TickNumber: number;
+  Distracted: number;
+  SummaryID: number;
+};
+
+const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
+  // TODO: error handle this
+  const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
+    createSummary(useDate, value, slot,  callback)
+  }, [slot, useDate]);
 
   const debouncedChangeHandler = useCallback(
     debounce(event => {
@@ -26,10 +34,26 @@ const TaskRow = ({ summary, slot, useDate }: RowProps) => {
     }, 800)
   , [setSummary]);
 
+  const tickChangeCallback = useCallback((tickChangeEvent) => {
+    if (tickChangeEvent.summary === undefined) {
+      setSummary('', (summary) => createTick(summary.ID, tickChangeEvent.tickNumber, refreshSummary));
+    } else {
+      createTick(tickChangeEvent.summary.ID, tickChangeEvent.tickNumber, refreshSummary)
+    }
+  }, [refreshSummary, setSummary]);
+
   let ticks = new Array<JSX.Element>();
 
   for (let i = 0; i < 96; i++) {
-    ticks.push(<div key={i} className={styles.tictacCell}><div className={styles.tictac}></div></div>)
+    ticks.push((
+      <div className={styles.tictac_cell} key={i}>
+        <Tick
+          summary={summary}
+          timerTick={summary?.TimerTicks.find((value) => value.TickNumber === i) || {TickNumber: i, SummaryID: summary?.ID}}
+          tickChangeCallback={tickChangeCallback}
+        />
+      </div>
+    ));
   }
   return (
     <div className={styles.grid}>
@@ -37,7 +61,6 @@ const TaskRow = ({ summary, slot, useDate }: RowProps) => {
         <div className={styles.summaryContent}>
           <input
             type="text"
-            name={`summaryContent${summary?.ID || 'Slot' + slot}`}
             defaultValue={summary?.Content}
             onChange={debouncedChangeHandler}
             placeholder="enter a summary"

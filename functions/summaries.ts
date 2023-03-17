@@ -2,19 +2,12 @@ import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import type { Env } from "../lib/Identity"
 import { GetIdentity } from "../lib/Identity"
 import { PagesFunction } from "@cloudflare/workers-types";
+import { TimerTick } from "./ticks";
 
 const JsonHeader = {
   headers: {
     'content-type': 'application/json;charset=UTF-8'
   }
-}
-
-export type TimerTick = {
-  ID: number,
-  UserID: number,
-  TickNumber: number,
-  Distracted: number,
-  SummaryID: number,
 }
 
 export type Summary = {
@@ -47,10 +40,14 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
     searchParams.get('slot'),
   ]
 
-  let summary: Summary;
+  if (date.length === 0) return errorResponse("Date is required");
 
   if (request.method === 'POST') {
     // BEGIN CREATE/UPDATE REQUEST
+    if (slot.length === 0) return errorResponse("Slot is required");
+
+    let summary: Summary;
+
     const { results, success, error } = await env.DB.prepare(`
       SELECT * FROM Summaries
       WHERE UserID = ? AND Date = ? AND Slot = ?
@@ -67,15 +64,13 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
 
       if (!success) return errorResponse(`Error updating summary/task row. ${error}`);
     } else {
-      const { success } = await env.DB.prepare(`
-        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?)
-      `).bind(identity.UserID, text, date, slot).run();
+      const { success, results } = await env.DB.prepare(`
+        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?) RETURNING *
+      `).bind(identity.UserID, text, date, slot).all<Summary>();
 
       if (!success) return errorResponse("Error inserting new summary/task row.");
 
-      summary = await env.DB.prepare(`
-        SELECT * FROM Summaries WHERE ID=last_insert_rowid();
-      `).first<Summary>();
+      summary = results[0];
     }
 
     return new Response(JSON.stringify(summary, null, 2), JsonHeader);

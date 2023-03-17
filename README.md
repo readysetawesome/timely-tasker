@@ -28,7 +28,7 @@ http://timely-tasker.com/timer
 * pipeline integration with [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker) and [testspace](https://readysetawesome.testspace.com/spaces/208089/current/303007), ++README badges!
 
 #### Coming:
-* make the tick boxes work as intended
+* speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)
 * navigate to prevoius dates (read only no cheating)
 * something to highlight the current hour and bring attention
 
