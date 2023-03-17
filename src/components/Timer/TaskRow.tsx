@@ -15,6 +15,7 @@ export interface RowProps {
 
 export type TimerTick = {
   ID: number;
+  Date: number;
   UserID: number;
   TickNumber: number;
   Distracted: number;
@@ -23,8 +24,8 @@ export type TimerTick = {
 
 const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
   // TODO: error handle this
-  const setSummary = useCallback((value: string, callback = (summary) => {}) => {
-    createSummary(useDate, value, slot, callback)
+  const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
+    createSummary(useDate, value, slot,  callback)
   }, [slot, useDate]);
 
   const debouncedChangeHandler = useCallback(
