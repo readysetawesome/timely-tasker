@@ -3,7 +3,7 @@ import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import TaskRow from "./TaskRow.tsx";
-import { getSummaries, greet } from "../../RestApi.ts";
+import RestApi from "../../RestApi.ts";
 
 const todaysDateInt = () => {
   const now = new Date();
@@ -30,23 +30,23 @@ const Timer = (/*{ TimerProps: props }*/) => {
   const [refreshes, setRefreshes] = useState(0);
 
   useEffect(() => {
-    greet(data => setIdentity(data));
+    RestApi.greet(data => setIdentity(data));
   }, []);
 
   useEffect(() => {
     if (identity.ID !== undefined) {
       setGreeting(`
-        Welcome, ${identity.DisplayName}!
+        Hello, ${identity.DisplayName}!
         Found your login info via ${identity.ProviderName}, lets get started!
       `);
 
-      getSummaries(useDate, data => setSummaries(data));
+      RestApi.getSummaries(useDate, data => setSummaries(data));
     }
   }, [identity, useDate]);
 
   useEffect(() => {
     if (refreshes > 0) {
-      getSummaries(useDate, data => setSummaries(data));
+      RestApi.getSummaries(useDate, data => setSummaries(data));
     }
   }, [refreshes, useDate]);
 
@@ -72,7 +72,7 @@ const Timer = (/*{ TimerProps: props }*/) => {
     <div>{greeting || "loading..."}</div>
     <div className={styles.Timer}>
       <h1>The Emergent Task Timer App</h1>
-      <h2>Showing data for {outputDate.getUTCMonth()+1}-{outputDate.getUTCDate()}-{outputDate.getUTCFullYear()}</h2>
+      <h2>Showing data for {`${outputDate.getUTCMonth()+1}-${outputDate.getUTCDate()}-${outputDate.getUTCFullYear()}`}</h2>
       <Header />
       {summaryElements}
     </div>

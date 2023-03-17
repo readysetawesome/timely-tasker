@@ -1,0 +1,10 @@
+{
+  "ID": 123,
+  "DisplayName": "Bert",
+  "Email": "qbert@example.com",
+  "ProviderName": "github",
+  "CFProviderID": "xxxxxx-11111-222222-3333",
+  "ProviderID": 1,
+  "UserID": 1,
+  "ProviderIdentityID": "abcdev-zzzxxx-111222"
+}
