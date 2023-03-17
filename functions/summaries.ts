@@ -20,8 +20,8 @@ export type TimerTick = {
 export type Summary = {
   ID: number,
   UserID: number,
-  Content: Text,
-  Date: Date,
+  Content: string,
+  Date: number,
   Slot: number,
   TimerTicks: Array<TimerTick>,
 }
@@ -41,26 +41,45 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
   }
 
   const { searchParams } = new URL(request.url);
+  const [text, date, slot] = [
+    searchParams.get('text'),
+    searchParams.get('date'),
+    searchParams.get('slot'),
+  ]
+
+  let summary: Summary;
 
   if (request.method === 'POST') {
-    // BEGIN CREATE REQUEST
-    const { success } = await env.DB.prepare(`
-      INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?)
-    `).bind(
-      identity.UserID,
-      searchParams.get('text'),
-      searchParams.get('date'),
-      searchParams.get('slot'),
-    ).run();
+    // BEGIN CREATE/UPDATE REQUEST
+    const { results, success, error } = await env.DB.prepare(`
+      SELECT * FROM Summaries
+      WHERE UserID = ? AND Date = ? AND Slot = ?
+    `).bind(identity.UserID, date, slot).all<Summary>();
 
-    if (!success) return errorResponse("Error inserting new summary/task row.");
+    if (!success) return errorResponse(`Error getting summary/task row. ${error}`);
+    summary = results[0];
+    if (summary) {
+      const { success, error } = await env.DB.prepare(`
+        UPDATE Summaries
+        SET Content = ?, Slot = ?
+        WHERE ID = ?
+      `).bind(text, slot, results[0].ID).run();
 
-    const summary = await env.DB.prepare(`
-      SELECT * FROM Summaries WHERE ID=last_insert_rowid();
-    `).first<Summary>();
+      if (!success) return errorResponse(`Error updating summary/task row. ${error}`);
+    } else {
+      const { success } = await env.DB.prepare(`
+        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?)
+      `).bind(identity.UserID, text, date, slot).run();
+
+      if (!success) return errorResponse("Error inserting new summary/task row.");
+
+      summary = await env.DB.prepare(`
+        SELECT * FROM Summaries WHERE ID=last_insert_rowid();
+      `).first<Summary>();
+    }
 
     return new Response(JSON.stringify(summary, null, 2), JsonHeader);
-    // END CREATE REQUEST
+    // END CREATE/UPDATE REQUEST
   } else {
     // BEGIN INDEX REQUEST
     const { results } = await env.DB.prepare(`

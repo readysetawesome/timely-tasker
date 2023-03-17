@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230307.0",
+    "@types/lodash.debounce": "^4.0.7",
     "enzyme": "^3.11.0",
     "jest-junit": "^15.0.0",
     "react-scripts": "^5.0.1"
