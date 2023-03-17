@@ -16,7 +16,7 @@ export interface RowProps {
 
 const TaskRow = ({ summary, slot, useDate }: RowProps) => {
   const setSummary = (value: string) => fetch(
-    fetchPrefix + `/summaries?date=${useDate}&text=${value}&slot=${slot}`,
+    fetchPrefix + `/summaries?date=${useDate}&text=${encodeURIComponent(value)}&slot=${slot}`,
     { ...fetchOptions, method: 'POST' }
   ); // TODO: error handle this
 
@@ -24,7 +24,7 @@ const TaskRow = ({ summary, slot, useDate }: RowProps) => {
     debounce(event => {
       setSummary(event.target.value);
     }, 800)
-  , []);
+  , [setSummary]);
 
   let ticks = new Array<JSX.Element>();
 
