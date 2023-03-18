@@ -10,6 +10,7 @@ export interface RowProps {
   summary?: Summary;
   slot: number;
   useDate: number;
+  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
 export type TimerTick = {
@@ -20,7 +21,7 @@ export type TimerTick = {
   SummaryID?: number;
 };
 
-const TaskRow = ({ summary, slot, useDate }: RowProps) => {
+const TaskRow = ({ summary, updateSummary, slot, useDate }: RowProps) => {
   // TODO: error handle this
   const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
     RestApi.createSummary({Date: useDate, Content: value, Slot: slot} as Summary,  callback)
@@ -35,7 +36,7 @@ const TaskRow = ({ summary, slot, useDate }: RowProps) => {
 
   for (let i = 0; i < 96; i++) {
     const timerTick: TimerTick =
-      summary?.TimerTicks.find((value: TimerTick) => value.TickNumber === i)
+      summary?.TimerTicks?.find((value: TimerTick) => value.TickNumber === i)
       || { TickNumber: i, SummaryID: summary?.ID } as TimerTick
 
     // This linter disable is a very special case:
@@ -52,6 +53,7 @@ const TaskRow = ({ summary, slot, useDate }: RowProps) => {
             tickNumber: i,
             timerTick: tick || timerTick,
             setTick,
+            updateSummary,
           } }
         />
       </div>

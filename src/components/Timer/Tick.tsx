@@ -15,8 +15,9 @@ export type TickChangeEvent = {
 export interface TickProps {
   tickNumber: number;
   timerTick?: TimerTick;
-  summary: Summary;
   setTick: React.Dispatch<React.SetStateAction<TimerTick | undefined>>;
+  summary: Summary;
+  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
 const nextValue = (distracted) => {
@@ -36,7 +37,7 @@ type PubSubTickMessage = {
   beingDistracted: () => void,
 }
 
-const Tick = ({ tickNumber, timerTick, summary, setTick }: TickProps) => {
+const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickProps) => {
   const distracted = timerTick?.Distracted;
 
   const style =
@@ -114,9 +115,9 @@ const Tick = ({ tickNumber, timerTick, summary, setTick }: TickProps) => {
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary('', summary, (s) => createTick(s));
+      createSummary('', summary, (s) => [updateSummary(s), createTick(s)]);
     }
-  }, [setTick, summary, tickNumber, timerTick, distracted]);
+  }, [setTick, updateSummary, summary, tickNumber, timerTick, distracted]);
 
   return <div className={style} onClick={updateTick} />;
 }
