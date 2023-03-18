@@ -1,9 +1,8 @@
-import { render, fireEvent, getByTestId, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
-import React, { Dispatch } from 'react';
-import { act } from 'react-dom/test-utils';
-import { Identity, Provider } from '../../../lib/Identity.tsx';
-import Timer from './Timer';
+import React from 'react';
+
+import Timer, { dateDisplay, todaysDateInt } from './Timer';
 import { Summary } from '../../../functions/summaries';
 import RestApi from "../../RestApi";
 import fakeIdentity from "../../../fixtures/identity.json";
@@ -12,8 +11,9 @@ const fakeSummaries = [{
   ID: 321,
   UserID: fakeIdentity.UserID,
   Content: "summary",
-  Date: 1679011200000,
-  Slot: 0
+  Date: todaysDateInt(new Date(2023, 3, 13, 2, 22, 22)),
+  Slot: 0,
+  TimerTicks: [],
 } as Summary ];
 
 
@@ -24,7 +24,7 @@ const restoreApi = () => {
 
 beforeEach(() => {
   RestApi.greet = (callback) => callback(fakeIdentity);
-  RestApi.getSummaries = (_, callback) => callback([]);
+  RestApi.getSummaries = (_, callback) => callback(fakeSummaries);
 });
 
 afterEach(() => {
@@ -37,6 +37,19 @@ test('renders the greeting', async () => {
 });
 
 test('renders the date', async () => {
-  render(<Timer />);
-  expect(await screen.findByText(/Showing data for 3-17-2023/i)).toBeInTheDocument()
+  render(<Timer date={todaysDateInt(new Date(2023, 2, 13, 2, 22, 22))} />);
+  expect(await screen.findByText(/Showing data for 3-13-2023/i)).toBeInTheDocument()
 });
+
+describe("dateDisplay", () => {
+  test('renders the date correctly when UTC boundary is crossed for GMT-700 zone', () => {
+    const MAR_17 = 1679011200000;
+    const ONE_DAY = 86400000;
+    // 1679011200000 - 86400000 : should be Mar 16
+    expect(dateDisplay(MAR_17 - ONE_DAY)).toBe('3-16-2023')
+    // 1679011200000: should be Mar 17
+    expect(dateDisplay(MAR_17)).toBe('3-17-2023')
+    // 1679011200000 + 86400000 : should be Mar 18
+    expect(dateDisplay(MAR_17 + ONE_DAY)).toBe('3-18-2023')
+  })
+})
