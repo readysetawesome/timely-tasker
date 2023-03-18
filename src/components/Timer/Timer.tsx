@@ -49,12 +49,15 @@ const Timer = ({ date }: TimerProps) => {
   let summaryElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
+    // This linter disable is a very special case:
+    // Its only OK because the loop runs a fixed number of times for 20 rows
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [summary, updateSummary] = useState<Summary>();
+
     summaryElements.push(
       <TaskRow
-        key={i}
-        useDate={date}
-        slot={i}
-        summary={summaries.find((value) => value.Slot === i)}
+        { ... { updateSummary, key: i, useDate: date, slot: i }}
+        summary={summaries.find((value) => value.Slot === i) || summary}
       />
     )
   }
