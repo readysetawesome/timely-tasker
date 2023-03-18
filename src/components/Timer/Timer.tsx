@@ -5,9 +5,18 @@ import styles from "./Timer.module.scss";
 import TaskRow from "./TaskRow.tsx";
 import RestApi from "../../RestApi.ts";
 
-const todaysDateInt = () => {
-  const now = new Date();
-  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0);
+
+const ONE_DAY_MILLIS = 86400000;
+
+export const todaysDateInt = (now) => {
+  if (!now) now = new Date();
+  const myZeroHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+  return myZeroHour.getTime();
+}
+
+export const dateDisplay = (date) => {
+  date = new Date(date);
+  return `${date.getUTCMonth()+1}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
 }
 
 const Header = () => {
@@ -22,9 +31,13 @@ const Header = () => {
   }</div>;
 }
 
-const Timer = (/*{ TimerProps: props }*/) => {
+export interface TimerProps {
+  date?: number,
+};
+
+const Timer = (props: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
-  const [useDate] = useState(todaysDateInt);
+  const [useDate, setDate] = useState(props.date || todaysDateInt());
   const [greeting, setGreeting] = useState("");
   const [summaries, setSummaries] = useState(new Array<Summary>());
   const [refreshes, setRefreshes] = useState(0);
@@ -66,13 +79,15 @@ const Timer = (/*{ TimerProps: props }*/) => {
     )
   }
 
-  const outputDate = new Date(useDate);
-
   return <>
     <div>{greeting || "loading..."}</div>
     <div className={styles.Timer}>
       <h1>The Emergent Task Timer App</h1>
-      <h2>Showing data for {`${outputDate.getUTCMonth()+1}-${outputDate.getUTCDate()}-${outputDate.getUTCFullYear()}`}</h2>
+      <h2>
+        <span style={{cursor: 'pointer'}} onClick={() => setDate(useDate - ONE_DAY_MILLIS)}>&lt;&lt;&nbsp;</span>
+        Showing data for {dateDisplay(useDate)}
+        <span style={{cursor: 'pointer'}} onClick={() => setDate(useDate + ONE_DAY_MILLIS)}>&nbsp;&gt;&gt;</span>
+      </h2>
       <Header />
       {summaryElements}
     </div>

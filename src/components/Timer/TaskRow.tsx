@@ -28,11 +28,9 @@ const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
     RestApi.createSummary(useDate, value, slot,  callback)
   }, [slot, useDate]);
 
-  const debouncedChangeHandler = useCallback(
-    debounce(event => {
-      setSummary(event.target.value);
-    }, 800)
-  , [setSummary]);
+  const debouncedChangeHandler = useCallback(() => {
+    return debounce(event => setSummary(event.target.value), 800)
+  }, [setSummary]);
 
   const tickChangeCallback = useCallback((tickChangeEvent) => {
     if (tickChangeEvent.summary === undefined) {
