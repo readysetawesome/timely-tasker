@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
@@ -28,12 +28,17 @@ const TaskRow = ({ summary, slot, useDate, refreshSummary }: RowProps) => {
     RestApi.createSummary(useDate, value, slot,  callback)
   }, [slot, useDate]);
 
-  const debouncedChangeHandler = useCallback(() => {
-    return debounce(event => setSummary(event.target.value), 800)
-  }, [setSummary]);
+  // why useMemo? http://tiny.cc/9zd5vz
+  const debouncedChangeHandler = useMemo(
+    () => debounce(event => setSummary(event.target.value), 800)
+  , [setSummary]);
 
+  // TODO: optimize this very naive callback
+  // https://github.com/readysetawesome/timely-tasker/issues/30
   const tickChangeCallback = useCallback((tickChangeEvent) => {
     if (tickChangeEvent.summary === undefined) {
+      // We need a summaryID to associate the ticks with,
+      // thus we create an empty summary if not exists
       setSummary('', (summary) => RestApi.createTick(summary.ID, tickChangeEvent.tickNumber, refreshSummary));
     } else {
       RestApi.createTick(tickChangeEvent.summary.ID, tickChangeEvent.tickNumber, refreshSummary)
