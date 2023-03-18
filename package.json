@@ -11,6 +11,7 @@
     "@types/node": "^17.0.21",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
+    "pubsub-js": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.5",
@@ -22,7 +23,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --ci --coverage . --reporters=default --reporters=jest-junit",
+    "test": "react-scripts test --ci --coverage . --collectCoverageFrom=!src/reportWebVitals.js  --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
