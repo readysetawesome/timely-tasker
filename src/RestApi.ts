@@ -4,8 +4,7 @@ import { Summary } from "../functions/summaries";
 
 const isDevMode = process.env.NODE_ENV === "development";
 const fetchPrefix = isDevMode ? "http://127.0.0.1:8788" : "";
-const fetchOptions = (isDevMode ? { mode: "cors" } : {}) as RequestInitCfProperties;
-
+const fetchOptions = (isDevMode ? { mode: "cors" } : {}) as RequestInit<RequestInitCfProperties>;
 
 const createSummary = (useDate: number, text: string, slot: number, callback) => fetch(
   fetchPrefix + `/summaries?date=${useDate}&text=${encodeURIComponent(text)}&slot=${slot}`,

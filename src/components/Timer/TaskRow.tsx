@@ -3,8 +3,8 @@ import React, { useCallback, useMemo } from "react";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import debounce from "lodash.debounce";
-import Tick from "./Tick.tsx";
-import RestApi from "../../RestApi.ts";
+import Tick from "./Tick";
+import RestApi from "../../RestApi";
 
 export interface RowProps {
   summary?: Summary;
@@ -14,11 +14,10 @@ export interface RowProps {
 };
 
 export type TimerTick = {
-  ID: number;
-  Date: number;
-  UserID: number;
+  ID?: number;
+  UserID?: number;
   TickNumber: number;
-  Distracted: number;
+  Distracted?: number;
   SummaryID: number;
 };
 
