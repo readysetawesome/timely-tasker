@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import React from 'react';
 
-import Timer, { dateDisplay, todaysDateInt } from './Timer';
+import Timer, { dateDisplay } from './Timer';
 import { Summary } from '../../../functions/summaries';
 import RestApi from "../../RestApi";
 import fakeIdentity from "../../../fixtures/identity.json";
+import { todaysDateInt } from '../../App';
 
 const fakeSummaries = [{
   ID: 321,
@@ -32,7 +33,7 @@ afterEach(() => {
 });
 
 test('renders the greeting', async () => {
-  render(<Timer />);
+  render(<Timer date={todaysDateInt()} />);
   expect(await screen.findByText(/Found your login info via github/i)).toBeInTheDocument()
 });
 

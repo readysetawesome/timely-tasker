@@ -5,15 +5,6 @@ import styles from "./Timer.module.scss";
 import TaskRow from "./TaskRow";
 import RestApi from "../../RestApi";
 
-
-const ONE_DAY_MILLIS = 86400000;
-
-export const todaysDateInt = (now?: Date) => {
-  if (!now) now = new Date();
-  const myZeroHour = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-  return myZeroHour;
-}
-
 export const dateDisplay = (date) => {
   date = new Date(date);
   return `${date.getUTCMonth()+1}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
@@ -32,15 +23,13 @@ const Header = () => {
 }
 
 export interface TimerProps {
-  date?: number,
+  date: number,
 };
 
-const Timer = (props: TimerProps) => {
+const Timer = ({ date }: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
-  const [useDate, setDate] = useState(props.date || todaysDateInt());
   const [greeting, setGreeting] = useState("");
   const [summaries, setSummaries] = useState(new Array<Summary>());
-  const [refreshes, setRefreshes] = useState(0);
 
   useEffect(() => {
     RestApi.greet(data => setIdentity(data));
@@ -52,27 +41,18 @@ const Timer = (props: TimerProps) => {
         Hello, ${identity.DisplayName}!
         Found your login info via ${identity.ProviderName}, lets get started!
       `);
-
-      RestApi.getSummaries(useDate, data => setSummaries(data));
+      setSummaries([]);
+      RestApi.getSummaries(date, data => setSummaries(data));
     }
-  }, [identity, useDate]);
-
-  useEffect(() => {
-    if (refreshes > 0) {
-      RestApi.getSummaries(useDate, data => setSummaries(data));
-    }
-  }, [refreshes, useDate]);
-
-  const refreshSummary = () => setRefreshes(refreshes+1);
+  }, [identity, date]);
 
   let summaryElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
     summaryElements.push(
       <TaskRow
-        refreshSummary={refreshSummary}
         key={i}
-        useDate={useDate}
+        useDate={date}
         slot={i}
         summary={summaries.find((value) => value.Slot === i)}
       />
@@ -83,11 +63,7 @@ const Timer = (props: TimerProps) => {
     <div>{greeting || "loading..."}</div>
     <div className={styles.Timer}>
       <h1>The Emergent Task Timer App</h1>
-      <h2>
-        <span style={{cursor: 'pointer'}} onClick={() => setDate(useDate - ONE_DAY_MILLIS)}>&lt;&lt;&nbsp;</span>
-        Showing data for {dateDisplay(useDate)}
-        <span style={{cursor: 'pointer'}} onClick={() => setDate(useDate + ONE_DAY_MILLIS)}>&nbsp;&gt;&gt;</span>
-      </h2>
+      <h2>Showing data for {dateDisplay(date)}</h2>
       <Header />
       {summaryElements}
     </div>
