@@ -2,6 +2,7 @@ import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import type { Env } from "../lib/Identity"
 import { GetIdentity } from "../lib/Identity"
 import { PagesFunction } from "@cloudflare/workers-types";
+import { TimerTick } from "../src/components/Timer/TaskRow";
 
 const JsonHeader = {
   headers: {
@@ -9,13 +10,6 @@ const JsonHeader = {
   }
 }
 
-export type TimerTick = {
-  ID: number,
-  UserID: number,
-  TickNumber: number,
-  Distracted: number,
-  SummaryID: number,
-}
 
 const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
@@ -33,9 +27,9 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
 
   const { searchParams } = new URL(request.url);
   const [summary, distracted, tick] = [
-    searchParams.get('summary'),
-    searchParams.get('distracted'),
-    searchParams.get('tick'),
+    parseInt(searchParams.get('summary')),
+    parseInt(searchParams.get('distracted')),
+    parseInt(searchParams.get('tick')),
   ]
 
   if (request.method === 'POST') {
@@ -48,23 +42,30 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
     if (!success) return errorResponse(`Error getting tick row. ${error}`);
     let timerTick = results[0];
     if (timerTick) {
-      const { success, error } = await env.DB.prepare(`
-        UPDATE TimerTicks
-        SET Distracted = (CASE WHEN Distracted = 0 THEN 1 WHEN Distracted = 1 THEN -1 ELSE 0 END)
-        WHERE ID = ?
-      `).bind(timerTick.ID).run();
+      if (distracted !== 0 && distracted !== 1) {
+        // there should be no tick, delete it
+        const { success, error } = await env.DB.prepare(`
+          DELETE FROM TimerTicks WHERE ID = ?
+        `).bind(timerTick.ID).run();
+        if (!success) return errorResponse(`Error deleting tick. ${error}`);
+      } else {
+        const { success, results } = await env.DB.prepare(`
+          UPDATE TimerTicks
+          SET Distracted = ?
+          WHERE ID = ? RETURNING *
+        `).bind(distracted, timerTick.ID).all<TimerTick>();
 
-      if (!success) return errorResponse(`Error updating summary/task row. ${error}`);
+        if (!success) return errorResponse(`Error updating tick. ${error}`);
+        timerTick = results[0];
+      }
     } else {
-      const { success } = await env.DB.prepare(`
-        INSERT INTO TimerTicks (UserID, TickNumber, Distracted, SummaryID) values (?, ?, ?, ?)
-      `).bind(identity.UserID, tick, 0, summary).run();
+      const { success, results } = await env.DB.prepare(`
+        INSERT INTO TimerTicks (UserID, TickNumber, Distracted, SummaryID) values (?, ?, ?, ?) RETURNING *
+      `).bind(identity.UserID, tick, distracted, summary).all<TimerTick>();
 
-      if (!success) return errorResponse("Error inserting new summary/task row.");
+      if (!success) return errorResponse("Error inserting new tick.");
 
-      timerTick = await env.DB.prepare(`
-        SELECT * FROM TimerTicks WHERE ID=last_insert_rowid();
-      `).first<TimerTick>();
+      timerTick = results[0];
     }
 
     return new Response(JSON.stringify(timerTick, null, 2), JsonHeader);
