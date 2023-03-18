@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import { TimerTick } from "./TaskRow";

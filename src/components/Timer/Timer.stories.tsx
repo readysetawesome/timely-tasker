@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable
 import Timer from './Timer';
 
 export default {
@@ -10,3 +10,4 @@ export const Default = () => <Timer />;
 Default.story = {
   name: 'default',
 };
+*/

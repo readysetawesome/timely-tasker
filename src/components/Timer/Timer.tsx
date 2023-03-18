@@ -2,16 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
-import TaskRow from "./TaskRow.tsx";
-import RestApi from "../../RestApi.ts";
+import TaskRow from "./TaskRow";
+import RestApi from "../../RestApi";
 
 
 const ONE_DAY_MILLIS = 86400000;
 
-export const todaysDateInt = (now) => {
+export const todaysDateInt = (now?: Date) => {
   if (!now) now = new Date();
-  const myZeroHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-  return myZeroHour.getTime();
+  const myZeroHour = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+  return myZeroHour;
 }
 
 export const dateDisplay = (date) => {
