@@ -20,6 +20,10 @@ https://davidseah.com/node/the-emergent-task-timer/
 Try the app out here right now: (github login or single use code login required)
 http://timely-tasker.com/timer
 
+<a href="https://timely-tasker.com">
+  ![480_demo_vid_AdobeExpress](https://user-images.githubusercontent.com/105779/226152549-f50c61b9-3d87-4c1c-8ada-c34bd521eb40.gif)
+</a>
+
 #### Features:
 * built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
 * modern react front-end using hooks and all the latest goodies I can get my hands on
