@@ -9,10 +9,9 @@ export interface TaskRowSummaryProps {
   summary?: Summary;
   slot: number;
   useDate: number;
-  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
-const TaskRowSummary = ({ summary, updateSummary, slot, useDate }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
   // TODO: error handle this
   const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
     RestApi.createSummary({Date: useDate, Content: value, Slot: slot} as Summary,  callback)

@@ -17,6 +17,10 @@ const fakeSummaries = [{
   TimerTicks: [],
 } as Summary ];
 
+const defaultTimerParams = {
+  leftNavClicker: <div></div>,
+  rightNavClicker: <div></div>,
+}
 
 const original = RestApi;
 const restoreApi = () => {
@@ -33,13 +37,13 @@ afterEach(() => {
 });
 
 test('renders the greeting', async () => {
-  render(<Timer date={todaysDateInt()} />);
-  expect(await screen.findByText(/Found your login info via github/i)).toBeInTheDocument()
+  render(<Timer date={todaysDateInt()} { ...defaultTimerParams }/>);
+  expect(await screen.findByText(/You are logged in with github./i)).toBeInTheDocument()
 });
 
 test('renders the date', async () => {
-  render(<Timer date={todaysDateInt(new Date(2023, 2, 13, 2, 22, 22))} />);
-  expect(await screen.findByText(/Showing data for 3-13-2023/i)).toBeInTheDocument()
+  render(<Timer date={todaysDateInt(new Date(2023, 2, 13, 2, 22, 22))} { ...defaultTimerParams } />);
+  expect(await screen.findByText(/Work Date: 3-13-2023/i)).toBeInTheDocument()
 });
 
 describe("dateDisplay", () => {

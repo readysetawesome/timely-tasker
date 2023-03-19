@@ -14,22 +14,22 @@ export const todaysDateInt = (now?: Date) => {
 
 function App() {
   const [date, setDate] = useState(todaysDateInt());
+  const leftNavClicker =
+    <span style={{cursor: 'pointer'}} onClick={() => setDate(date - ONE_DAY_MILLIS)}>
+      &lt;&lt;&nbsp;&nbsp;&nbsp;
+    </span>;
+
+  const rightNavClicker =
+    <span style={{cursor: 'pointer'}} onClick={() => setDate(date + ONE_DAY_MILLIS)}>
+      &nbsp;&nbsp;&nbsp;&gt;&gt;
+    </span>;
 
   return (
     <div className="App">
       <header>
-        <span style={{cursor: 'pointer'}} onClick={() => setDate(date - ONE_DAY_MILLIS)}>
-          &lt;&lt;&nbsp;&nbsp;&nbsp;
-        </span>
-
-        Welcome to the Timely Tasker!  &nbsp;
         <a href="https://github.com/readysetawesome/timely-tasker">Timely Tasker Github Project</a>
-
-        <span style={{cursor: 'pointer'}} onClick={() => setDate(date + ONE_DAY_MILLIS)}>
-          &nbsp;&nbsp;&nbsp;&gt;&gt;
-        </span>
       </header>
-      <Timer date={date} />
+      <Timer { ...{ date, leftNavClicker, rightNavClicker } } />
     </div>
   );
 }

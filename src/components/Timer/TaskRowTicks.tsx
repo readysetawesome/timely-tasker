@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
@@ -31,7 +31,13 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
     // Its only OK because the loop runs a fixed number of times
     // 96 ticks, one for each 15 minute chunk of the day. never changes.
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [tick, setTick] = useState<TimerTick>();
+    const setTick = useCallback((tick: TimerTick) => {
+      const ammendedlist =
+        summary ? summary.TimerTicks.filter((t: TimerTick) => t.TickNumber !== tick.TickNumber ) : [];
+
+      summary.TimerTicks = [ ...ammendedlist, tick];
+      updateSummary(summary);
+    }, [summary, updateSummary]);
 
     ticks.push((
       <div className={styles.tictac_cell} key={i}>
@@ -39,7 +45,7 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
           { ...{
             summary: summary || {Date: useDate, Content: '', Slot: slot} as Summary,
             tickNumber: i,
-            timerTick: tick || timerTick,
+            timerTick: timerTick,
             setTick,
             updateSummary,
           } }

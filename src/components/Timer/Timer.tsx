@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
@@ -24,9 +24,13 @@ const Header = () => {
 
 export interface TimerProps {
   date: number,
+  leftNavClicker: ReactElement,
+  rightNavClicker: ReactElement,
 };
 
-const Timer = ({ date }: TimerProps) => {
+const Timer = ({
+  date, leftNavClicker, rightNavClicker
+}: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState("");
   const [summaries, setSummaries] = useState(new Array<Summary>());
@@ -41,8 +45,7 @@ const Timer = ({ date }: TimerProps) => {
         Hello, ${identity.DisplayName}!
         You are logged in with ${identity.ProviderName}.
       `);
-      setSummaries([]);
-      RestApi.getSummaries(date, data => setSummaries(data));
+      RestApi.getSummaries(date, data => setSummaries([ ...data ]));
     }
   }, [identity, date]);
 
@@ -53,20 +56,25 @@ const Timer = ({ date }: TimerProps) => {
     // This linter disable is a very special case:
     // Its only OK because the loop runs a fixed number of times for 20 rows
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [summary, updateSummary] = useState<Summary>();
-    const foundSummary = summaries.find((value) => value.Slot === i) || summary;
+    const foundSummary = summaries?.find((value) => value.Slot === i);
+
+    const updateSummary = (summary: Summary) => {
+      setSummaries(
+        [ summary, ...summaries.filter(s => s.Slot !== summary.Slot) ]
+      )
+    }
 
     summaryElements.push(
       <TaskRowSummary
         { ... { updateSummary, key: i, useDate: date, slot: i }}
-        summary={foundSummary}
+        summary={foundSummary || {TimerTicks: []} as Summary}
       />
     )
 
     tickRowElements.push(
       <TaskRowTicks
         { ... { updateSummary, key: i, useDate: date, slot: i }}
-        summary={foundSummary}
+        summary={foundSummary || {TimerTicks: []} as Summary}
       />
     )
   }
@@ -74,7 +82,11 @@ const Timer = ({ date }: TimerProps) => {
   return <>
     <div>
       <h1>The Timely Tasker</h1>
-      <h2>Work Date: {dateDisplay(date)}</h2>
+      <h2>
+        { leftNavClicker }
+        Work Date: {dateDisplay(date)}
+        { rightNavClicker }
+      </h2>
       <p>{greeting || "loading..."}</p>
     </div>
     <div className={styles.Timer}>
