@@ -1,4 +1,4 @@
-# The Timely Tasker App
+<h1 align="center">The Timely Tasker App</h1>
 
 <p align="center">
   <a href="https://readysetawesome.testspace.com/spaces/208089/current/303007">
@@ -14,11 +14,17 @@
 
 ## Overview
 
-Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
-https://davidseah.com/node/the-emergent-task-timer/
+  Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
+  https://davidseah.com/node/the-emergent-task-timer/
 
-Try the app out here right now: (github login or single use code login required)
-http://timely-tasker.com/timer
+  Try the app out here right now: (github login or single use code login required)
+  http://timely-tasker.com/timer
+  
+<p align="center">
+  <a href="https://timely-tasker.com" align="center">
+    <img src="https://github.com/readysetawesome/timely-tasker/blob/main/public/March23Demo.gif?raw=true"/>
+  </a>
+</p>
 
 #### Features:
 * built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
