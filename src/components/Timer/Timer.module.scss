@@ -1,24 +1,58 @@
+$summary-row-item-height: 18px;
+
 .Timer {
-  .grid {
-    display: grid;
-    grid-template-columns: 200px repeat(96, 18px);
+  .content {
+    width: 98%;
+    height: 100vh;
+    position: relative;
+
+    .left_column {
+      display: block;
+      position: absolute;
+      left: 1%;
+      width: 29%;
+
+
+      background-color: #ccc;
+    }
+
+    .right_column {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      flex: 1 0 69%;
+      margin-left: 30%;
+      overflow-x: auto;
+      background-color: #eee;
+
+    }
 
   }
 
+  .grid_summary {
+    display: grid;
+    grid-template-columns: 98%;
+  }
+
+  .grid_ticks {
+    display: grid;
+    grid-template-columns: repeat(96, 18px);
+  }
 
   .tictac_header_row {
     display: grid;
-    grid-template-columns: 200px repeat(24, 72px);
+    grid-template-columns: repeat(24, 72px);
   }
 
   .tictac_cell {
+    height: 26px;
     background-color: lightblue;
   }
 
-  .tictac_cell:nth-child(8n+1),
   .tictac_cell:nth-child(8n),
   .tictac_cell:nth-child(8n-1),
-  .tictac_cell:nth-child(8n-2) {
+  .tictac_cell:nth-child(8n-2),
+  .tictac_cell:nth-child(8n-3) {
     background-color: beige;
   }
 
@@ -29,16 +63,16 @@
   }
 
   .tictac_empty {
-    width: 8px;
-    height: 14px;
+    width: 10px;
+    height: $summary-row-item-height;
     margin: 2px 2px 2px 2px;
     border-radius: 3px;
     border: 2px solid darkgray;
   }
 
   .tictac_distracted {
-    width: 8px;
-    height: 14px;
+    width: 10px;
+    height: $summary-row-item-height;
     margin: 2px 2px 2px 2px;
     border-radius: 3px;
     border:2px solid darkgray;
@@ -48,16 +82,16 @@
     content:"";
     position:absolute;
     border-top:2px solid darkslategray;
-    width:13px;
-    padding-right: 2px;
+    width:19px;
+    padding-right: 1px;
     left: 0px;
-    transform: rotate(45deg);
+    transform: rotate(55deg);
     transform-origin: 0% 0%;
   }
 
   .tictac_focused {
-    width: 8px;
-    height: 14px;
+    width: 10px;
+    height: $summary-row-item-height;
     margin: 2px 2px 2px 2px;
     border-radius: 3px;
     background-color: darkslategray;
@@ -65,3 +99,31 @@
   }
 
 }
+
+$input-background: #f5f5f5;
+$input-border: #c5c5c5;
+$input-border-radius: 4px;
+$input-font-size: 16px;
+$input-font-color: #333;
+
+
+  input[type="text"] {
+    flex: 1;
+    height: $summary-row-item-height + 2px;
+    margin: 2px;
+
+    border: none;
+    border-radius: $input-border-radius;
+    background-color: $input-background;
+    font-size: $input-font-size;
+    color: $input-font-color;
+
+    &::placeholder {
+      color: #c5c5c5;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+  }

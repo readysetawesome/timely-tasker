@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
-import TaskRow from "./TaskRow";
+import TaskRowTicks from "./TaskRowTicks";
+import TaskRowSummary from "./TaskRowSummary";
 import RestApi from "../../RestApi";
 
 export const dateDisplay = (date) => {
@@ -12,7 +13,6 @@ export const dateDisplay = (date) => {
 
 const Header = () => {
   let items = new Array<JSX.Element>();
-  items.push(<div key={'headerspacer'} className={styles.tictac_header}>Enter A Task Summary</div>)
   for (let i = 0; i < 24; i++) {
     const suffix = (i >= 12)? 'pm' : 'am';
     items.push(<div key={i} className={styles.tictac_header}>{((i + 11) % 12 + 1)}{suffix}</div>)
@@ -47,17 +47,26 @@ const Timer = ({ date }: TimerProps) => {
   }, [identity, date]);
 
   let summaryElements = new Array<JSX.Element>();
+  let tickRowElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
     // This linter disable is a very special case:
     // Its only OK because the loop runs a fixed number of times for 20 rows
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [summary, updateSummary] = useState<Summary>();
+    const foundSummary = summaries.find((value) => value.Slot === i) || summary;
 
     summaryElements.push(
-      <TaskRow
+      <TaskRowSummary
         { ... { updateSummary, key: i, useDate: date, slot: i }}
-        summary={summaries.find((value) => value.Slot === i) || summary}
+        summary={foundSummary}
+      />
+    )
+
+    tickRowElements.push(
+      <TaskRowTicks
+        { ... { updateSummary, key: i, useDate: date, slot: i }}
+        summary={foundSummary}
       />
     )
   }
@@ -67,8 +76,17 @@ const Timer = ({ date }: TimerProps) => {
     <div className={styles.Timer}>
       <h1>The Emergent Task Timer App</h1>
       <h2>Showing data for {dateDisplay(date)}</h2>
-      <Header />
-      {summaryElements}
+
+      <div className={styles.content}>
+        <div className={styles.left_column}>
+          <div key={'headerspacer'} className={styles.tictac_header}>Enter A Task Summary</div>
+          {summaryElements}
+        </div>
+        <div className={styles.right_column}>
+          <Header />
+          {tickRowElements}
+        </div>
+      </div>
     </div>
   </>
 };

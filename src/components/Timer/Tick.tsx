@@ -4,7 +4,7 @@ import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import RestApi from "../../RestApi";
 import PubSub from "pubsub-js";
-import { TimerTick } from "./TaskRow";
+import { TimerTick } from "./TaskRowTicks";
 
 export type TickChangeEvent = {
   tickNumber: number;
@@ -39,6 +39,7 @@ type PubSubTickMessage = {
 
 const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickProps) => {
   const distracted = timerTick?.Distracted;
+  const nextTickValue = nextValue(distracted);
 
   const style =
     distracted === 1 ? styles.tictac_distracted :
@@ -81,13 +82,13 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
 
     const createTick = (s: Summary) => {
       RestApi.createTick({
-        tickNumber, summary: s, distracted: nextValue(distracted)
+        tickNumber, summary: s, distracted: nextTickValue
       } as TickChangeEvent, (newTimerTick: TimerTick) => {
-        if (nextValue(distracted) !== -1)
+        if (nextTickValue !== -1)
           PubSub.publish(`tick:${tickNumber}`, {
             tick: newTimerTick,
             summaryID: s.ID,
-            distracted: nextValue(distracted),
+            distracted: nextTickValue,
             fulfilled: false,
             beingDistracted: () => {
               // this callback is invoked to notify that user is distracted by engaging
@@ -103,7 +104,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
         else {
           // don't pub deletes, only change my visual state
           if (timerTick) {
-            timerTick.Distracted = nextValue(distracted);
+            timerTick.Distracted = nextTickValue;
             setTick({ ...timerTick });
           }
         }
@@ -117,7 +118,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
       // thus we create an empty summary if not exists for this row
       createSummary('', summary, (s) => [updateSummary(s), createTick(s)]);
     }
-  }, [setTick, updateSummary, summary, tickNumber, timerTick, distracted]);
+  }, [summary, tickNumber, nextTickValue, setTick, timerTick, updateSummary]);
 
   return <div className={style} onClick={updateTick} />;
 }

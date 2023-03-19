@@ -1,12 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useState } from "react";
 
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
-import debounce from "lodash.debounce";
 import Tick from "./Tick";
-import RestApi from "../../RestApi";
 
-export interface RowProps {
+export interface TaskRowTicksProps {
   summary?: Summary;
   slot: number;
   useDate: number;
@@ -21,17 +19,7 @@ export type TimerTick = {
   SummaryID?: number;
 };
 
-const TaskRow = ({ summary, updateSummary, slot, useDate }: RowProps) => {
-  // TODO: error handle this
-  const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
-    RestApi.createSummary({Date: useDate, Content: value, Slot: slot} as Summary,  callback)
-  }, [slot, useDate]);
-
-  // why useMemo? http://tiny.cc/9zd5vz
-  const debouncedChangeHandler = useMemo(
-    () => debounce(event => setSummary(event.target.value), 800)
-  , [setSummary]);
-
+const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksProps) => {
   let ticks = new Array<JSX.Element>();
 
   for (let i = 0; i < 96; i++) {
@@ -60,20 +48,12 @@ const TaskRow = ({ summary, updateSummary, slot, useDate }: RowProps) => {
     ));
   }
   return (
-    <div className={styles.grid}>
+    <div className={styles.grid_ticks}>
       <>
-        <div className={styles.summaryContent}>
-          <input
-            type="text"
-            defaultValue={summary?.Content}
-            onChange={debouncedChangeHandler}
-            placeholder="enter a summary"
-          />
-        </div>
         {ticks}
       </>
     </div>
   );
 }
 
-export default TaskRow;
+export default TaskRowTicks;
