@@ -23,9 +23,9 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
   let ticks = new Array<JSX.Element>();
 
   for (let i = 0; i < 96; i++) {
-    const timerTick: TimerTick =
-      summary?.TimerTicks?.find((value: TimerTick) => value.TickNumber === i)
-      || { TickNumber: i, SummaryID: summary?.ID } as TimerTick
+    const timerTick =
+      summary.TimerTicks.find((value: TimerTick) => value.TickNumber === i)
+      || ({ TickNumber: i, SummaryID: summary?.ID } as TimerTick);
 
     // This linter disable is a very special case:
     // Its only OK because the loop runs a fixed number of times
@@ -33,7 +33,7 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const setTick = useCallback((tick: TimerTick) => {
       const ammendedlist =
-        summary ? summary.TimerTicks.filter((t: TimerTick) => t.TickNumber !== tick.TickNumber ) : [];
+        summary.TimerTicks.filter((t: TimerTick) => t.TickNumber !== tick.TickNumber ) || [];
 
       summary.TimerTicks = [ ...ammendedlist, tick];
       updateSummary(summary);
@@ -43,7 +43,7 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
       <div className={styles.tictac_cell} key={i}>
         <Tick
           { ...{
-            summary: summary || {Date: useDate, Content: '', Slot: slot} as Summary,
+            summary: summary || {Date: useDate, Content: '', Slot: slot, TimerTicks: []} as Summary,
             tickNumber: i,
             timerTick: timerTick,
             setTick,

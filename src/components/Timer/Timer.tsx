@@ -53,28 +53,28 @@ const Timer = ({
   let tickRowElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
-    // This linter disable is a very special case:
-    // Its only OK because the loop runs a fixed number of times for 20 rows
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const foundSummary = summaries?.find((value) => value.Slot === i);
+    const foundSummary = summaries?.find((value) => value.Slot === i) ||
+      {TimerTicks: [], Slot: i, Date: date, Content: ''} as Summary;
 
-    const updateSummary = (summary: Summary) => {
-      setSummaries(
-        [ summary, ...summaries.filter(s => s.Slot !== summary.Slot) ]
-      )
-    }
+    const updateSummary = (s: Summary) => {
+      setSummaries([
+        s,
+        ...summaries.filter((_s) => _s.Slot !== i),
+      ]);
+    };
 
     summaryElements.push(
       <TaskRowSummary
         { ... { updateSummary, key: i, useDate: date, slot: i }}
-        summary={foundSummary || {TimerTicks: []} as Summary}
+        summary={foundSummary}
       />
     )
 
     tickRowElements.push(
       <TaskRowTicks
         { ... { updateSummary, key: i, useDate: date, slot: i }}
-        summary={foundSummary || {TimerTicks: []} as Summary}
+        summary={foundSummary}
       />
     )
   }

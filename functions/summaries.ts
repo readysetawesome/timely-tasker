@@ -4,6 +4,23 @@ import { GetIdentity } from "../lib/Identity"
 import { PagesFunction } from "@cloudflare/workers-types";
 import { TimerTick } from "./ticks";
 
+const FULL_JSON_OBJECT_SELECT = `
+  Summaries.ID, Summaries.Content, Summaries.Date, Summaries.Slot, (
+    SELECT json_group_array(
+      json_object(
+        'ID', ID,
+        'UserID', UserID,
+        'Date', Date,
+        'TickNumber', TickNumber,
+        'Distracted', Distracted,
+        'SummaryID', SummaryID
+      )
+    )
+    FROM TimerTicks TT
+    WHERE TT.SummaryID = Summaries.ID
+  ) as TimerTicks
+`
+
 const JsonHeader = {
   headers: {
     'content-type': 'application/json;charset=UTF-8'
@@ -55,43 +72,35 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
 
     if (!success) return errorResponse(`Error getting summary/task row. ${error}`);
     summary = results[0];
+
     if (summary) {
-      const { success, error } = await env.DB.prepare(`
+      const { results: _results, success, error } = await env.DB.prepare(`
         UPDATE Summaries
         SET Content = ?, Slot = ?
         WHERE ID = ?
-      `).bind(text, slot, results[0].ID).run();
+        RETURNING ${FULL_JSON_OBJECT_SELECT}
+      `).bind(text, slot, results[0].ID).all<Summary>();
 
       if (!success) return errorResponse(`Error updating summary/task row. ${error}`);
+      summary = _results[0];
     } else {
-      const { success, results } = await env.DB.prepare(`
-        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?) RETURNING *
+      const { success, results: _results } = await env.DB.prepare(`
+        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?) RETURNING ${FULL_JSON_OBJECT_SELECT}
       `).bind(identity.UserID, text, date, slot).all<Summary>();
 
       if (!success) return errorResponse("Error inserting new summary/task row.");
-
-      summary = results[0];
+      summary = _results[0];
     }
+
+    // Slight hack to unpack json values returned by the sqlite api
+    summary.TimerTicks = JSON.parse(summary.TimerTicks as unknown as string);
 
     return new Response(JSON.stringify(summary, null, 2), JsonHeader);
     // END CREATE/UPDATE REQUEST
   } else {
     // BEGIN INDEX REQUEST
     const { results } = await env.DB.prepare(`
-      SELECT Summaries.*, (
-        SELECT json_group_array(
-          json_object(
-            'ID', ID,
-            'UserID', UserID,
-            'Date', Date,
-            'TickNumber', TickNumber,
-            'Distracted', Distracted,
-            'SummaryID', SummaryID
-          )
-        )
-        FROM TimerTicks TT
-        WHERE TT.SummaryID = Summaries.ID
-      ) as TimerTicks
+      SELECT ${FULL_JSON_OBJECT_SELECT}
       FROM Summaries
       WHERE UserID=? AND Date = ? ORDER BY Slot;
     `).bind(identity.UserID, searchParams.get('date')).all<Summary>();

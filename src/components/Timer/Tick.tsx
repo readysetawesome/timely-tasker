@@ -74,14 +74,16 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
           if (!message.fulfilled) {
             // I need to update myself to distracted now...
             setVisualUpdate(1);
-            RestApi.createTick({
-              tickNumber, summary: summary, distracted: 1
-            } as TickChangeEvent, newTimerTick => {
-              setTick(newTimerTick);
+            setTimeout(() => {
+              RestApi.createTick({
+                tickNumber, summary: summary, distracted: 1
+              } as TickChangeEvent, newTimerTick => {
+                setTick(newTimerTick);
+                message.beingDistracted();
+              });
             });
             // ... and dispatch to the initiator so they can update to "distracted" state
             message.fulfilled = true;
-            message.beingDistracted();
           }
         }
       }
@@ -90,7 +92,8 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
   }, [summary, timerTick, tickNumber, setTick, setVisualUpdate]);
 
   const updateTick = useCallback(() => {
-    const createSummary = (value: string, summary: Summary, callback = (s: Summary) => {}) => {
+    const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
+      console.log("create a new summary", summary)
       RestApi.createSummary(summary,  callback)
     };
 
@@ -109,10 +112,12 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
               // with multiple tasks as once.
               // The receiver should only run it once! Then set fulfilled = true
               setVisualUpdate(1);
-              RestApi.createTick({
-                tickNumber, summary: s, distracted: 1
-              } as TickChangeEvent, (newTimerTick: TimerTick) => {
-                setTick(newTimerTick);
+              setTimeout(() => {
+                RestApi.createTick({
+                  tickNumber, summary: s, distracted: 1
+                } as TickChangeEvent, (newTimerTick: TimerTick) => {
+                  setTick(newTimerTick);
+                });
               });
             }
           });
@@ -121,7 +126,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
           if (timerTick) {
             setVisualUpdate(-1);
             timerTick.Distracted = -1;
-            setTick({ ...timerTick });
+            setTimeout(() => setTick({ ...timerTick }));
           }
         }
       });
@@ -132,7 +137,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary('', summary, (s) => [updateSummary(s), createTick(s)]);
+      createSummary(summary, (s) => [updateSummary(s), createTick(s)]);
     }
   }, [summary, tickNumber, nextTickValue, setVisualUpdate, setTick, timerTick, updateSummary]);
 

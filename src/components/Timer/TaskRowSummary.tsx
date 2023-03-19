@@ -14,7 +14,7 @@ export interface TaskRowSummaryProps {
 const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
   // TODO: error handle this
   const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
-    RestApi.createSummary({Date: useDate, Content: value, Slot: slot} as Summary,  callback)
+    RestApi.createSummary({Date: useDate, Content: value || "", Slot: slot} as Summary,  callback)
   }, [slot, useDate]);
 
   // why useMemo? http://tiny.cc/9zd5vz
