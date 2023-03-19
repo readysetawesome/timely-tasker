@@ -39,7 +39,7 @@ const Timer = ({ date }: TimerProps) => {
     if (identity.ID !== undefined) {
       setGreeting(`
         Hello, ${identity.DisplayName}!
-        Found your login info via ${identity.ProviderName}, lets get started!
+        You are logged in with ${identity.ProviderName}.
       `);
       setSummaries([]);
       RestApi.getSummaries(date, data => setSummaries(data));
@@ -72,14 +72,15 @@ const Timer = ({ date }: TimerProps) => {
   }
 
   return <>
-    <div>{greeting || "loading..."}</div>
+    <div>
+      <h1>The Timely Tasker</h1>
+      <h2>Work Date: {dateDisplay(date)}</h2>
+      <p>{greeting || "loading..."}</p>
+    </div>
     <div className={styles.Timer}>
-      <h1>The Emergent Task Timer App</h1>
-      <h2>Showing data for {dateDisplay(date)}</h2>
-
       <div className={styles.content}>
         <div className={styles.left_column}>
-          <div key={'headerspacer'} className={styles.tictac_header}>Enter A Task Summary</div>
+          <div key={'headerspacer'} className={styles.summary_header}>Task Summary</div>
           {summaryElements}
         </div>
         <div className={styles.right_column}>

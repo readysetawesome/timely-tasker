@@ -24,7 +24,7 @@ const TaskRowSummary = ({ summary, updateSummary, slot, useDate }: TaskRowSummar
   , [setSummary]);
 
   return (
-    <div className={styles.grid_summary}>
+    <div className={styles.summary_cell}>
       <input
         className={styles.summary_input_container}
         type="text"
