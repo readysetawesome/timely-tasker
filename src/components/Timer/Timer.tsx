@@ -57,7 +57,6 @@ const Timer = ({
       {TimerTicks: [], Slot: i, Date: date, Content: ''} as Summary;
 
     const setSummaryState = (s: Summary) => {
-
       setSummaries([
         { Content: foundSummary.ID ? foundSummary.Content : s.Content, ...s },
         ...summaries.filter((_s) => _s.Slot !== i),
@@ -66,14 +65,20 @@ const Timer = ({
 
     summaryElements.push(
       <TaskRowSummary
-        { ... { setSummaryState, key: i, useDate: date, slot: i }}
+        setSummaryState={setSummaryState}
+        key={i}
+        useDate={date}
+        slot={i}
         summary={foundSummary}
       />
     )
 
     tickRowElements.push(
       <TaskRowTicks
-        { ... { setSummaryState, key: i, useDate: date, slot: i }}
+        setSummaryState={setSummaryState}
+        key={i}
+        useDate={date}
+        slot={i}
         summary={foundSummary}
       />
     )
