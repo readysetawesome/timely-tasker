@@ -111,6 +111,15 @@ $tictac-margin: 2px 2px 2px 2px;
     border: 2px solid darkgray;
   }
 
+  .tictac_clicked {
+    width: $tictac-margin;
+    height: $tictac-height;
+    margin: $tictac-margin;
+    border-radius: 3px;
+    background-color: darkblue;
+    border: 2px solid darkgreen;
+  }
+
 }
 
 $input-background: #f5f5f5;
