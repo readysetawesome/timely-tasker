@@ -36,7 +36,7 @@ const Timer = ({
   const [summaries, setSummaries] = useState(new Array<Summary>());
 
   useEffect(() => {
-    RestApi.greet(data => setIdentity(data));
+    RestApi.greet(identity => setIdentity(identity));
   }, []);
 
   useEffect(() => {
@@ -53,27 +53,27 @@ const Timer = ({
   let tickRowElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     const foundSummary = summaries?.find((value) => value.Slot === i) ||
       {TimerTicks: [], Slot: i, Date: date, Content: ''} as Summary;
 
-    const updateSummary = (s: Summary) => {
+    const setSummaryState = (s: Summary) => {
+
       setSummaries([
-        s,
+        { Content: foundSummary.ID ? foundSummary.Content : s.Content, ...s },
         ...summaries.filter((_s) => _s.Slot !== i),
       ]);
     };
 
     summaryElements.push(
       <TaskRowSummary
-        { ... { updateSummary, key: i, useDate: date, slot: i }}
+        { ... { setSummaryState, key: i, useDate: date, slot: i }}
         summary={foundSummary}
       />
     )
 
     tickRowElements.push(
       <TaskRowTicks
-        { ... { updateSummary, key: i, useDate: date, slot: i }}
+        { ... { setSummaryState, key: i, useDate: date, slot: i }}
         summary={foundSummary}
       />
     )

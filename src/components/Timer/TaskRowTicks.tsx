@@ -8,7 +8,7 @@ export interface TaskRowTicksProps {
   summary?: Summary;
   slot: number;
   useDate: number;
-  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
+  setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
 export type TimerTick = {
@@ -19,7 +19,7 @@ export type TimerTick = {
   SummaryID?: number;
 };
 
-const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksProps) => {
+const TaskRowTicks = ({ summary, setSummaryState, slot, useDate }: TaskRowTicksProps) => {
   let ticks = new Array<JSX.Element>();
 
   for (let i = 0; i < 96; i++) {
@@ -36,8 +36,8 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
         summary.TimerTicks.filter((t: TimerTick) => t.TickNumber !== tick.TickNumber ) || [];
 
       summary.TimerTicks = [ ...ammendedlist, tick];
-      updateSummary(summary);
-    }, [summary, updateSummary]);
+      setSummaryState(summary);
+    }, [summary, setSummaryState]);
 
     ticks.push((
       <div className={styles.tictac_cell} key={i}>
@@ -47,7 +47,7 @@ const TaskRowTicks = ({ summary, updateSummary, slot, useDate }: TaskRowTicksPro
             tickNumber: i,
             timerTick: timerTick,
             setTick,
-            updateSummary,
+            setSummaryState,
           } }
         />
       </div>
