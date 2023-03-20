@@ -16,7 +16,7 @@ export interface TickProps {
   timerTick?: TimerTick;
   setTick: React.Dispatch<React.SetStateAction<TimerTick | undefined>>;
   summary: Summary;
-  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
+  setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
 const nextValue = (distracted) => {
@@ -36,7 +36,7 @@ type PubSubTickMessage = {
   beingDistracted: () => void,
 }
 
-const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickProps) => {
+const Tick = ({ tickNumber, timerTick, setTick, summary, setSummaryState }: TickProps) => {
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
 
@@ -49,6 +49,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
 
   useEffect(() => {
     const sub = PubSub.subscribe(`tick:${tickNumber}`, (_, message: PubSubTickMessage) => {
+      console.log("hi")
       if (message.summaryID === summary?.ID) {
         // This is my tick being updated by it's own click handler's side effects
         // If i'm to be marked distracted, let the others reply to this event by calling beingDistracted()
@@ -75,13 +76,13 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
     return () => PubSub.unsubscribe(sub)
   }, [summary, timerTick, tickNumber, setTick]);
 
+  const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
+    RestApi.createSummary(summary,  callback)
+  };
+
   const updateTick = useCallback((e) => {
     // Do a visual update immediately for "fast" feeling UI
     document.querySelector(`[data-test-id='${testIdAttr}']`).className = styles.tictac_clicked;
-
-    const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
-      RestApi.createSummary(summary,  callback)
-    };
 
     const createTick = (s: Summary) => {
       RestApi.createTick({
@@ -119,9 +120,13 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary(summary, (s) => [updateSummary(s), createTick(s)]);
+      createSummary(summary, (s) => {
+        createTick(s)
+      });
+
+
     }
-  }, [testIdAttr, summary, tickNumber, nextTickValue, setTick, timerTick, updateSummary]);
+  }, [testIdAttr, summary, tickNumber, nextTickValue, setTick, timerTick]);
 
   return <div className={style} onClick={updateTick} data-test-id={testIdAttr}/>;
 }

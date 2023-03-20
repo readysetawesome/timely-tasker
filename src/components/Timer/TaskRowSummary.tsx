@@ -9,12 +9,14 @@ export interface TaskRowSummaryProps {
   summary?: Summary;
   slot: number;
   useDate: number;
-  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
+  setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
-const TaskRowSummary = ({ summary, slot, useDate, updateSummary }: TaskRowSummaryProps) => {
-  const [inputText, setInputText] = useState('')
+const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSummaryProps) => {
+  const [inputText, setInputText] = useState('');
 
+  // Parent state is in charge here.
+  // Any change to the summary object needs to immediately affect input value
   useEffect(() => {
     if (summary) {
       setInputText(summary.Content);
@@ -24,8 +26,16 @@ const TaskRowSummary = ({ summary, slot, useDate, updateSummary }: TaskRowSummar
   const setSummary = useCallback((
     value: string,
   ) => {
-    RestApi.createSummary({Date: useDate, Content: value || "", Slot: slot} as Summary,  updateSummary)
-  }, [slot, updateSummary, useDate]);
+    const s = {
+      Date: useDate,
+      Content: value || "",
+      Slot: slot,
+      ID: summary.ID,
+      TimerTicks: summary.TimerTicks
+    } as Summary;
+    setSummaryState(s);
+    RestApi.createSummary(s, setSummaryState)
+  }, [summary.ID, summary.TimerTicks, useDate, slot, setSummaryState]);
 
   // why useMemo? http://tiny.cc/9zd5vz
   const debouncedChangeHandler = useMemo(
