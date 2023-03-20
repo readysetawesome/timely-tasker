@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
@@ -12,7 +12,14 @@ export interface TaskRowSummaryProps {
 };
 
 const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
-  // TODO: error handle this
+  const [inputText, setInputText] = useState('')
+
+  useEffect(() => {
+    if (summary) {
+      setInputText(summary.Content);
+    }
+  }, [summary]);
+
   const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
     RestApi.createSummary({Date: useDate, Content: value || "", Slot: slot} as Summary,  callback)
   }, [slot, useDate]);
@@ -27,8 +34,8 @@ const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
       <input
         className={styles.summary_input_container}
         type="text"
-        defaultValue={summary?.Content}
-        onChange={debouncedChangeHandler}
+        value={inputText}
+        onChange={(e) => [setInputText(e.target.value), debouncedChangeHandler(e)]}
         placeholder="enter a summary"
       />
     </div>
