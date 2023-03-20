@@ -9,9 +9,10 @@ export interface TaskRowSummaryProps {
   summary?: Summary;
   slot: number;
   useDate: number;
+  updateSummary: React.Dispatch<React.SetStateAction<Summary>>;
 };
 
-const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ summary, slot, useDate, updateSummary }: TaskRowSummaryProps) => {
   const [inputText, setInputText] = useState('')
 
   useEffect(() => {
@@ -20,14 +21,18 @@ const TaskRowSummary = ({ summary, slot, useDate }: TaskRowSummaryProps) => {
     }
   }, [summary]);
 
-  const setSummary = useCallback((value: string, callback = (summary: Summary) => {}) => {
-    RestApi.createSummary({Date: useDate, Content: value || "", Slot: slot} as Summary,  callback)
-  }, [slot, useDate]);
+  const setSummary = useCallback((
+    value: string,
+  ) => {
+    RestApi.createSummary({Date: useDate, Content: value || "", Slot: slot} as Summary,  updateSummary)
+  }, [slot, updateSummary, useDate]);
 
   // why useMemo? http://tiny.cc/9zd5vz
   const debouncedChangeHandler = useMemo(
-    () => debounce(event => setSummary(event.target.value), 800)
-  , [setSummary]);
+    () => debounce(event => {
+      setSummary(event.target.value);
+    }
+  , 800), [setSummary]);
 
   return (
     <div className={styles.summary_cell}>

@@ -1,8 +1,8 @@
 import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
-import type { Env } from "../lib/Identity"
-import { GetIdentity } from "../lib/Identity"
+import type { Env } from "../lib/Identity";
+import { GetIdentity } from "../lib/Identity";
 import { PagesFunction } from "@cloudflare/workers-types";
-import { TimerTick } from "./ticks";
+import { TimerTick } from "../src/components/Timer/TaskRowTicks";
 
 const FULL_JSON_OBJECT_SELECT = `
   Summaries.ID, Summaries.Content, Summaries.Date, Summaries.Slot, (
@@ -19,7 +19,7 @@ const FULL_JSON_OBJECT_SELECT = `
     FROM TimerTicks TT
     WHERE TT.SummaryID = Summaries.ID
   ) as TimerTicks
-`
+`;
 
 const JsonHeader = {
   headers: {

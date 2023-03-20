@@ -114,7 +114,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
       });
     }
 
-    if (summary?.ID !== undefined) {
+    if (summary.ID !== undefined) {
       createTick(summary);
     } else {
       // We need a summaryID to associate the ticks with,
