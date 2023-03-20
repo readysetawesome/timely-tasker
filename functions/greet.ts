@@ -41,7 +41,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
 
     const batch = await env.DB.batch([
       env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`)
-        .bind(jwtIdentity.name, jwtIdentity.email),
+        .bind(jwtIdentity.name || "", jwtIdentity.email),
       env.DB.prepare(`INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`)
         .bind(provider.ID, jwtIdentity.user_uuid),
       env.DB.prepare(`

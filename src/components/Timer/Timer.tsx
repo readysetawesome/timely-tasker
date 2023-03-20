@@ -42,7 +42,7 @@ const Timer = ({
   useEffect(() => {
     if (identity.ID !== undefined) {
       setGreeting(`
-        Hello, ${identity.DisplayName}!
+        Hello, ${ identity.DisplayName === "" ? "my friend" : identity.DisplayName }!
         You are logged in with ${identity.ProviderName}.
       `);
       RestApi.getSummaries(date, summaries => setSummaries(summaries));
