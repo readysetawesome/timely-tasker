@@ -74,13 +74,11 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
           if (!message.fulfilled) {
             // I need to update myself to distracted now...
             setVisualUpdate(1);
-            setTimeout(() => {
-              RestApi.createTick({
-                tickNumber, summary: summary, distracted: 1
-              } as TickChangeEvent, newTimerTick => {
-                setTick(newTimerTick);
-                message.beingDistracted();
-              });
+            RestApi.createTick({
+              tickNumber, summary: summary, distracted: 1
+            } as TickChangeEvent, newTimerTick => {
+              setTick(newTimerTick);
+              message.beingDistracted();
             });
             // ... and dispatch to the initiator so they can update to "distracted" state
             message.fulfilled = true;
@@ -112,12 +110,10 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
               // with multiple tasks as once.
               // The receiver should only run it once! Then set fulfilled = true
               setVisualUpdate(1);
-              setTimeout(() => {
-                RestApi.createTick({
-                  tickNumber, summary: s, distracted: 1
-                } as TickChangeEvent, (newTimerTick: TimerTick) => {
-                  setTick(newTimerTick);
-                });
+              RestApi.createTick({
+                tickNumber, summary: s, distracted: 1
+              } as TickChangeEvent, (newTimerTick: TimerTick) => {
+                setTick(newTimerTick);
               });
             }
           });
@@ -126,7 +122,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
           if (timerTick) {
             setVisualUpdate(-1);
             timerTick.Distracted = -1;
-            setTimeout(() => setTick({ ...timerTick }));
+            setTick({ ...timerTick });
           }
         }
       });
