@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import RestApi from "../../RestApi";
@@ -20,7 +20,7 @@ export interface TickProps {
 };
 
 const nextValue = (distracted) => {
-  // rotate through the ticktac states empty => filled => slash (distracted)
+  // rotate through the tictac states empty(-1/undef) => filled(0) => slash(1)
   return (
     distracted === 1 ? -1 :
     distracted === 0 ? 1 :
@@ -80,7 +80,6 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
     document.querySelector(`[data-test-id='${testIdAttr}']`).className = styles.tictac_clicked;
 
     const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
-      console.log("create a new summary", summary)
       RestApi.createSummary(summary,  callback)
     };
 

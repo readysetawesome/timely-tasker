@@ -45,7 +45,7 @@ const Timer = ({
         Hello, ${identity.DisplayName}!
         You are logged in with ${identity.ProviderName}.
       `);
-      RestApi.getSummaries(date, data => setSummaries([ ...data ]));
+      RestApi.getSummaries(date, summaries => setSummaries(summaries));
     }
   }, [identity, date]);
 
