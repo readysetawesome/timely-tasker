@@ -2,7 +2,7 @@ import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
 import type { Env } from "../lib/Identity"
 import { GetIdentity } from "../lib/Identity"
 import { PagesFunction } from "@cloudflare/workers-types";
-import { TimerTick } from "../src/components/Timer/TaskRow";
+import { TimerTick } from "../src/components/Timer/TaskRowTicks";
 
 const JsonHeader = {
   headers: {
