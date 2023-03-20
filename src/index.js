@@ -5,21 +5,15 @@ import './index.css';
 import App from './App';
 import Timer from './components/Timer/Timer.tsx';
 
-
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root')
-);
-
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<App />}>
-
-      </Route>
+      <Route path="/" element={<App />}></Route>
       <Route path="timer" element={<App />} />
     </Routes>
   </BrowserRouter>

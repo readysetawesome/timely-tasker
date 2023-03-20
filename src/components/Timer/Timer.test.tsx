@@ -4,31 +4,33 @@ import React from 'react';
 
 import Timer, { dateDisplay } from './Timer';
 import { Summary } from '../../../functions/summaries';
-import RestApi from "../../RestApi";
-import fakeIdentity from "../../../fixtures/identity.json";
+import RestApi from '../../RestApi';
+import fakeIdentity from '../../../fixtures/identity.json';
 import { todaysDateInt } from '../../App';
 
-const fakeSummaries = [{
-  ID: 321,
-  UserID: fakeIdentity.UserID,
-  Content: "summary",
-  Date: todaysDateInt(new Date(2023, 3, 13, 2, 22, 22)),
-  Slot: 0,
-  TimerTicks: [],
-} as Summary ];
+const fakeSummaries = [
+  {
+    ID: 321,
+    UserID: fakeIdentity.UserID,
+    Content: 'summary',
+    Date: todaysDateInt(new Date(2023, 3, 13, 2, 22, 22)),
+    Slot: 0,
+    TimerTicks: [],
+  } as Summary,
+];
 
 const defaultTimerParams = {
   leftNavClicker: <div></div>,
   rightNavClicker: <div></div>,
-}
+};
 
 const original = RestApi;
 const restoreApi = () => {
-  return global.RestApi = original;
-}
+  return (global.RestApi = original);
+};
 
 beforeEach(() => {
-  RestApi.greet = (callback) => callback(fakeIdentity);
+  RestApi.greet = callback => callback(fakeIdentity);
   RestApi.getSummaries = (_, callback) => callback(fakeSummaries);
 });
 
@@ -37,24 +39,31 @@ afterEach(() => {
 });
 
 test('renders the greeting', async () => {
-  render(<Timer date={todaysDateInt()} { ...defaultTimerParams }/>);
-  expect(await screen.findByText(/You are logged in with github./i)).toBeInTheDocument()
+  render(<Timer date={todaysDateInt()} {...defaultTimerParams} />);
+  expect(
+    await screen.findByText(/You are logged in with github./i)
+  ).toBeInTheDocument();
 });
 
 test('renders the date', async () => {
-  render(<Timer date={todaysDateInt(new Date(2023, 2, 13, 2, 22, 22))} { ...defaultTimerParams } />);
-  expect(await screen.findByText(/Work Date: 3-13-2023/i)).toBeInTheDocument()
+  render(
+    <Timer
+      date={todaysDateInt(new Date(2023, 2, 13, 2, 22, 22))}
+      {...defaultTimerParams}
+    />
+  );
+  expect(await screen.findByText(/Work Date: 3-13-2023/i)).toBeInTheDocument();
 });
 
-describe("dateDisplay", () => {
+describe('dateDisplay', () => {
   test('renders the date correctly when UTC boundary is crossed for GMT-700 zone', () => {
     const MAR_17 = 1679011200000;
     const ONE_DAY = 86400000;
     // 1679011200000 - 86400000 : should be Mar 16
-    expect(dateDisplay(MAR_17 - ONE_DAY)).toBe('3-16-2023')
+    expect(dateDisplay(MAR_17 - ONE_DAY)).toBe('3-16-2023');
     // 1679011200000: should be Mar 17
-    expect(dateDisplay(MAR_17)).toBe('3-17-2023')
+    expect(dateDisplay(MAR_17)).toBe('3-17-2023');
     // 1679011200000 + 86400000 : should be Mar 18
-    expect(dateDisplay(MAR_17 + ONE_DAY)).toBe('3-18-2023')
-  })
-})
+    expect(dateDisplay(MAR_17 + ONE_DAY)).toBe('3-18-2023');
+  });
+});

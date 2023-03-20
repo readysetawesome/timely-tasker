@@ -15,7 +15,6 @@ $tictac-margin: 2px 2px 2px 2px;
       left: 1%;
       width: 29%;
 
-
       background-color: #ccc;
     }
 
@@ -27,9 +26,7 @@ $tictac-margin: 2px 2px 2px 2px;
       margin-left: 30%;
       overflow-x: auto;
       background-color: #eee;
-
     }
-
   }
 
   .summary_cell {
@@ -39,7 +36,6 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .grid_ticks {
-
     display: grid;
     grid-template-columns: repeat(96, 18px);
   }
@@ -89,14 +85,14 @@ $tictac-margin: 2px 2px 2px 2px;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
-    border:2px solid darkgray;
-    position:relative;
+    border: 2px solid darkgray;
+    position: relative;
   }
-  .tictac_distracted:after{
-    content:"";
-    position:absolute;
-    border-top:2px solid darkslategray;
-    width:23px;
+  .tictac_distracted:after {
+    content: '';
+    position: absolute;
+    border-top: 2px solid darkslategray;
+    width: 23px;
     left: 0px;
     transform: rotate(57deg);
     transform-origin: 0% 0%;
@@ -119,7 +115,6 @@ $tictac-margin: 2px 2px 2px 2px;
     background-color: darkblue;
     border: 2px solid darkgreen;
   }
-
 }
 
 $input-background: #f5f5f5;
@@ -128,24 +123,23 @@ $input-border-radius: 4px;
 $input-font-size: 16px;
 $input-font-color: #333;
 
+input[type='text'] {
+  flex: 1;
 
-  input[type="text"] {
-    flex: 1;
+  margin: 2px;
 
-    margin: 2px;
+  border: none;
+  border-radius: $input-border-radius;
+  background-color: $input-background;
+  font-size: $input-font-size;
+  color: $input-font-color;
 
-    border: none;
-    border-radius: $input-border-radius;
-    background-color: $input-background;
-    font-size: $input-font-size;
-    color: $input-font-color;
-
-    &::placeholder {
-      color: #c5c5c5;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
+  &::placeholder {
+    color: #c5c5c5;
   }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+}
