@@ -1,5 +1,4 @@
-
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
 import RestApi from "../../RestApi";
@@ -38,15 +37,27 @@ type PubSubTickMessage = {
 }
 
 const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickProps) => {
-  const distracted = timerTick?.Distracted;
+  const [preHttpOverrideValue, setPreHttpOverrideValue] = useState<number>();
+
+  const distracted = preHttpOverrideValue || timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
+
+  const setVisualUpdate = useCallback((distracted: number) => {
+    setPreHttpOverrideValue(distracted);
+    const timer = setTimeout(() => setPreHttpOverrideValue(undefined), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const style =
     distracted === 1 ? styles.tictac_distracted :
     distracted === 0 ? styles.tictac_focused :
     styles.tictac_empty;
 
-  const distractedCallback = useCallback((tick: TimerTick) => setTick(tick), [setTick])
+  const overrideStyle =
+    preHttpOverrideValue === undefined ? undefined :
+    preHttpOverrideValue === 1 ? styles.tictac_distracted :
+    preHttpOverrideValue === 0 ? styles.tictac_focused :
+    styles.tictac_empty;
 
   useEffect(() => {
     const sub = PubSub.subscribe(`tick:${tickNumber}`, (_, message: PubSubTickMessage) => {
@@ -54,29 +65,33 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
         // This is my tick being updated by it's own click handler's side effects
         // If i'm to be marked distracted, let the others reply to this event by calling beingDistracted()
         // Removed ticks are fully deleted, so we produce an empty state here to replace the rendered component
-        setTick(message.tick ? message.tick : {Distracted: -1, TickNumber: tickNumber, SummaryID: message.summaryID})
+        const tick = message.tick ? {...message.tick} : {Distracted: -1, TickNumber: tickNumber, SummaryID: message.summaryID};
+        setVisualUpdate(tick.Distracted);
+        setTick(tick);
       } else {
         // Some other row was changed
         if (message.tick.Distracted === 0 && (timerTick?.Distracted === 0 || timerTick?.Distracted === 1)) {
           if (!message.fulfilled) {
             // I need to update myself to distracted now...
+            setVisualUpdate(1);
             RestApi.createTick({
               tickNumber, summary: summary, distracted: 1
             } as TickChangeEvent, newTimerTick => {
               setTick(newTimerTick);
+              message.beingDistracted();
             });
             // ... and dispatch to the initiator so they can update to "distracted" state
             message.fulfilled = true;
-            message.beingDistracted();
           }
         }
       }
     });
     return () => PubSub.unsubscribe(sub)
-  }, [summary, timerTick, summary?.ID, tickNumber, setTick, distracted, distractedCallback]);
+  }, [summary, timerTick, tickNumber, setTick, setVisualUpdate]);
 
   const updateTick = useCallback(() => {
-    const createSummary = (value: string, summary: Summary, callback = (s: Summary) => {}) => {
+    const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
+      console.log("create a new summary", summary)
       RestApi.createSummary(summary,  callback)
     };
 
@@ -94,6 +109,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
               // this callback is invoked to notify that user is distracted by engaging
               // with multiple tasks as once.
               // The receiver should only run it once! Then set fulfilled = true
+              setVisualUpdate(1);
               RestApi.createTick({
                 tickNumber, summary: s, distracted: 1
               } as TickChangeEvent, (newTimerTick: TimerTick) => {
@@ -104,7 +120,8 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
         else {
           // don't pub deletes, only change my visual state
           if (timerTick) {
-            timerTick.Distracted = nextTickValue;
+            setVisualUpdate(-1);
+            timerTick.Distracted = -1;
             setTick({ ...timerTick });
           }
         }
@@ -116,11 +133,11 @@ const Tick = ({ tickNumber, timerTick, setTick, summary, updateSummary }: TickPr
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary('', summary, (s) => [updateSummary(s), createTick(s)]);
+      createSummary(summary, (s) => [updateSummary(s), createTick(s)]);
     }
-  }, [summary, tickNumber, nextTickValue, setTick, timerTick, updateSummary]);
+  }, [summary, tickNumber, nextTickValue, setVisualUpdate, setTick, timerTick, updateSummary]);
 
-  return <div className={style} onClick={updateTick} />;
+  return <div className={overrideStyle || style} onClick={updateTick} />;
 }
 
 export default Tick;

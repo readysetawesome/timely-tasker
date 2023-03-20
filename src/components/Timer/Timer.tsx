@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { Identity } from "../../../lib/Identity";
 import { Summary } from "../../../functions/summaries"
 import styles from "./Timer.module.scss";
@@ -24,9 +24,13 @@ const Header = () => {
 
 export interface TimerProps {
   date: number,
+  leftNavClicker: ReactElement,
+  rightNavClicker: ReactElement,
 };
 
-const Timer = ({ date }: TimerProps) => {
+const Timer = ({
+  date, leftNavClicker, rightNavClicker
+}: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState("");
   const [summaries, setSummaries] = useState(new Array<Summary>());
@@ -39,10 +43,9 @@ const Timer = ({ date }: TimerProps) => {
     if (identity.ID !== undefined) {
       setGreeting(`
         Hello, ${identity.DisplayName}!
-        Found your login info via ${identity.ProviderName}, lets get started!
+        You are logged in with ${identity.ProviderName}.
       `);
-      setSummaries([]);
-      RestApi.getSummaries(date, data => setSummaries(data));
+      RestApi.getSummaries(date, data => setSummaries([ ...data ]));
     }
   }, [identity, date]);
 
@@ -50,11 +53,16 @@ const Timer = ({ date }: TimerProps) => {
   let tickRowElements = new Array<JSX.Element>();
 
   for (let i = 0; i < 20; i++) {
-    // This linter disable is a very special case:
-    // Its only OK because the loop runs a fixed number of times for 20 rows
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [summary, updateSummary] = useState<Summary>();
-    const foundSummary = summaries.find((value) => value.Slot === i) || summary;
+    const foundSummary = summaries?.find((value) => value.Slot === i) ||
+      {TimerTicks: [], Slot: i, Date: date, Content: ''} as Summary;
+
+    const updateSummary = (s: Summary) => {
+      setSummaries([
+        s,
+        ...summaries.filter((_s) => _s.Slot !== i),
+      ]);
+    };
 
     summaryElements.push(
       <TaskRowSummary
@@ -72,14 +80,19 @@ const Timer = ({ date }: TimerProps) => {
   }
 
   return <>
-    <div>{greeting || "loading..."}</div>
+    <div>
+      <h1>The Timely Tasker</h1>
+      <h2>
+        { leftNavClicker }
+        Work Date: {dateDisplay(date)}
+        { rightNavClicker }
+      </h2>
+      <p>{greeting || "loading..."}</p>
+    </div>
     <div className={styles.Timer}>
-      <h1>The Emergent Task Timer App</h1>
-      <h2>Showing data for {dateDisplay(date)}</h2>
-
       <div className={styles.content}>
         <div className={styles.left_column}>
-          <div key={'headerspacer'} className={styles.tictac_header}>Enter A Task Summary</div>
+          <div key={'headerspacer'} className={styles.summary_header}>Task Summary</div>
           {summaryElements}
         </div>
         <div className={styles.right_column}>
