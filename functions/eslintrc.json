@@ -1,0 +1,37 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "overrides": [],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "tsconfig.json"
+  },
+  "plugins": ["@typescript-eslint", "jest", "react", "react-hooks"],
+  "rules": {
+    "no-empty-function": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-esline/property-will-be-overwritten-by-spread": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "prettier/prettier": [
+      "warn",
+      {
+        "tabWidth": 2,
+        "useTabs": false,
+        "singleQuote": true,
+        "trailingComma": "all",
+        "printWidth": 120
+      }
+    ]
+  }
+}

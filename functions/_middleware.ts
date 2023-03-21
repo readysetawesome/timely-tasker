@@ -1,4 +1,4 @@
-import cloudflareAccessPlugin from "@cloudflare/pages-plugin-cloudflare-access";
+import cloudflareAccessPlugin from '@cloudflare/pages-plugin-cloudflare-access';
 
 interface Env {
   AUDIENCE: string;
@@ -27,7 +27,7 @@ const onRequestCors: PagesFunction = async ({ next }) => {
   return response;
 };
 
-const onRequestDoPlugin: PagesFunction<Env> = (context) => {
+const onRequestDoPlugin: PagesFunction<Env> = context => {
   const aud = context.env.AUDIENCE;
   if (typeof aud !== 'string') {
     // must be local dev mode, just pass through
@@ -35,10 +35,10 @@ const onRequestDoPlugin: PagesFunction<Env> = (context) => {
     return context.next();
   } else {
     return cloudflareAccessPlugin({
-      domain: "https://timely-tasker.cloudflareaccess.com",
-      aud: aud
+      domain: 'https://timely-tasker.cloudflareaccess.com',
+      aud: aud,
     })(context);
   }
-}
+};
 
-export const onRequest = [onRequestCors, onRequestDoPlugin]
+export const onRequest = [onRequestCors, onRequestDoPlugin];

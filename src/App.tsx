@@ -3,33 +3,34 @@ import './App.css';
 
 import Timer from './components/Timer/Timer';
 
-
 const ONE_DAY_MILLIS = 86400000;
 
 export const todaysDateInt = (now?: Date) => {
   if (!now) now = new Date();
   const myZeroHour = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   return myZeroHour;
-}
+};
 
 function App() {
   const [date, setDate] = useState(todaysDateInt());
-  const leftNavClicker =
-    <span style={{cursor: 'pointer'}} onClick={() => setDate(date - ONE_DAY_MILLIS)}>
+  const leftNavClicker = (
+    <span style={{ cursor: 'pointer' }} onClick={() => setDate(date - ONE_DAY_MILLIS)}>
       &lt;&lt;&nbsp;&nbsp;&nbsp;
-    </span>;
+    </span>
+  );
 
-  const rightNavClicker =
-    <span style={{cursor: 'pointer'}} onClick={() => setDate(date + ONE_DAY_MILLIS)}>
+  const rightNavClicker = (
+    <span style={{ cursor: 'pointer' }} onClick={() => setDate(date + ONE_DAY_MILLIS)}>
       &nbsp;&nbsp;&nbsp;&gt;&gt;
-    </span>;
+    </span>
+  );
 
   return (
     <div className="App">
       <header>
         <a href="https://github.com/readysetawesome/timely-tasker">Timely Tasker Github Project</a>
       </header>
-      <Timer { ...{ date, leftNavClicker, rightNavClicker } } />
+      <Timer {...{ date, leftNavClicker, rightNavClicker }} />
     </div>
   );
 }

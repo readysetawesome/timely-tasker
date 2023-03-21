@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictNullChecks": true,
     "target": "esnext",
     "module": "esnext",
     "lib": ["esnext", "dom"],
@@ -11,6 +12,8 @@
   },
   "include": [
     "./src/**/*",
-    "declaration.d.ts"
+    "declaration.d.ts",
+    "./functions/*",
+    "./lib/*"
   ]
 }
