@@ -1,19 +1,16 @@
-import type { PluginData } from "@cloudflare/pages-plugin-cloudflare-access";
-import type { Env } from "../lib/Identity"
-import { GetIdentity } from "../lib/Identity"
-import { PagesFunction } from "@cloudflare/workers-types";
+import type { PluginData } from '@cloudflare/pages-plugin-cloudflare-access';
+import type { Env, Identity } from '../lib/Identity';
+import { GetIdentity } from '../lib/Identity';
 
 const JsonHeader = {
   headers: {
-    'content-type': 'application/json;charset=UTF-8'
-  }
-}
+    'content-type': 'application/json;charset=UTF-8',
+  },
+};
 
 const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, any, PluginData> = async ({
-  data, env
-}) => {
+export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env }) => {
   const result = await GetIdentity(data, env);
   let { identity } = result;
   const { jwtIdentity, provider, error } = result;
@@ -34,27 +31,31 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({
 
     const existingUser: any = await userQuery.bind(jwtIdentity.email).first();
 
-    if (existingUser) return errorResponse(`
+    if (existingUser)
+      return errorResponse(`
       A user already signed up with this email address using ${existingUser.ProviderName}.
       Was it you? If it was you, try logging in with ${existingUser.ProviderName} instead.
     `);
 
     const batch = await env.DB.batch([
-      env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`)
-        .bind(jwtIdentity.name || "", jwtIdentity.email),
-      env.DB.prepare(`INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`)
-        .bind(provider.ID, jwtIdentity.user_uuid),
+      env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`).bind(
+        jwtIdentity.name || '',
+        jwtIdentity.email,
+      ),
+      env.DB.prepare(
+        `INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`,
+      ).bind(provider.ID, jwtIdentity.user_uuid),
       env.DB.prepare(`
         SELECT * FROM Identities, Providers, Users
         WHERE Users.ID = UserID
           AND Providers.ID = ProviderID
           AND Identities.ID = last_insert_rowid()
       `),
-    ])
+    ]);
 
-    if (!batch[1].success) return errorResponse("unable to insert new  User & Identity mapping");
+    if (!batch[1].success) return errorResponse('unable to insert new  User & Identity mapping');
 
-    identity = batch[2].results?.[0];
+    identity = batch[2].results?.[0] as unknown as Identity;
   }
 
   return new Response(JSON.stringify(identity, null, 2), JsonHeader);
