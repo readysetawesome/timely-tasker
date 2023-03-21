@@ -111,15 +111,34 @@ $tictac-margin: 2px 2px 2px 2px;
     border: 2px solid darkgray;
   }
 
-  .tictac_clicked {
+  .tictac_clicked_0,
+  .tictac_clicked_1,
+  .tictac_clicked_2 {
     width: $tictac-margin;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
-    background-color: darkblue;
-    border: 2px solid darkgreen;
+
   }
 
+  .tictac_clicked_0 {
+    background-color: lightblue;
+    border: 2px solid darkblue;
+  }
+
+  .tictac_clicked_1 {
+    background-color: blue;
+    border: 2px solid blue;
+  }
+
+  .tictac_clicked_2 {
+    background-color: darkblue;
+    border: 2px solid lightblue;
+  }
+}
+
+:root {
+  --animate-delay: 0.1s;
 }
 
 $input-background: #f5f5f5;
@@ -128,24 +147,23 @@ $input-border-radius: 4px;
 $input-font-size: 16px;
 $input-font-color: #333;
 
+input[type="text"] {
+  flex: 1;
 
-  input[type="text"] {
-    flex: 1;
+  margin: 2px;
 
-    margin: 2px;
+  border: none;
+  border-radius: $input-border-radius;
+  background-color: $input-background;
+  font-size: $input-font-size;
+  color: $input-font-color;
 
-    border: none;
-    border-radius: $input-border-radius;
-    background-color: $input-background;
-    font-size: $input-font-size;
-    color: $input-font-color;
-
-    &::placeholder {
-      color: #c5c5c5;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
+  &::placeholder {
+    color: #c5c5c5;
   }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Summary } from '../../../functions/summaries';
 import styles from './Timer.module.scss';
 import RestApi from '../../RestApi';
@@ -33,6 +33,8 @@ type PubSubTickMessage = {
 };
 
 const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
+  const [doAnimate, setDoAnimate] = useState(false);
+
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
 
@@ -43,8 +45,10 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
 
   useEffect(() => {
     const sub = PubSub.subscribe(`tick:${tickNumber}`, (_, message: PubSubTickMessage) => {
-      // only respond to pubsub from other summary rows within the same column
-      if (message.summaryID !== summary?.ID) {
+      if (message.summaryID === summary?.ID) {
+        // This was my update, stop animating
+        setDoAnimate(false);
+      } else {
         // Some other row was changed
         if (message.tick.Distracted === 0 && (timerTick?.Distracted === 0 || timerTick?.Distracted === 1)) {
           if (!message.fulfilled) {
@@ -67,18 +71,17 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
       }
     });
     return () => PubSub.unsubscribe(sub);
-  }, [summary, timerTick, tickNumber, setTick]);
+  }, [summary, timerTick, tickNumber, setTick, setDoAnimate]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
     RestApi.createSummary(summary, callback);
   };
 
+
   const updateTick = useCallback(() => {
     // Do a visual update immediately for "fast" feeling UI
-    const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
-    if (element) element.className = styles.tictac_clicked;
-
+    setDoAnimate(true);
     const createTick = (s: Summary) => {
       RestApi.createTick(
         {
@@ -105,6 +108,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
                     distracted: 1,
                   } as TickChangeEvent,
                   (newTimerTick: TimerTick) => {
+                    setDoAnimate(false);
                     setTick(newTimerTick);
                   },
                 );
@@ -114,6 +118,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
             // don't pub deletes, only change my visual state
             if (timerTick) {
               timerTick.Distracted = -1;
+              setDoAnimate(false);
               setTick({ ...timerTick });
             }
           }
@@ -130,9 +135,11 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
         createTick(s);
       });
     }
-  }, [testIdAttr, summary, tickNumber, nextTickValue, setTick, timerTick]);
+  }, [summary, tickNumber, nextTickValue, setTick, timerTick, setDoAnimate]);
 
-  return <div className={style} onClick={updateTick} data-test-id={testIdAttr} />;
+  return (
+    <div className={doAnimate ? `animate__animated animate__bounce ${style}` : style } onClick={updateTick} data-test-id={testIdAttr} />
+  );
 };
 
 export default Tick;
