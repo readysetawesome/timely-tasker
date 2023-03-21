@@ -29,7 +29,6 @@
 #### Features:
 * built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
 * modern react front-end using hooks and all the latest goodies I can get my hands on
-* strong user Identity and data ownership via [CloudFlare Access plugin](https://developers.cloudflare.com/pages/platform/functions/plugins/cloudflare-access/) integration and JWT assertions
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
 * pipeline integration with [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker) and [testspace](https://readysetawesome.testspace.com/spaces/208089/current/303007), ++README badges!
 
