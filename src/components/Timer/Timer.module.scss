@@ -14,8 +14,6 @@ $tictac-margin: 2px 2px 2px 2px;
       position: absolute;
       left: 1%;
       width: 29%;
-
-
       background-color: #ccc;
     }
 
@@ -27,9 +25,7 @@ $tictac-margin: 2px 2px 2px 2px;
       margin-left: 30%;
       overflow-x: auto;
       background-color: #eee;
-
     }
-
   }
 
   .summary_cell {
@@ -39,14 +35,12 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .grid_ticks {
-
     display: grid;
     grid-template-columns: repeat(96, 18px);
   }
 
   .summary_header {
     height: $row-item-height;
-
     display: grid;
     grid-template-columns: 100%;
   }
@@ -116,8 +110,8 @@ $tictac-margin: 2px 2px 2px 2px;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
-    background-color: darkblue;
     border: 2px solid darkgreen;
+    animation: wiggle 1s linear infinite;
   }
 
 }
@@ -128,24 +122,48 @@ $input-border-radius: 4px;
 $input-font-size: 16px;
 $input-font-color: #333;
 
+input[type="text"] {
+  flex: 1;
 
-  input[type="text"] {
-    flex: 1;
+  margin: 2px;
 
-    margin: 2px;
+  border: none;
+  border-radius: $input-border-radius;
+  background-color: $input-background;
+  font-size: $input-font-size;
+  color: $input-font-color;
 
-    border: none;
-    border-radius: $input-border-radius;
-    background-color: $input-background;
-    font-size: $input-font-size;
-    color: $input-font-color;
-
-    &::placeholder {
-      color: #c5c5c5;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
+  &::placeholder {
+    color: #c5c5c5;
   }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  }
+}
+
+/* Keyframes */
+@keyframes wiggle {
+  0%, 7% {
+    transform: rotateZ(0);
+  }
+  15% {
+    transform: rotateZ(-15deg);
+  }
+  20% {
+    transform: rotateZ(10deg);
+  }
+  25% {
+    transform: rotateZ(-10deg);
+  }
+  30% {
+    transform: rotateZ(6deg);
+  }
+  35% {
+    transform: rotateZ(-4deg);
+  }
+  40%, 100% {
+    transform: rotateZ(0);
+  }
+}
