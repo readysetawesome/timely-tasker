@@ -33,8 +33,8 @@
 * pipeline integration with [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker) and [testspace](https://readysetawesome.testspace.com/spaces/208089/current/303007), ++README badges!
 
 #### Coming:
-* speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)
-* navigate to prevoius dates (read only no cheating)
+* ~~speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)~~
+* ~~navigate to prevoius dates~~
 * something to highlight the current hour and bring attention
 
 ## Database Schema
