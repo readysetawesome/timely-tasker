@@ -41,7 +41,7 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
   // why useMemo? http://tiny.cc/9zd5vz
   const debouncedChangeHandler = useMemo(
     () =>
-      debounce(event => {
+      debounce((event) => {
         setSummary(event.target.value);
       }, 800),
     [setSummary],
@@ -53,8 +53,9 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         className={styles.summary_input_container}
         type="text"
         value={inputText}
-        onChange={e => [setInputText(e.target.value), debouncedChangeHandler(e)]}
+        onChange={(e) => [setInputText(e.target.value), debouncedChangeHandler(e)]}
         placeholder="enter a summary"
+        data-test-id={`summary-text-${slot}`}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
 import RestApi from '../../RestApi';
 
-export const dateDisplay = date => {
+export const dateDisplay = (date) => {
   date = new Date(date);
   return `${date.getUTCMonth() + 1}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
 };
@@ -37,7 +37,13 @@ const Timer = ({ date, leftNavClicker, rightNavClicker }: TimerProps) => {
   const [summaries, setSummaries] = useState(new Array<Summary>());
 
   useEffect(() => {
-    RestApi.greet(identity => setIdentity(identity));
+    RestApi.greet((identity) => setIdentity(identity));
+    const date = new Date();
+    const targetTickNumber = date.getHours() * 4;
+    const targetTick = document.querySelector(`[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`);
+    if (targetTick) {
+      targetTick.scrollIntoView({ block: 'nearest', inline: 'start' });
+    }
   }, []);
 
   useEffect(() => {
@@ -46,7 +52,7 @@ const Timer = ({ date, leftNavClicker, rightNavClicker }: TimerProps) => {
         Hello, ${identity.DisplayName === '' ? 'my friend' : identity.DisplayName}!
         You are logged in with ${identity.ProviderName}.
       `);
-      RestApi.getSummaries(date, summaries => setSummaries(summaries));
+      RestApi.getSummaries(date, (summaries) => setSummaries(summaries));
     }
   }, [identity, date]);
 
@@ -55,16 +61,15 @@ const Timer = ({ date, leftNavClicker, rightNavClicker }: TimerProps) => {
 
   for (let i = 0; i < 20; i++) {
     const foundSummary =
-      summaries?.find(value => value.Slot === i) ||
+      summaries?.find((value) => value.Slot === i) ||
       ({ TimerTicks: [], Slot: i, Date: date, Content: '', ID: undefined, UserID: undefined } as Summary);
 
     const setSummaryState = (s: Summary) => {
-
       setSummaries([
         {
-          ...s
+          ...s,
         },
-        ...summaries.filter(_s => _s.Slot !== i),
+        ...summaries.filter((_s) => _s.Slot !== i),
       ]);
     };
 
@@ -86,7 +91,7 @@ const Timer = ({ date, leftNavClicker, rightNavClicker }: TimerProps) => {
           Work Date: {dateDisplay(date)}
           {rightNavClicker}
         </h2>
-        <p>{greeting || 'loading...'}</p>
+        <p data-test-id="greeting">{greeting || 'loading...'}</p>
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>

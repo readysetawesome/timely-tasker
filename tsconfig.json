@@ -4,14 +4,17 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["esnext", "dom"],
-    "types": ["@cloudflare/workers-types", "@testing-library/jest-dom", "jest", "node"],
+    "types": ["@cloudflare/workers-types", "@testing-library/jest-dom", "jest", "node", "cypress"],
     "moduleResolution":"node",
     "jsx": "react",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "./src/**/*",
+    "./cypress.config.ts",
+    "./src/**/*.ts*",
+    "./src/**/*.js*",
+    "./*.js",
     "declaration.d.ts",
     "./functions/*",
     "./lib/*"
