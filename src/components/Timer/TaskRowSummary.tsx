@@ -15,7 +15,17 @@ export interface TaskRowSummaryProps {
 const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSummaryProps) => {
   const [inputText, setInputText] = useState('');
 
-  // Parent state is in charge here.
+  /*
+    We keep track of a pending debounce, to defeat the following race condition:
+      * User types text, stops typing
+      * debounce begins -800ms remaining
+      * debounce completed - http dispatched (awaiting response)
+      * user types additional text, stops typing
+      * http response updates inbound `summary` prop, thus re-render previous text on line 32
+  */
+  const [pendingDebounce, setPendingDebounce] = useState(false);
+
+  // Parent state is in charge here. Unelss there's a debounce pending.
   // Any change to the summary object needs to immediately affect input value
   useEffect(() => {
     if (summary) {
@@ -33,19 +43,23 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         TimerTicks: summary?.TimerTicks,
       } as Summary;
 
-      RestApi.createSummary(s, setSummaryState);
+      RestApi.createSummary(s, (s) => {
+        if (!pendingDebounce) {
+          setSummaryState(s);
+        }
+      });
     },
-    [summary?.ID, summary?.TimerTicks, useDate, slot, setSummaryState],
+    [useDate, slot, summary?.ID, summary?.TimerTicks, pendingDebounce, setSummaryState],
   );
 
   // why useMemo? http://tiny.cc/9zd5vz
-  const debouncedChangeHandler = useMemo(
-    () =>
-      debounce((event) => {
-        setSummary(event.target.value);
-      }, 800),
-    [setSummary],
-  );
+  const debouncedChangeHandler = useMemo(() => {
+    setPendingDebounce(true);
+    return debounce((event) => {
+      setPendingDebounce(false);
+      setSummary(event.target.value);
+    }, 800);
+  }, [setSummary]);
 
   return (
     <div className={styles.summary_cell}>
@@ -53,7 +67,7 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         className={styles.summary_input_container}
         type="text"
         value={inputText}
-        onChange={(e) => [setInputText(e.target.value), debouncedChangeHandler(e)]}
+        onChange={(e) => [debouncedChangeHandler(e), setInputText(e.target.value)]}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
