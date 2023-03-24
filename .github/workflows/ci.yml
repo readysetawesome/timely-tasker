@@ -2,15 +2,18 @@ name: CI
 on:
   push:
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  cypress-run:
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cypress run
+        uses: cypress-io/github-action@v5
+        with:
+          component: true
       - uses: testspace-com/setup-testspace@v1
         with:
           domain: ${{ github.repository_owner }}
-      - name: Do testing stuff
-        run: npm install && npm test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -19,3 +22,4 @@ jobs:
         run: |
           testspace test-results.xml
         if: always()
+
