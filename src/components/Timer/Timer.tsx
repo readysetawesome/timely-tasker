@@ -27,24 +27,24 @@ const Header = () => {
 
 export interface TimerProps {
   date: number;
+  currentTime: Date;
   leftNavClicker: ReactElement;
   rightNavClicker: ReactElement;
 }
 
-const Timer = ({ date, leftNavClicker, rightNavClicker }: TimerProps) => {
+const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState('');
   const [summaries, setSummaries] = useState(new Array<Summary>());
 
   useEffect(() => {
     RestApi.greet((identity) => setIdentity(identity));
-    const date = new Date();
-    const targetTickNumber = date.getHours() * 4;
+    const targetTickNumber = currentTime.getHours() * 4 - 4;
     const targetTick = document.querySelector(`[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`);
     if (targetTick) {
       targetTick.scrollIntoView({ block: 'nearest', inline: 'start' });
     }
-  }, []);
+  }, [currentTime]);
 
   useEffect(() => {
     if (identity.ID !== undefined) {

@@ -11,7 +11,8 @@
 /coverage
 /.nyc_output
 test-results.xml
-.nycrc
+/cypress/videos
+/cypress/screenshots
 
 # production
 /build

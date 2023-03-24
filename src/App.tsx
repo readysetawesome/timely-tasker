@@ -30,7 +30,7 @@ function App() {
       <header>
         <a href="https://github.com/readysetawesome/timely-tasker">Timely Tasker Github Project</a>
       </header>
-      <Timer {...{ date, leftNavClicker, rightNavClicker }} />
+      <Timer {...{ date, currentTime: new Date(), leftNavClicker, rightNavClicker }} />
     </div>
   );
 }
