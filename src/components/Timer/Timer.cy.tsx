@@ -76,7 +76,7 @@ describe('<Timer />', () => {
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
     cy.clock();
-    cy.tick(100);
+    cy.tick(2000);
     cy.get("[data-test-id='1-31']")
       .first()
       .then(($el) => {
