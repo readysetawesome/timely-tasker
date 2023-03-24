@@ -75,15 +75,14 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
-    /*
-      This will pass locally but i think github CI run is too fast and doesn't get the interactive update in time.
-
+    cy.clock();
+    cy.tick(100);
     cy.get("[data-test-id='1-31']")
       .first()
       .then(($el) => {
         expect($el[0].className).to.contain('Timer_tictac_distracted');
       });
-    */
+
   });
 
   it('renders a summary input that doesnt cause problems on debounce/update', () => {
@@ -102,14 +101,11 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-2']").type(incompleteText);
     cy.tick(810);
 
-        cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
+    cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
 
-        cy.wait(['@createSummaryIncomplete']);
-        cy.get("[data-test-id='summary-text-2']").then(($el) => {
-          expect($el[0].getAttribute('value')).to.equal(targetText);
-        });
-
-
-
+    cy.wait(['@createSummaryIncomplete']);
+    cy.get("[data-test-id='summary-text-2']").then(($el) => {
+      expect($el[0].getAttribute('value')).to.equal(targetText);
+    });
   });
 });
