@@ -28,10 +28,10 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
   // Parent state is in charge here. Unelss there's a debounce pending.
   // Any change to the summary object needs to immediately affect input value
   useEffect(() => {
-    if (summary && !pendingDebounce) {
+    if (summary) {
       setInputText(summary.Content);
     }
-  }, [pendingDebounce, summary]);
+  }, [summary]);
 
   const setSummary = useCallback(
     (value: string) => {
@@ -43,20 +43,23 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         TimerTicks: summary?.TimerTicks,
       } as Summary;
 
-      RestApi.createSummary(s, setSummaryState);
+      RestApi.createSummary(s, (s) => {
+        if (!pendingDebounce) {
+          setSummaryState(s);
+        }
+      });
     },
-    [summary?.ID, summary?.TimerTicks, useDate, slot, setSummaryState],
+    [useDate, slot, summary?.ID, summary?.TimerTicks, pendingDebounce, setSummaryState],
   );
 
   // why useMemo? http://tiny.cc/9zd5vz
-  const debouncedChangeHandler = useMemo(
-    () =>
-      debounce((event) => {
-        setPendingDebounce(false);
-        setSummary(event.target.value);
-      }, 800),
-    [setSummary],
-  );
+  const debouncedChangeHandler = useMemo(() => {
+    setPendingDebounce(true);
+    return debounce((event) => {
+      setPendingDebounce(false);
+      setSummary(event.target.value);
+    }, 800);
+  }, [setSummary]);
 
   return (
     <div className={styles.summary_cell}>
@@ -64,7 +67,7 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         className={styles.summary_input_container}
         type="text"
         value={inputText}
-        onChange={(e) => [setPendingDebounce(true), setInputText(e.target.value), debouncedChangeHandler(e)]}
+        onChange={(e) => [debouncedChangeHandler(e), setInputText(e.target.value)]}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
