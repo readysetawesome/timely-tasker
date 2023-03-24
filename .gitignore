@@ -9,6 +9,9 @@
 
 # testing
 /coverage
+/.nyc_output
+test-results.xml
+.nycrc
 
 # production
 /build

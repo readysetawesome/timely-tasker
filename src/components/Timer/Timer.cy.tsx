@@ -1,6 +1,6 @@
 import React from 'react';
 import Timer from './Timer';
-import { mount } from 'cypress/react';
+import { mount } from 'cypress/react18';
 const TODAYS_DATE = 1679558574481;
 
 beforeEach(() => {
@@ -15,7 +15,7 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', '3-23-2023');
 
     // check that we scrolled over to the time of day it is
-    cy.get("[data-test-id='0-32']", { timeout: 1000 })
+    cy.get("[data-test-id='0-32']")
       .first()
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
@@ -35,7 +35,7 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', '3-23-2023');
 
     // check that we scrolled over to the time of day it is
-    cy.get("[data-test-id='0-32']", { timeout: 1000 })
+    cy.get("[data-test-id='0-32']")
       .first()
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();

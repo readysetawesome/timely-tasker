@@ -14,8 +14,8 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
-         files: ./coverage/coverage-final.json
+         files: .nyc_output/out.json
       - name: Push result to Testspace server
         run: |
-          testspace junit.xml
+          testspace test-results.xml
         if: always()
