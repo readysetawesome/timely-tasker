@@ -59,7 +59,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 12; i++) {
     const foundSummary =
       summaries?.find((value) => value.Slot === i) ||
       ({ TimerTicks: [], Slot: i, Date: date, Content: '', ID: undefined, UserID: undefined } as Summary);
