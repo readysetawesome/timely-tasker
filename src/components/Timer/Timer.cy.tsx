@@ -1,6 +1,7 @@
 import React from 'react';
 import Timer from './Timer';
 import { mount } from 'cypress/react18';
+import summaries from '../../../cypress/fixtures/summaries.json';
 const TODAYS_DATE = 1679558574481; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
 
@@ -45,6 +46,30 @@ describe('<Timer />', () => {
         const rect = $el[0].getBoundingClientRect();
         expect(rect.x).to.be.lessThan(470);
         expect(rect.x).to.be.greaterThan(450);
+      });
+  });
+
+  it('renders ticks that interact with each other as intended, setting other ticks in the colum to distracted', () => {
+    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
+      'createTick',
+    );
+    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as(
+      'updateRelatedTick',
+    );
+    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`, { fixture: 'tickDistracted' }).as(
+      'updateTickDistracted',
+    );
+    cy.get("[data-test-id='1-31']")
+      .first()
+      .then(($el) => {
+        $el[0].click();
+      });
+
+    cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
+    cy.get("[data-test-id='1-31']")
+      .first()
+      .then(($el) => {
+        expect($el[0].className).to.contain('Timer_tictac_distracted');
       });
   });
 });
