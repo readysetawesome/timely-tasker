@@ -2,6 +2,7 @@ import React from 'react';
 import Timer from './Timer';
 import { mount } from 'cypress/react18';
 import summaries from '../../../cypress/fixtures/summaries.json';
+import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 const TODAYS_DATE = 1679558574481; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
 
@@ -83,5 +84,32 @@ describe('<Timer />', () => {
         expect($el[0].className).to.contain('Timer_tictac_distracted');
       });
     */
+  });
+
+  it('renders a summary input that doesnt cause problems on debounce/update', () => {
+    const targetText = summarySlotTwo.Content;
+    const incompleteText = targetText.slice(0, targetText.length - 2);
+
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(incompleteText)}&slot=2`, {
+      fixture: 'summarySlotTwoIncomplete',
+    }).as('createSummaryIncomplete');
+
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(targetText)}&slot=2`, {
+      fixture: 'summarySlotTwo',
+    }).as('createSummaryComplete');
+
+    cy.clock();
+    cy.get("[data-test-id='summary-text-2']").type(incompleteText);
+    cy.tick(810);
+
+        cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
+
+        cy.wait(['@createSummaryIncomplete']);
+        cy.get("[data-test-id='summary-text-2']").then(($el) => {
+          expect($el[0].getAttribute('value')).to.equal(targetText);
+        });
+
+
+
   });
 });
