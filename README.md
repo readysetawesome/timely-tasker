@@ -1,8 +1,7 @@
 <h1 align="center">The Timely Tasker App</h1>
-
 <p align="center">
-  <a href="https://readysetawesome.testspace.com/spaces/208089/current/303007">
-    <img src="https://img.shields.io/testspace/tests/readysetawesome/readysetawesome:timely-tasker/main?compact_message" />
+  <a href="https://github.com/readysetawesome/timely-tasker/actions/workflows/ci.yml">
+    <img src="https://github.com/readysetawesome/timely-tasker/actions/workflows/ci.yml/badge.svg" />
   </a>
   <a href="https://app.codecov.io/gh/readysetawesome/timely-tasker">
     <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
@@ -19,7 +18,7 @@
 
   Try the app out here right now: (github login or single use code login required)
   http://timely-tasker.com/timer
-  
+
 <p align="center">
   <a href="https://timely-tasker.com" align="center">
     <img src="https://github.com/readysetawesome/timely-tasker/blob/main/public/March23Demo.gif?raw=true"/>
@@ -30,7 +29,7 @@
 * built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
 * modern react front-end using hooks and all the latest goodies I can get my hands on
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
-* pipeline integration with [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker) and [testspace](https://readysetawesome.testspace.com/spaces/208089/current/303007), ++README badges!
+* pipeline integration with github CI and [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker), ++README badges!
 
 #### Coming:
 * ~~speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)~~

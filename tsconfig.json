@@ -4,14 +4,17 @@
     "target": "esnext",
     "module": "esnext",
     "lib": ["esnext", "dom"],
-    "types": ["@cloudflare/workers-types", "@testing-library/jest-dom", "jest", "node"],
+    "types": ["@cloudflare/workers-types", "node", "cypress"],
     "moduleResolution":"node",
-    "jsx": "react",
+    "jsx": "react-jsx",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true
   },
   "include": [
-    "./src/**/*",
+    "**/*.ts*",
+    "src",
+    "./*.js",
     "declaration.d.ts",
     "./functions/*",
     "./lib/*"

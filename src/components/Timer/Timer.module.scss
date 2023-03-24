@@ -1,15 +1,21 @@
 $row-item-height: 1.85em;
-$tictac-width: 10px;
+$tictac-width: .69em;
 $tictac-height: 1.35em;
 $tictac-margin: 2px 2px 2px 2px;
 
 .Timer {
+
   .content {
-    width: 98%;
-    height: 100vh;
+    width: 50em;
+    height: 20em;
     position: relative;
+    margin: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
 
     .left_column {
+      border-radius: 3px;
+
       display: block;
       position: absolute;
       left: 1%;
@@ -18,6 +24,8 @@ $tictac-margin: 2px 2px 2px 2px;
     }
 
     .right_column {
+      border-radius: 3px;
+
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
@@ -31,7 +39,7 @@ $tictac-margin: 2px 2px 2px 2px;
   .summary_cell {
     height: $row-item-height;
     display: grid;
-    grid-template-columns: 98%;
+    grid-template-columns: 100%;
   }
 
   .grid_ticks {
@@ -71,7 +79,7 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .tictac_empty {
-    width: $tictac-margin;
+    width: $tictac-width;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
@@ -79,7 +87,7 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .tictac_distracted {
-    width: $tictac-margin;
+    width: $tictac-width;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
@@ -97,7 +105,7 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .tictac_focused {
-    width: $tictac-margin;
+    width: $tictac-width;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;
@@ -106,7 +114,7 @@ $tictac-margin: 2px 2px 2px 2px;
   }
 
   .tictac_clicked {
-    width: $tictac-margin;
+    width: $tictac-width;
     height: $tictac-height;
     margin: $tictac-margin;
     border-radius: 3px;

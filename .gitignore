@@ -9,6 +9,10 @@
 
 # testing
 /coverage
+/.nyc_output
+test-results.xml
+/cypress/videos
+/cypress/screenshots
 
 # production
 /build

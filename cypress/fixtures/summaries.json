@@ -1,0 +1,33 @@
+[
+  {
+    "ID": 75,
+    "Content": "replace jest with cypress",
+    "Date": 1679529600000,
+    "Slot": 0,
+    "TimerTicks": [
+      {
+        "ID": 292,
+        "UserID": 1,
+        "Date": 1679529600000,
+        "TickNumber": 31,
+        "Distracted": 0,
+        "SummaryID": 75
+      },
+      {
+        "ID": 293,
+        "UserID": 1,
+        "Date": 1679529600000,
+        "TickNumber": 32,
+        "Distracted": 1,
+        "SummaryID": 75
+      }
+    ]
+  },
+  {
+    "ID": 76,
+    "Content": "other stuff",
+    "Date": 1679529600000,
+    "Slot": 1,
+    "TimerTicks": []
+  }
+]
