@@ -19,7 +19,7 @@ export interface TickProps {
   setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
 }
 
-const nextValue = distracted => {
+const nextValue = (distracted) => {
   // rotate through the tictac states empty(-1/undef) => filled(0) => slash(1)
   return distracted === 1 ? -1 : distracted === 0 ? 1 : 0;
 };
@@ -55,7 +55,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
                 summary: summary,
                 distracted: 1,
               } as TickChangeEvent,
-              newTimerTick => {
+              (newTimerTick) => {
                 setTick(newTimerTick);
                 message.beingDistracted();
               },
@@ -126,7 +126,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary(summary, s => {
+      createSummary(summary, (s) => {
         createTick(s);
       });
     }

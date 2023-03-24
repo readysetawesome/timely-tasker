@@ -43,8 +43,8 @@ describe('<Timer />', () => {
       .first()
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
-        expect(rect.x).to.be.lessThan(600);
-        expect(rect.x).to.be.greaterThan(400);
+        expect(rect.x).to.be.lessThan(470);
+        expect(rect.x).to.be.greaterThan(450);
       });
   });
 });

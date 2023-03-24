@@ -18,5 +18,3 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
          files: .nyc_output/out.json
-
-
