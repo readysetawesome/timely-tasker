@@ -2,15 +2,23 @@ import React from 'react';
 import Timer from './Timer';
 import { mount } from 'cypress/react18';
 const TODAYS_DATE = 1679558574481; // at the zero h:m:s
-const TIME_NOW = 1679587374481;
+const TIME_NOW = 1679587374481; // at 9 am
 
 beforeEach(() => {
   cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
   cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+  // we made these stamps in gmt-700 which is 420 minutes of offset
+  const now = TIME_NOW - 420 * 60 * 1000;
+  const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
   mount(
     <div className="App">
       <header>timely tasker</header>
-      <Timer date={TODAYS_DATE} currentTime={new Date(TIME_NOW)} leftNavClicker={<div></div>} rightNavClicker={<div></div>} />
+      <Timer
+        date={TODAYS_DATE}
+        currentTime={new Date(useCurrentTime)}
+        leftNavClicker={<div></div>}
+        rightNavClicker={<div></div>}
+      />
     </div>,
   );
   cy.wait(['@getIdentity', '@getSummaries']);
