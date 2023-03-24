@@ -75,14 +75,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.clock();
-    cy.tick(2000);
-    cy.get("[data-test-id='1-31']")
-      .first()
-      .then(($el) => {
-        expect($el[0].className).to.contain('Timer_tictac_distracted');
-      });
-
+    cy.get(`div[class*="Timer_tictac_distracted"][data-test-id="1-31"]`, { timeout: 2000 });
   });
 
   it('renders a summary input that doesnt cause problems on debounce/update', () => {
