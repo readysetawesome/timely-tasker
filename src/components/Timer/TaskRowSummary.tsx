@@ -15,13 +15,23 @@ export interface TaskRowSummaryProps {
 const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSummaryProps) => {
   const [inputText, setInputText] = useState('');
 
-  // Parent state is in charge here.
+  /*
+    We keep track of a pending debounce, to defeat the following race condition:
+      * User types text, stops typing
+      * debounce begins -800ms remaining
+      * debounce completed - http dispatched (awaiting response)
+      * user types additional text, stops typing
+      * http response updates inbound `summary` prop, thus re-render previous text on line 32
+  */
+  const [pendingDebounce, setPendingDebounce] = useState(false);
+
+  // Parent state is in charge here. Unelss there's a debounce pending.
   // Any change to the summary object needs to immediately affect input value
   useEffect(() => {
-    if (summary) {
+    if (summary && !pendingDebounce) {
       setInputText(summary.Content);
     }
-  }, [summary]);
+  }, [pendingDebounce, summary]);
 
   const setSummary = useCallback(
     (value: string) => {
@@ -42,6 +52,7 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
   const debouncedChangeHandler = useMemo(
     () =>
       debounce((event) => {
+        setPendingDebounce(false);
         setSummary(event.target.value);
       }, 800),
     [setSummary],
@@ -53,7 +64,7 @@ const TaskRowSummary = ({ summary, slot, useDate, setSummaryState }: TaskRowSumm
         className={styles.summary_input_container}
         type="text"
         value={inputText}
-        onChange={(e) => [setInputText(e.target.value), debouncedChangeHandler(e)]}
+        onChange={(e) => [setPendingDebounce(true), setInputText(e.target.value), debouncedChangeHandler(e)]}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
