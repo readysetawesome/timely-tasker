@@ -105,6 +105,8 @@ describe('<Timer />', () => {
     // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
     cy.get("[data-test-id='summary-text-2']").type(incompleteText, { delay: 1000 / incompleteText.length });
 
+    cy.wait(0); //permit the react hooks to run
+
     cy.wait(['@createSummaryIncomplete']);
 
     cy.wait(0); //permit the react hooks to run
@@ -115,6 +117,8 @@ describe('<Timer />', () => {
     cy.wait(0); //permit the react hooks to run
 
     cy.wait(['@createSummaryComplete']);
+
+    cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal(targetText);
