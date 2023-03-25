@@ -57,10 +57,10 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
               } as TickChangeEvent,
               (newTimerTick) => {
                 setTick(newTimerTick);
+                // ... and dispatch to the initiator so they can update to "distracted" state
                 message.beingDistracted();
               },
             );
-            // ... and dispatch to the initiator so they can update to "distracted" state
             message.fulfilled = true;
           }
         }
@@ -68,11 +68,6 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
     });
     return () => PubSub.unsubscribe(sub);
   }, [summary, timerTick, tickNumber, setTick]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const createSummary = (summary: Summary, callback = (s: Summary) => {}) => {
-    RestApi.createSummary(summary, callback);
-  };
 
   const updateTick = useCallback(() => {
     // Do a visual update immediately for "fast" feeling UI
@@ -126,7 +121,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
     } else {
       // We need a summaryID to associate the ticks with,
       // thus we create an empty summary if not exists for this row
-      createSummary(summary, (s) => {
+      RestApi.createSummary(summary, (s) => {
         createTick(s);
       });
     }

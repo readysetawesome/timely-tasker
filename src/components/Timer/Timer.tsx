@@ -42,6 +42,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
     RestApi.greet((identity) => setIdentity(identity));
   }, []);
 
+  // Once we have identity, set greeting and get summaries+ticks
   useEffect(() => {
     if (identity.ID !== undefined) {
       setGreeting(`
@@ -52,6 +53,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
     }
   }, [identity, date]);
 
+  // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summaries && !didScroll) {
@@ -72,8 +74,6 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       summaries?.find((value) => value.Slot === i) ||
       ({ TimerTicks: [], Slot: i, Date: date, Content: '', ID: undefined, UserID: undefined } as Summary);
 
-    const [summaryText, setSummaryText] = useState<string | undefined>();
-
     const setSummaryState = useCallback(
       (s: Summary) => {
         setSummaries([{ ...s }, ...(summaries?.filter((_s) => _s.Slot !== i) || [])]);
@@ -91,26 +91,21 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
           }
         }, 800),
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [summaries, setSummaryState, i],
+      [setSummaryState, summaries],
     );
-
-    useEffect(() => handleSummaryChange(summaryText), [handleSummaryChange, summaryText]);
 
     if (summaries !== undefined) {
       summaryElements.push(
         <TaskRowSummary
-          {...{
-            summaryText: summaryText !== undefined ? summaryText : foundSummary().Content,
-            setSummaryText,
-            key: i,
-            useDate: date,
-            slot: i,
-          }}
+          summaryText={foundSummary().Content}
+          handleSummaryChange={handleSummaryChange}
+          slot={i}
+          key={i}
         />,
       );
 
       tickRowElements.push(
-        <TaskRowTicks {...{ setSummaryState, key: i, useDate: date, slot: i }} summary={foundSummary()} />,
+        <TaskRowTicks setSummaryState={setSummaryState} key={i} useDate={date} slot={i} summary={foundSummary()} />,
       );
     }
   }

@@ -4,7 +4,7 @@ import { mount } from 'cypress/react18';
 import summaries from '../../../cypress/fixtures/summaries.json';
 import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
-const TODAYS_DATE = 1679558574481; // at the zero h:m:s
+const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
 
 beforeEach(() => {
@@ -94,9 +94,10 @@ describe('<Timer />', () => {
     cy.clock();
     cy.get("[data-test-id='summary-text-2']").type(incompleteText);
     cy.tick(810);
-
+    cy.clock().then((clock) => clock.restore());
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
-
+    cy.wait(['@createSummaryIncomplete']);
+    cy.wait(['@createSummaryComplete']);
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal(targetText);
     });
@@ -120,6 +121,7 @@ describe('<Timer />', () => {
     cy.wait(['@createTick']);
 
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', { timeout: 2000 });
+
     cy.get("[data-test-id='summary-text-3']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal('Hello');
     });
