@@ -21,13 +21,14 @@
 
 <p align="center">
   <a href="https://timely-tasker.com" align="center">
-    <img src="https://github.com/readysetawesome/timely-tasker/blob/main/public/March23Demo.gif?raw=true"/>
+    <img src="https://user-images.githubusercontent.com/105779/227736707-3ba0ce3b-6694-4da8-a9b3-8053c636a14d.gif?raw=true"/>
   </a>
 </p>
 
 #### Features:
 * built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
 * modern react front-end using hooks and all the latest goodies I can get my hands on
+* interactive browser-based test coverage with [Cypress](https://www.cypress.io/)
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
 * pipeline integration with github CI and [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker), ++README badges!
 
