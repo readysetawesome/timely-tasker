@@ -1,3 +1,4 @@
+/* eslint-disable cypress/no-unnecessary-waiting */
 import React from 'react';
 import App from '../../App';
 import { mount } from 'cypress/react18';
@@ -58,6 +59,12 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`, { fixture: 'tickDistracted' }).as(
       'updateTickDistracted',
     );
+    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=-1`, { fixture: 'tickRemoved' }).as(
+      'updateTickRemoved',
+    );
+    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
+      'updateTickOriginal',
+    );
     cy.get("[data-test-id='0-31']")
       .first()
       .then(($el) => {
@@ -73,7 +80,14 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 2000 });
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 300 });
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 300 })
+      .first()
+      .then(($tick) => {
+        $tick[0].click();
+      });
+
+    cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
 
   it('renders a summary input that doesnt cause problems on debounce/update', () => {
@@ -91,18 +105,20 @@ describe('<Timer />', () => {
     // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
     cy.get("[data-test-id='summary-text-2']").type(incompleteText, { delay: 1000 / incompleteText.length });
 
+    cy.wait(0); //permit the react hooks to run
+
     cy.wait(['@createSummaryIncomplete']);
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(0); //permit the react hooks to run
 
     // use a delay that fits inside the next debounce (2*100 < 800)
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2), { delay: 100 });
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(0); //permit the react hooks to run
 
     cy.wait(['@createSummaryComplete']);
+
+    cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal(targetText);
@@ -122,7 +138,6 @@ describe('<Timer />', () => {
 
     cy.wait(['@createSummaryNew']);
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='3-33']").click();
@@ -149,7 +164,6 @@ describe('<Timer />', () => {
 
     cy.wait(['@createSummaryNew']);
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='left-nav-clicker']").click();

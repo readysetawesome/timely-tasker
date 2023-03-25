@@ -63,6 +63,26 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
             );
             message.fulfilled = true;
           }
+        } else if (message.tick.Distracted === -1) {
+          // another tick was deleted from my column,
+          // check for last tick standing in column and update to focused
+          const anyOthers = document.querySelector(
+            `
+            :not([class*=Timer_tictac_empty])
+            :not([data-test-id^="${summary.Slot}-"])
+            [data-test-id$="-${tickNumber}"
+          `.replace(/\s/g, ''),
+          );
+          if (timerTick?.Distracted === 1 && !anyOthers) {
+            RestApi.createTick(
+              {
+                tickNumber,
+                summary: summary,
+                distracted: 0,
+              } as TickChangeEvent,
+              setTick,
+            );
+          }
         }
       }
     });
@@ -78,7 +98,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
       RestApi.createTick(
         {
           tickNumber,
-          summary: s,
+          summary: summary,
           distracted: nextTickValue,
         } as TickChangeEvent,
         (newTimerTick: TimerTick) => {
@@ -106,10 +126,14 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
               },
             });
           } else {
-            // don't pub deletes, only change my visual state
             if (timerTick) {
               timerTick.Distracted = -1;
               setTick({ ...timerTick });
+              PubSub.publish(`tick:${tickNumber}`, {
+                tick: timerTick,
+                summaryID: s.ID,
+                distracted: -1,
+              } as PubSubTickMessage);
             }
           }
         },
