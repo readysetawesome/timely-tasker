@@ -126,7 +126,6 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
               },
             });
           } else {
-            // don't pub deletes, only change my visual state
             if (timerTick) {
               timerTick.Distracted = -1;
               setTick({ ...timerTick });

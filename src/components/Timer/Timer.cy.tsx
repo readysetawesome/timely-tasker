@@ -80,7 +80,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 300 })
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 300 });
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 300 })
       .first()
       .then(($tick) => {
