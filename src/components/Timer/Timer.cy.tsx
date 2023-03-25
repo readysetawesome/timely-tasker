@@ -97,7 +97,6 @@ describe('<Timer />', () => {
 
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
 
-
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal(targetText);
     });
@@ -121,9 +120,8 @@ describe('<Timer />', () => {
     cy.wait(['@createTick']);
 
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', { timeout: 2000 });
-    cy.get("[data-test-id='summary-text-3']").
-      then(($el) => {
-        expect($el[0].getAttribute('value')).to.equal('Hello');
-      });
+    cy.get("[data-test-id='summary-text-3']").then(($el) => {
+      expect($el[0].getAttribute('value')).to.equal('Hello');
+    });
   });
 });
