@@ -1,5 +1,5 @@
 import React from 'react';
-import App from '../../App'
+import App from '../../App';
 import { mount } from 'cypress/react18';
 import summaries from '../../../cypress/fixtures/summaries.json';
 import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
@@ -126,7 +126,9 @@ describe('<Timer />', () => {
       fixture: 'summarySlotThree',
     }).as('createSummaryNew');
 
-    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24*60*60*1000}`, { fixture: 'summariesPast' }).as('getSummariesPast');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { fixture: 'summariesPast' }).as(
+      'getSummariesPast',
+    );
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
@@ -136,8 +138,8 @@ describe('<Timer />', () => {
 
     cy.wait(['@getSummariesPast']);
 
-    cy.get("[data-test-id='summary-text-0'][value='from a previous date'");
-    cy.get("[data-test-id='summary-text-1'][value='']");
-    cy.get("[data-test-id='summary-text-3'][value='']");
+    cy.get("[data-test-id='summary-text-0'][value='from a previous date'", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
   });
 });

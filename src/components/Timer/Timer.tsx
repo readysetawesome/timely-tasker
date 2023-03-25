@@ -49,8 +49,14 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
         Hello, ${identity.DisplayName === '' ? 'my friend' : identity.DisplayName}!
         You are logged in with ${identity.ProviderName}.
       `);
+      if (summaries) {
+        // loadingn on nav, clear existing state first to eliminate any entered text
+        setSummaries(undefined);
+      }
       RestApi.getSummaries(date, (summaries) => setSummaries(summaries));
     }
+    // Don't require summaries here or we'll fire the effect too often
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity, date]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
