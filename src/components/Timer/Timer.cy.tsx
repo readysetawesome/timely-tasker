@@ -88,8 +88,10 @@ describe('<Timer />', () => {
     cy.clock();
     cy.get("[data-test-id='summary-text-2']").type(incompleteText);
     cy.tick(810);
-    cy.clock().then((clock) => clock.restore());
+
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
+    cy.tick(810);
+    cy.clock().then((clock) => clock.restore());
     cy.wait(['@createSummaryIncomplete']);
     cy.wait(['@createSummaryComplete']);
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
