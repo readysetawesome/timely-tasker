@@ -36,6 +36,9 @@ describe('<Timer />', () => {
 
   it('renders ticks content', () => {
     // check that we scrolled over to the time of day it is
+
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(150); // release the thread and allow react hooks to process
     cy.get("[data-test-id='0-36']")
       .first()
       .then(($el) => {
@@ -85,15 +88,20 @@ describe('<Timer />', () => {
       fixture: 'summarySlotTwo',
     }).as('createSummaryComplete');
 
-    cy.clock();
-    cy.get("[data-test-id='summary-text-2']").type(incompleteText);
-    cy.tick(810);
-
-    cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
-    cy.tick(410);
+    // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
+    cy.get("[data-test-id='summary-text-2']").type(incompleteText, { delay: 1000 / incompleteText.length });
 
     cy.wait(['@createSummaryIncomplete']);
-    cy.tick(810);
+
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(0); //permit the react hooks to run
+
+    // use a delay that fits inside the next debounce (2*100 < 800)
+    cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2), { delay: 100 });
+
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(0); //permit the react hooks to run
+
     cy.wait(['@createSummaryComplete']);
 
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
@@ -113,6 +121,9 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
+
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='3-33']").click();
 
@@ -137,6 +148,9 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
+
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='left-nav-clicker']").click();
 
