@@ -1,5 +1,5 @@
 import React from 'react';
-import Timer from './Timer';
+import App from '../../App';
 import { mount } from 'cypress/react18';
 import summaries from '../../../cypress/fixtures/summaries.json';
 import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
@@ -13,17 +13,11 @@ beforeEach(() => {
   // we made these stamps in gmt-700 which is 420 minutes of offset
   const now = TIME_NOW - 420 * 60 * 1000;
   const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
-  mount(
-    <div className="App">
-      <header>timely tasker</header>
-      <Timer
-        date={TODAYS_DATE}
-        currentTime={new Date(useCurrentTime)}
-        leftNavClicker={<div></div>}
-        rightNavClicker={<div></div>}
-      />
-    </div>,
-  );
+  cy.clock().then((clock) => clock.setSystemTime(useCurrentTime));
+
+  mount(<App />).as('mountedComponent');
+
+  cy.clock().then((clock) => clock.restore());
   cy.wait(['@getIdentity', '@getSummaries']);
 });
 
@@ -94,8 +88,10 @@ describe('<Timer />', () => {
     cy.clock();
     cy.get("[data-test-id='summary-text-2']").type(incompleteText);
     cy.tick(810);
-    cy.clock().then((clock) => clock.restore());
+
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
+    cy.tick(810);
+    cy.clock().then((clock) => clock.restore());
     cy.wait(['@createSummaryIncomplete']);
     cy.wait(['@createSummaryComplete']);
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
@@ -125,5 +121,27 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal('Hello');
     });
+  });
+
+  it('tasks should not leak on nav', () => {
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
+      fixture: 'summarySlotThree',
+    }).as('createSummaryNew');
+
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { fixture: 'summariesPast' }).as(
+      'getSummariesPast',
+    );
+
+    cy.get("[data-test-id='summary-text-3']").type('Hello');
+
+    cy.wait(['@createSummaryNew']);
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+
+    cy.wait(['@getSummariesPast']);
+
+    cy.get("[data-test-id='summary-text-0'][value='from a previous date'", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
   });
 });
