@@ -90,10 +90,12 @@ describe('<Timer />', () => {
     cy.tick(810);
 
     cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2));
-    cy.tick(810);
-    cy.clock().then((clock) => clock.restore());
+    cy.tick(410);
+
     cy.wait(['@createSummaryIncomplete']);
+    cy.tick(810);
     cy.wait(['@createSummaryComplete']);
+
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal(targetText);
     });
