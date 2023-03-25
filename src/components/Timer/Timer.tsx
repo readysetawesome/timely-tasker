@@ -76,14 +76,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
 
     const setSummaryState = useCallback(
       (s: Summary) => {
-        setSummaries([
-          {
-            ...s,
-            ID: s.ID,
-            Content: s.Content,
-          },
-          ...(summaries?.filter((_s) => _s.Slot !== i) || []),
-        ]);
+        setSummaries([{ ...s }, ...(summaries?.filter((_s) => _s.Slot !== i) || [])]);
       },
       [summaries, i],
     );
