@@ -39,7 +39,7 @@
 
 ## Database Schema
 
-http://timely-tasker.com/schema_info.html
+[schema diagram](http://htmlpreview.github.io?https://github.com/readysetawesome/timely-tasker/blob/main/public/schema_info.html)
 
 Each Summary is one horizontal line with a topic at the beginning,
 each TimerTick is one of the 96 quarter-hour slots in a day.
