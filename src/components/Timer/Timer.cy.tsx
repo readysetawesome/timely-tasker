@@ -68,27 +68,14 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
       'updateTickOriginal',
     );
-    cy.get("[data-test-id='0-31']")
-      .first()
-      .then(($el) => {
-        expect($el[0].className).to.contain('Timer_tictac_focused');
-      });
+    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
 
-    cy.get("[data-test-id='1-31']")
-      .first()
-      .then(($el) => {
-        expect($el[0].className).to.contain('Timer_tictac_empty');
-        $el[0].click();
-      });
+    cy.get("[data-test-id='1-31'][class*=Timer_tictac_empty]").click();
 
     cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
 
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 2000 });
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 2000 })
-      .first()
-      .then(($tick) => {
-        $tick[0].click();
-      });
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 2000 }).click();
 
     cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
@@ -137,6 +124,7 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
+    cy.wait(0); // Await react state setup on http return
 
     cy.get("[data-test-id='3-33']").click();
 
