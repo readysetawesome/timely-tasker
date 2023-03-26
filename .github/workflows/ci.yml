@@ -3,17 +3,25 @@ on:
   push:
 jobs:
   cypress-run:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+
+      - name: Setup Node.js 18 environment
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 'lts/hydrogen'
+
+      - name: Install npm dependencies
+        run: npm install
+
       - name: Cypress run
-        uses: cypress-io/github-action@v5
-        with:
-          component: true
+        run: npm test
+        env:
+          # See issue https://github.com/cypress-io/cypress/issues/25357
+          ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
