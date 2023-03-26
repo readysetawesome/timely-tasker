@@ -1,7 +1,7 @@
 <h1 align="center">The Timely Tasker App</h1>
 <p align="center">
   <a href="https://github.com/readysetawesome/timely-tasker/actions/workflows/ci.yml">
-    <img src="https://github.com/readysetawesome/timely-tasker/actions/workflows/ci.yml/badge.svg" />
+    <img src="https://github.com/readysetawesome/timely-tasker/actions/workflows/ci.yml/badge.svg?branch=main" />
   </a>
   <a href="https://app.codecov.io/gh/readysetawesome/timely-tasker">
     <img src="https://img.shields.io/codecov/c/gh/readysetawesome/timely-tasker" />
