@@ -4,9 +4,16 @@ $tictac-height: 1.35em;
 $tictac-margin: 2px 2px 2px 2px;
 
 .Timer {
-
   .content {
-    width: 50em;
+    @media all and (max-width: 800px) {
+      /* CSS rules here for screens lower than 750px */
+      width: auto;
+    }
+    @media all and (min-width: 800px) {
+      /* CSS rules here for screens above 750px */
+      width: 50em;
+    }
+
     height: 30em;
     position: relative;
     margin: auto;
