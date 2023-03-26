@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@cloudflare/pages-plugin-cloudflare-access": "^1.0.3",
+    "@reduxjs/toolkit": "^1.9.3",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/node": "^17.0.21",
