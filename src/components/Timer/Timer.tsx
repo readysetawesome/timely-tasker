@@ -111,7 +111,14 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       );
 
       tickRowElements.push(
-        <TaskRowTicks setSummaryState={setSummaryState} key={i} useDate={date} slot={i} summary={foundSummary()} />,
+        <TaskRowTicks
+          summaries={summaries}
+          setSummaryState={setSummaryState}
+          key={i}
+          useDate={date}
+          slot={i}
+          summary={foundSummary()}
+        />,
       );
     }
   }

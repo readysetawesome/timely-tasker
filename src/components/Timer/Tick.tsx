@@ -16,7 +16,7 @@ export interface TickProps {
   timerTick?: TimerTick;
   setTick: React.Dispatch<React.SetStateAction<TimerTick | undefined>>;
   summary: Summary;
-  setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
+  summaries: Summary[];
 }
 
 const nextValue = (distracted) => {
@@ -32,7 +32,7 @@ type PubSubTickMessage = {
   beingDistracted: () => void;
 };
 
-const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
+const Tick = ({ tickNumber, timerTick, setTick, summary, summaries }: TickProps) => {
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
 
@@ -66,12 +66,9 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
         } else if (message.tick.Distracted === -1) {
           // another tick was deleted from my column,
           // check for last tick standing in column and update to focused
-          const anyOthers = document.querySelector(
-            `
-            :not([class*=Timer_tictac_empty])
-            :not([data-test-id^="${summary.Slot}-"])
-            [data-test-id$="-${tickNumber}"
-          `.replace(/\s/g, ''),
+          const anyOthers = summaries.find(
+            (s) =>
+              s.Slot !== summary.Slot && s.TimerTicks.find((t) => t.TickNumber === tickNumber && t.Distracted != -1),
           );
           if (timerTick?.Distracted === 1 && !anyOthers) {
             RestApi.createTick(
@@ -87,7 +84,7 @@ const Tick = ({ tickNumber, timerTick, setTick, summary }: TickProps) => {
       }
     });
     return () => PubSub.unsubscribe(sub);
-  }, [summary, timerTick, tickNumber, setTick]);
+  }, [summary, timerTick, tickNumber, setTick, summaries]);
 
   const updateTick = useCallback(() => {
     // Do a visual update immediately for "fast" feeling UI

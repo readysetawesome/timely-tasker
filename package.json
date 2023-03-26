@@ -21,7 +21,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "npx nyc cypress run --component --reporter junit",
+    "test": "npx nyc cypress run --component",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .js,.ts ./src ./functions"
   },

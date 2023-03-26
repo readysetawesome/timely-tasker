@@ -6,6 +6,7 @@ import Tick from './Tick';
 
 export interface TaskRowTicksProps {
   summary?: Summary;
+  summaries: Summary[];
   slot: number;
   useDate: number;
   setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
@@ -19,7 +20,7 @@ export type TimerTick = {
   SummaryID?: number;
 };
 
-const TaskRowTicks = ({ summary, setSummaryState, slot, useDate }: TaskRowTicksProps) => {
+const TaskRowTicks = ({ summary, setSummaryState, slot, useDate, summaries }: TaskRowTicksProps) => {
   const ticks = new Array<JSX.Element>();
 
   for (let i = 0; i < 96; i++) {
@@ -47,6 +48,7 @@ const TaskRowTicks = ({ summary, setSummaryState, slot, useDate }: TaskRowTicksP
       <div className={styles.tictac_cell} key={i}>
         <Tick
           {...{
+            summaries,
             summary: summary || ({ Date: useDate, Content: '', Slot: slot, TimerTicks: [] } as Summary),
             tickNumber: i,
             timerTick: timerTick,
