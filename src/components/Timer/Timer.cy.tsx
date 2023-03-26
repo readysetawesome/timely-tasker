@@ -108,7 +108,6 @@ describe('<Timer />', () => {
     cy.wait(0); //permit the react hooks to run
 
     cy.wait(['@createSummaryIncomplete']);
-
     cy.wait(0); //permit the react hooks to run
 
     // use a delay that fits inside the next debounce (2*100 < 800)
@@ -117,7 +116,6 @@ describe('<Timer />', () => {
     cy.wait(0); //permit the react hooks to run
 
     cy.wait(['@createSummaryComplete']);
-
     cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='summary-text-2']").then(($el) => {
@@ -137,12 +135,12 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
-
     cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='3-33']").click();
 
     cy.wait(['@createTick']);
+    cy.wait(0); //permit the react hooks to run
 
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', { timeout: 2000 });
 
@@ -163,12 +161,12 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
-
     cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='left-nav-clicker']").click();
 
     cy.wait(['@getSummariesPast']);
+    cy.wait(0); //permit the react hooks to run
 
     cy.get("[data-test-id='summary-text-0'][value='from a previous date'", { timeout: 200 });
     cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
