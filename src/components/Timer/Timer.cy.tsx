@@ -110,10 +110,10 @@ describe('<Timer />', () => {
     cy.wait(['@createSummaryIncomplete']);
     cy.wait(0); //permit the react hooks to run
 
-    // use a delay that fits inside the next debounce (2*100 < 800)
-    cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2), { delay: 100 });
+    // use a delay that fits inside the next debounce (2*390 < 800)
+    cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 2), { delay: 390 });
 
-    cy.wait(0); //permit the react hooks to run
+    cy.wait(100); //permit the react hooks to run
 
     cy.wait(['@createSummaryComplete']);
     cy.wait(0); //permit the react hooks to run
