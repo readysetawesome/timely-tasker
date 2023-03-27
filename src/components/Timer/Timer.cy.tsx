@@ -155,6 +155,18 @@ describe('<Timer />', () => {
     cy.wait(['@createSummaryNew', '@createTick']);
   });
 
+  it('handles errors with tick click', () => {
+    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { forceNetworkError: true }).as(
+      'updateTickFail'
+    );
+
+    cy.get("[data-test-id='0-31']").click();
+
+    cy.wait(['@updateTickFail']);
+
+    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused");
+  });
+
   it('handles errors with summary create', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, { forceNetworkError: true }).as(
       'createSummaryFail'

@@ -22,6 +22,7 @@ export type TickChangeEvent = {
   slot: number;
   summary: Summary;
   distracted: number;
+  previously: number;
 };
 
 const slice = createSlice({

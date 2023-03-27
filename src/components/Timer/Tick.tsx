@@ -55,6 +55,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
       slot,
       tickNumber,
       distracted: nextTickValue === -1 ? -1 : matchingColumnTicks.length > 0 ? 1 : nextTickValue,
+      previously: distracted,
     } as TickChangeEvent)(dispatch);
 
     // evaluate last tick standing rule and apply
@@ -64,6 +65,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
         slot: matchingColumnTicks[0].summary?.Slot,
         tickNumber,
         distracted: 0,
+        previously: matchingColumnTicks[0].Distracted,
       } as TickChangeEvent)(dispatch);
     } else {
       if (nextTickValue !== -1) {
@@ -76,12 +78,13 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
               slot: t.summary?.Slot,
               tickNumber,
               distracted: 1,
+              previously: t.Distracted,
             } as TickChangeEvent)(dispatch);
           }
         });
       }
     }
-  }, [date, dispatch, matchingColumnTicks, nextTickValue, slot, summary, testIdAttr, tickNumber]);
+  }, [date, dispatch, distracted, matchingColumnTicks, nextTickValue, slot, summary, testIdAttr, tickNumber]);
 
   return <div className={style} onClick={updateTick} data-test-id={testIdAttr} />;
 };
