@@ -16,6 +16,9 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      - name: Migrate local sqlite DB for server side tests
+        run: npx wrangler d1 migrations apply timely-tasker-dev --local <<< $'y\n'
+
       - name: Cypress run
         run: npm test
         env:
