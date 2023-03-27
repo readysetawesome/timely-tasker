@@ -4,6 +4,9 @@ $tictac-height: 1.35em;
 $tictac-margin: 2px 2px 2px 2px;
 
 .Timer {
+  .error {
+    color: darkred;
+  }
   .content {
     @media all and (max-width: 800px) {
       /* CSS rules here for screens lower than 750px */

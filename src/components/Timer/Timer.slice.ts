@@ -9,14 +9,14 @@ export interface TimerState {
   pendingSummaries: { [slot: number]: Summary };
   loadingDate?: number;
   summariesLoading: RestApiStatus;
-  // ticksChanging: { [slot: number]: TimerTick[] };
+  summaryCreated: RestApiStatus;
 }
 
 const initialState = {
   summaries: {},
   pendingSummaries: {},
   summariesLoading: ApiStates.Initial,
-  // ticksChanging: [],
+  summaryCreated: ApiStates.Initial,
 } as TimerState;
 
 export type TickChangeEvent = {
@@ -48,14 +48,16 @@ const slice = createSlice({
     summaryCreated: (state, action: PayloadAction<Summary>) => {
       state.summaries[action.payload.Slot] = action.payload;
       delete state.pendingSummaries[action.payload.Slot];
-      // Check for ticks that we queued up because this was pending?
+      state.summaryCreated = ApiStates.Success;
     },
     summaryPending: (state, action: PayloadAction<Summary>) => {
       state.pendingSummaries[action.payload.Slot] = action.payload;
+      state.summaryCreated = ApiStates.InProgress;
     },
     summaryError: (state, action: PayloadAction<Summary>) => {
       state.pendingSummaries[action.payload.Slot] = action.payload;
       delete state.pendingSummaries[action.payload.Slot];
+      state.summaryCreated = ApiStates.Error;
     },
 
     tickUpdated: (

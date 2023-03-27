@@ -14,18 +14,16 @@ import { TimerTick } from './TaskRowTicks';
 
 export const fetchSummaries = (useDate: number) => async (dispatch) => {
   dispatch(summariesLoading(useDate));
-  await RestApi.getSummaries(
-    useDate,
-    (response) => dispatch(summariesLoaded(response)),
-    () => dispatch(summariesError()),
-  );
+  await RestApi.getSummaries(useDate)
+    .then((response: Summary[]) => dispatch(summariesLoaded(response)))
+    .catch(() => dispatch(summariesError()));
 };
 
 export const setSummary = (s: Summary) => async (dispatch) => {
   dispatch(summaryPending(s));
   await RestApi.createSummary(s)
     .then((s: Summary) => dispatch(summaryCreated(s)))
-    .catch(summaryError);
+    .catch(() => dispatch(summaryError(s)));
 };
 
 export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch) => {

@@ -49,13 +49,8 @@ const createSummary = (summary: Summary) =>
     { ...fetchOptions, method: 'POST' },
   ).then((response) => response.json());
 
-const getSummaries = (useDate: number, callback: (summaries: Array<Summary>) => void, errorCallback: () => void) => {
-  // List all summaries for the target date
-  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions)
-    .then((response) => response.json())
-    .then(callback)
-    .catch(errorCallback);
-};
+const getSummaries = (useDate: number) =>
+  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions).then((response) => response.json());
 
 const greet = (callback) =>
   fetch(fetchPrefix + '/greet', fetchOptions)

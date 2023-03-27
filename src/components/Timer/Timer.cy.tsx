@@ -155,6 +155,19 @@ describe('<Timer />', () => {
     cy.wait(['@createSummaryNew', '@createTick']);
   });
 
+  it('handles errors with summary create', () => {
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, { forceNetworkError: true }).as(
+      'createSummaryFail',
+    );
+
+    cy.get("[data-test-id='summary-text-3']").type('Hello');
+
+    cy.wait(['@createSummaryFail']);
+    cy.get('span[class*=Timer_error]').then(($content) => {
+      expect($content).to.contain('Error setting Summary text');
+    });
+  });
+
   it('tasks should not leak on nav', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
       fixture: 'summarySlotThree',
@@ -177,7 +190,7 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
   });
 
-  it('handles errors from summary fetch step', () => {
+  it('handles errors from summary fetch step on nav', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { forceNetworkError: true }).as(
       'getSummariesFail',
     );

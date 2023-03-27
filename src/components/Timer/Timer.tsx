@@ -40,6 +40,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   const summariesLoading = useSelector(getRestSelectorFor('timer', 'summariesLoading').inProgress);
   const summariesSuccess = useSelector(getRestSelectorFor('timer', 'summariesLoading').success);
   const summariesError = useSelector(getRestSelectorFor('timer', 'summariesLoading').error);
+  const summaryError = useSelector(getRestSelectorFor('timer', 'summaryCreated').error);
   const loadingDate = useSelector(getLoadingDate);
   const dispatch = useDispatch();
 
@@ -101,6 +102,8 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>
+          {summaryError && <span className={styles.error}>Error setting Summary text</span>}
+
           {summariesError && 'Error loading Summary text and ticks!'}
           {!summariesError && (
             <>
