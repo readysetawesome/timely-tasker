@@ -28,8 +28,8 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, e
     parseInt(searchParams.get('tick') || '-1'),
   ];
 
-  if (distracted < 0 || tick < 0) {
-    return errorResponse('Parameter error, integers required for "distracted" and "tick".');
+  if (tick < 0) {
+    return errorResponse('Parameter error, positive integers required "tick".');
   }
 
   if (request.method === 'POST') {

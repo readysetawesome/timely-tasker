@@ -42,18 +42,18 @@ export const GetIdentity = async (data: PluginData, env: Env): Promise<IdentityR
   if (provider === null) {
     // provider does not exist, lazy initialize
 
-    const { success } = await env.DB.prepare(
+    const { success, results } = await env.DB.prepare(
       `
-      INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?)
+      INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?) RETURNING *
     `
     )
       .bind(jwtIdentity.idp.type, jwtIdentity.idp.id)
-      .run();
+      .all<Provider>();
 
     if (!success) {
       return { jwtIdentity, error: 'unable to insert new IDP' };
     } else {
-      provider = await providerQuery.bind(jwtIdentity.idp.id).first<Provider>();
+      provider = results[0];
     }
   }
 

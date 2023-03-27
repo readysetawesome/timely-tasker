@@ -35,7 +35,7 @@ const TaskRowSummary = ({ slot, date }: TaskRowSummaryProps) => {
       <input
         className={styles.summary_input_container}
         type="text"
-        value={text || summary?.Content || ''}
+        value={text === undefined ? summary?.Content || '' : text}
         onChange={(e) => [setText(e.target.value), handleSummaryChange(e.target.value)]}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
