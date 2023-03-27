@@ -42,6 +42,7 @@ export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch
         );
       });
     } else {
+      console.log('dispatching tickUpdated ', tickChangeEvent);
       await RestApi.createTick(tickChangeEvent, (tick: TimerTick) => dispatch(tickUpdated({ tick, tickChangeEvent })));
     }
   } catch (e) {

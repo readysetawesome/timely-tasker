@@ -58,17 +58,18 @@ const slice = createSlice({
       delete state.pendingSummaries[action.payload.Slot];
     },
 
-    /*tickChanged: (state, { payload: tickChangeEvent }: PayloadAction<TickChangeEvent>) => {
-      // state.ticksChanging[tickChangeEvent.slot].push(tickChangeEvent);
-    },*/
     tickUpdated: (
       state,
       { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>,
     ) => {
+      // Slice the old member out of the array
       const tickArray = [
         ...state.summaries[tickChangeEvent.slot].TimerTicks.filter((t) => t.TickNumber !== tick.TickNumber),
       ];
-      if (tickChangeEvent.distracted !== -1) tickArray.push(tick);
+
+      // pack the new member into array only if not deleted
+      if (tickChangeEvent.distracted !== -1) tickArray.push({ ...tick, Distracted: tickChangeEvent.distracted });
+
       state.summaries[tickChangeEvent.slot] = {
         ...state.summaries[tickChangeEvent.slot],
         TimerTicks: tickArray,

@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './Timer.module.scss';
 import Tick from './Tick';
+import { Summary } from '../../../functions/summaries';
 
 export interface TaskRowTicksProps {
   slot: number;
@@ -12,6 +13,7 @@ export type TimerTick = {
   TickNumber: number;
   Distracted?: number;
   SummaryID?: number;
+  summary?: Summary;
 };
 
 const TaskRowTicks = ({ slot }: TaskRowTicksProps) => {

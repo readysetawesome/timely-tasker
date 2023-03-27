@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import styles from './Timer.module.scss';
 
 import { TimerTick } from './TaskRowTicks';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummary } from './Timer.selectors';
+import { getLoadingDate, getMatchingTicks, getSummary } from './Timer.selectors';
 import { tickClicked } from './Timer.actions';
 import { TickChangeEvent } from './Timer.slice';
 import { Summary } from '../../../functions/summaries';
@@ -21,15 +21,37 @@ const nextValue = (distracted) => {
 
 const Tick = ({ tickNumber, slot }: TickProps) => {
   const summary = useSelector((state) => getSummary(state, slot));
+
   const date = useSelector(getLoadingDate);
   const dispatch = useDispatch();
   const timerTick =
     summary?.TimerTicks.find((value: TimerTick) => value.TickNumber === tickNumber) ||
-    ({ TickNumber: tickNumber, SummaryID: summary?.ID } as TimerTick);
+    ({ TickNumber: tickNumber, SummaryID: summary?.ID, Distracted: -1 } as TimerTick);
+
+  const matchingColumnTicks = useSelector((state) => getMatchingTicks(state, tickNumber)).filter(
+    (t) => t.summary?.Slot !== slot,
+  );
 
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
   const testIdAttr = `${slot}-${tickNumber}`;
+
+  useEffect(() => {
+    if (distracted !== -1) {
+      // evaluate distracted column rule
+      matchingColumnTicks.forEach((t) => {
+        if ((distracted === 0 || distracted === 1) && t.Distracted === 0) {
+          // I have a non empty state and this tick was 'focused', mark it distracted
+          tickClicked({
+            summary: t.summary,
+            slot: t.summary?.Slot,
+            tickNumber,
+            distracted: 1,
+          } as TickChangeEvent)(dispatch);
+        }
+      });
+    }
+  }, [dispatch, distracted, matchingColumnTicks, slot, tickNumber]);
 
   const style =
     distracted === 1 ? styles.tictac_distracted : distracted === 0 ? styles.tictac_focused : styles.tictac_empty;
@@ -49,9 +71,19 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
         } as Summary),
       slot,
       tickNumber,
-      distracted: nextTickValue,
+      distracted: nextTickValue === -1 ? -1 : matchingColumnTicks.length > 0 ? 1 : nextTickValue,
     } as TickChangeEvent)(dispatch);
-  }, [testIdAttr, summary, date, slot, tickNumber, nextTickValue, dispatch]);
+
+    // evaluate last tick standing rule and apply
+    if (nextTickValue === -1 && matchingColumnTicks.length === 1 && matchingColumnTicks[0].Distracted === 1) {
+      tickClicked({
+        summary: matchingColumnTicks[0].summary,
+        slot: matchingColumnTicks[0].summary?.Slot,
+        tickNumber,
+        distracted: 0,
+      } as TickChangeEvent)(dispatch);
+    }
+  }, [date, dispatch, matchingColumnTicks, nextTickValue, slot, summary, testIdAttr, tickNumber]);
 
   return <div className={style} onClick={updateTick} data-test-id={testIdAttr} />;
 };

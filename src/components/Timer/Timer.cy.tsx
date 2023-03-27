@@ -60,9 +60,6 @@ describe('<Timer />', () => {
   });
 
   it('renders ticks that interact with each other as intended, setting other ticks in the colum to distracted', () => {
-    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
-      'createTick',
-    );
     cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as(
       'updateRelatedTick',
     );
@@ -79,7 +76,7 @@ describe('<Timer />', () => {
 
     cy.get("[data-test-id='1-31'][class*=Timer_tictac_empty]").click();
 
-    cy.wait(['@createTick', '@updateRelatedTick', '@updateTickDistracted']);
+    cy.wait(['@updateRelatedTick', '@updateTickDistracted']);
 
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 2000 });
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 2000 }).click();
