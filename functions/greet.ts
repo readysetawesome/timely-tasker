@@ -1,5 +1,5 @@
 import type { PluginData } from '@cloudflare/pages-plugin-cloudflare-access';
-import type { Env, Identity } from '../lib/Identity';
+import type { Env, AppIdentity } from '../lib/Identity';
 import { GetIdentity } from '../lib/Identity';
 
 const JsonHeader = {
@@ -10,7 +10,7 @@ const JsonHeader = {
 
 const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env }) => {
+export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, env }) => {
   const result = await GetIdentity(data, env);
   let { identity } = result;
   const { jwtIdentity, provider, error } = result;
@@ -29,7 +29,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
         AND Providers.ID = ProviderID
     `);
 
-    const existingUser: any = await userQuery.bind(jwtIdentity.email).first();
+    const existingUser = await userQuery.bind(jwtIdentity.email).first<AppIdentity>();
 
     if (existingUser)
       return errorResponse(`
@@ -37,13 +37,15 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
       Was it you? If it was you, try logging in with ${existingUser.ProviderName} instead.
     `);
 
-    const batch = await env.DB.batch([
+    if (provider === undefined) return errorResponse('Unable to find/intialize provider record.');
+
+    const batch = await env.DB.batch<AppIdentity>([
       env.DB.prepare(`INSERT INTO Users (DisplayName, Email) values (?, ?)`).bind(
         jwtIdentity.name || '',
-        jwtIdentity.email,
+        jwtIdentity.email
       ),
       env.DB.prepare(
-        `INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`,
+        `INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`
       ).bind(provider.ID, jwtIdentity.user_uuid),
       env.DB.prepare(`
         SELECT * FROM Identities, Providers, Users
@@ -55,7 +57,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
 
     if (!batch[1].success) return errorResponse('unable to insert new  User & Identity mapping');
 
-    identity = batch[2].results?.[0] as unknown as Identity;
+    identity = batch[2].results?.[0];
   }
 
   return new Response(JSON.stringify(identity, null, 2), JsonHeader);

@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { Identity } from '../../../lib/Identity';
+import { AppIdentity } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
@@ -21,7 +21,7 @@ const Header = () => {
       <div key={i} className={styles.tictac_header}>
         {((i + 11) % 12) + 1}
         {suffix}
-      </div>,
+      </div>
     );
   }
   return <div className={styles.tictac_header_row}>{items}</div>;
@@ -35,7 +35,7 @@ export interface TimerProps {
 }
 
 const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
-  const [identity, setIdentity] = useState({} as Identity);
+  const [identity, setIdentity] = useState({} as AppIdentity);
   const [greeting, setGreeting] = useState('');
   const summariesRestSelectors = getRestSelectorsFor('timer', 'summariesLoading');
   const summariesLoading = useSelector(summariesRestSelectors.inProgress);

@@ -37,7 +37,7 @@ export type Summary = {
 
 const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env, request }) => {
+export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, env, request }) => {
   const result = await GetIdentity(data, env);
   const { identity, error } = result;
 
@@ -62,7 +62,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
       `
       SELECT * FROM Summaries
       WHERE UserID = ? AND Date = ? AND Slot = ?
-    `,
+    `
     )
       .bind(identity?.UserID, date, slot)
       .all<Summary>();
@@ -81,7 +81,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
         SET Content = ?, Slot = ?
         WHERE ID = ?
         RETURNING ${FULL_JSON_OBJECT_SELECT}
-      `,
+      `
       )
         .bind(text, slot, results?.[0].ID)
         .all<Summary>();
@@ -92,7 +92,7 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
       const { success, results: _results } = await env.DB.prepare(
         `
         INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?) RETURNING ${FULL_JSON_OBJECT_SELECT}
-      `,
+      `
       )
         .bind(identity?.UserID, text, date, slot)
         .all<Summary>();
@@ -114,13 +114,13 @@ export const onRequest: PagesFunction<Env, any, PluginData> = async ({ data, env
       SELECT ${FULL_JSON_OBJECT_SELECT}
       FROM Summaries
       WHERE UserID=? AND Date = ? ORDER BY Slot;
-    `,
+    `
     )
       .bind(identity?.UserID, searchParams.get('date'))
       .all<Summary>();
 
     // Slight hack to unpack json values returned by the sqlite api
-    results?.forEach(value => {
+    results?.forEach((value) => {
       value.TimerTicks = JSON.parse(value.TimerTicks as unknown as string);
     });
 

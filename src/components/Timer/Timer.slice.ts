@@ -56,7 +56,7 @@ const slice = createSlice({
 
     tickUpdated: (
       state,
-      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>,
+      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>
     ) => {
       // Slice the old member out of the array
       const tickArray = [

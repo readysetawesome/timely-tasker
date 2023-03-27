@@ -9,7 +9,7 @@ export const getSummary = createSelector(
   [getSummaries, (state, slot: number) => slot],
   (summaries, slot): Summary | undefined => {
     return summaries[slot];
-  },
+  }
 );
 
 export const getMatchingTicks = createSelector(
@@ -23,5 +23,5 @@ export const getMatchingTicks = createSelector(
       });
     });
     return matching;
-  },
+  }
 );
