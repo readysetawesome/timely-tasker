@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 
 import styles from './Timer.module.scss';
 
@@ -36,23 +36,6 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
   const nextTickValue = nextValue(distracted);
   const testIdAttr = `${slot}-${tickNumber}`;
 
-  useEffect(() => {
-    if (distracted !== -1) {
-      // evaluate distracted column rule
-      matchingColumnTicks.forEach((t) => {
-        if ((distracted === 0 || distracted === 1) && t.Distracted === 0) {
-          // I have a non empty state and this tick was 'focused', mark it distracted
-          tickClicked({
-            summary: t.summary,
-            slot: t.summary?.Slot,
-            tickNumber,
-            distracted: 1,
-          } as TickChangeEvent)(dispatch);
-        }
-      });
-    }
-  }, [dispatch, distracted, matchingColumnTicks, slot, tickNumber]);
-
   const style =
     distracted === 1 ? styles.tictac_distracted : distracted === 0 ? styles.tictac_focused : styles.tictac_empty;
 
@@ -82,6 +65,21 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
         tickNumber,
         distracted: 0,
       } as TickChangeEvent)(dispatch);
+    } else {
+      if (nextTickValue !== -1) {
+        // evaluate distracted column rule
+        matchingColumnTicks.forEach((t) => {
+          if (t.Distracted === 0) {
+            // some other tick in this column, mark it distracted
+            tickClicked({
+              summary: t.summary,
+              slot: t.summary?.Slot,
+              tickNumber,
+              distracted: 1,
+            } as TickChangeEvent)(dispatch);
+          }
+        });
+      }
     }
   }, [date, dispatch, matchingColumnTicks, nextTickValue, slot, summary, testIdAttr, tickNumber]);
 
