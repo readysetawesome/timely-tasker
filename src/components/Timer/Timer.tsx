@@ -3,7 +3,7 @@ import { Identity } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
-import RestApi, { getRestSelectorFor } from '../../RestApi';
+import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate } from './Timer.selectors';
 import { fetchSummaries } from './Timer.actions';
@@ -37,10 +37,11 @@ export interface TimerProps {
 const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState('');
-  const summariesLoading = useSelector(getRestSelectorFor('timer', 'summariesLoading').inProgress);
-  const summariesSuccess = useSelector(getRestSelectorFor('timer', 'summariesLoading').success);
-  const summariesError = useSelector(getRestSelectorFor('timer', 'summariesLoading').error);
-  const summaryError = useSelector(getRestSelectorFor('timer', 'summaryCreated').error);
+  const summariesRestSelectors = getRestSelectorsFor('timer', 'summariesLoading');
+  const summariesLoading = useSelector(summariesRestSelectors.inProgress);
+  const summariesSuccess = useSelector(summariesRestSelectors.success);
+  const summariesError = useSelector(summariesRestSelectors.error);
+  const summaryError = useSelector(getRestSelectorsFor('timer', 'summaryCreated').error);
   const loadingDate = useSelector(getLoadingDate);
   const dispatch = useDispatch();
 
