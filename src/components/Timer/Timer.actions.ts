@@ -35,6 +35,19 @@ export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch
       );
     }); // TODO: .catch()
   } else {
+    // Dispatch immediately if the summary already exists, to ensure snappy UI response
+    dispatch(
+      tickUpdated({
+        tick: {
+          TickNumber: tickChangeEvent.tickNumber,
+          SummaryID: tickChangeEvent.summary.ID,
+          Distracted: tickChangeEvent.distracted,
+          summary: tickChangeEvent.summary,
+        } as TimerTick,
+        tickChangeEvent,
+      }),
+    );
+    // dubious of second dispatch, but it's going to add the record ID, so leave it for now
     await RestApi.createTick(tickChangeEvent, (tick: TimerTick) => dispatch(tickUpdated({ tick, tickChangeEvent })));
   }
 };
