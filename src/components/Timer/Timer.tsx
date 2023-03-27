@@ -60,12 +60,13 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   }, [identity]);
 
   useEffect(() => {
-    if (!identity) return;
+    // Don't do anything until a greeting is set, it means identity exists in db
+    if (!identity || greeting === '') return;
     if (loadingDate !== date && !summariesLoading && !summariesError) {
       fetchSummaries(date)(dispatch);
       return;
     }
-  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch]);
+  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch, greeting]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);
