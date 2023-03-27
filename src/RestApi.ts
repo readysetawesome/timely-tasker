@@ -51,11 +51,12 @@ const createSummary = (summary: Summary, callback) =>
     .then((response) => response.json())
     .then((data) => callback(data));
 
-const getSummaries = (useDate: number, callback: (summaries: Array<Summary>) => void) => {
+const getSummaries = (useDate: number, callback: (summaries: Array<Summary>) => void, errorCallback: () => void) => {
   // List all summaries for the target date
   fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions)
     .then((response) => response.json())
-    .then(callback);
+    .then(callback)
+    .catch(errorCallback);
 };
 
 const greet = (callback) =>

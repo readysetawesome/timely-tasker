@@ -15,9 +15,13 @@ import { TimerTick } from './TaskRowTicks';
 export const fetchSummaries = (useDate: number) => async (dispatch) => {
   try {
     dispatch(summariesLoading(useDate));
-    await RestApi.getSummaries(useDate, (response) => dispatch(summariesLoaded(response)));
+    await RestApi.getSummaries(
+      useDate,
+      (response) => dispatch(summariesLoaded(response)),
+      () => dispatch(summariesError()),
+    );
   } catch (e) {
-    dispatch(summariesError);
+    dispatch(summariesError());
     return console.error(e.message);
   }
 };

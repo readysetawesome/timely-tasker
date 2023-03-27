@@ -162,4 +162,15 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
     cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
   });
+
+  it('handles errors from summary fetch step', () => {
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { forceNetworkError: true }).as(
+      'getSummariesFail',
+    );
+    cy.get('[data-test-id="left-nav-clicker"]').click();
+    cy.wait(['@getSummariesFail']);
+    cy.get('[class*=Timer_content]').then(($content) => {
+      expect($content).to.contain('Error loading Summary text and ticks');
+    });
+  });
 });

@@ -101,16 +101,21 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>
-          <div className={styles.left_column}>
-            <div key={'headerspacer'} className={styles.summary_header}>
-              Task Summary
-            </div>
-            {summaryElements}
-          </div>
-          <div className={styles.right_column}>
-            <Header />
-            {tickRowElements}
-          </div>
+          {summariesError && 'Error loading Summary text and ticks!'}
+          {!summariesError && (
+            <>
+              <div className={styles.left_column}>
+                <div key={'headerspacer'} className={styles.summary_header}>
+                  Task Summary
+                </div>
+                {summaryElements}
+              </div>
+              <div className={styles.right_column}>
+                <Header />
+                {tickRowElements}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
