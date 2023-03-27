@@ -1,15 +1,10 @@
-import React, { useCallback } from 'react';
-
-import { Summary } from '../../../functions/summaries';
+import React from 'react';
 import styles from './Timer.module.scss';
 import Tick from './Tick';
+import { Summary } from '../../../functions/summaries';
 
 export interface TaskRowTicksProps {
-  summary?: Summary;
-  summaries: Summary[];
   slot: number;
-  useDate: number;
-  setSummaryState: React.Dispatch<React.SetStateAction<Summary>>;
 }
 
 export type TimerTick = {
@@ -18,42 +13,19 @@ export type TimerTick = {
   TickNumber: number;
   Distracted?: number;
   SummaryID?: number;
+  summary?: Summary;
 };
 
-const TaskRowTicks = ({ summary, setSummaryState, slot, useDate, summaries }: TaskRowTicksProps) => {
+const TaskRowTicks = ({ slot }: TaskRowTicksProps) => {
   const ticks = new Array<JSX.Element>();
 
-  for (let i = 0; i < 96; i++) {
-    const timerTick =
-      summary?.TimerTicks.find((value: TimerTick) => value.TickNumber === i) ||
-      ({ TickNumber: i, SummaryID: summary?.ID } as TimerTick);
-
-    // This linter disable is a very special case:
-    // Its only OK because the loop runs a fixed number of times
-    // 96 ticks, one for each 15 minute chunk of the day. never changes.
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const setTick = useCallback(
-      (tick: TimerTick) => {
-        const ammendedlist = summary?.TimerTicks.filter((t: TimerTick) => t.TickNumber !== tick.TickNumber) || [];
-
-        if (summary) {
-          summary.TimerTicks = [...ammendedlist, tick];
-          setSummaryState(summary);
-        }
-      },
-      [summary, setSummaryState],
-    );
-
+  for (let tickNumber = 0; tickNumber < 96; tickNumber++) {
     ticks.push(
-      <div className={styles.tictac_cell} key={i}>
+      <div className={styles.tictac_cell} key={tickNumber}>
         <Tick
           {...{
-            summaries,
-            summary: summary || ({ Date: useDate, Content: '', Slot: slot, TimerTicks: [] } as Summary),
-            tickNumber: i,
-            timerTick: timerTick,
-            setTick,
-            setSummaryState,
+            slot,
+            tickNumber,
           }}
         />
       </div>,

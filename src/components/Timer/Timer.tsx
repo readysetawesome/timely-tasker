@@ -1,11 +1,12 @@
-import React, { ReactElement, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { Identity } from '../../../lib/Identity';
-import { Summary } from '../../../functions/summaries';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
-import RestApi from '../../RestApi';
-import debounce from 'lodash/debounce';
+import RestApi, { getRestSelectorFor } from '../../RestApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { getLoadingDate } from './Timer.selectors';
+import { fetchSummaries } from './Timer.actions';
 
 export const dateDisplay = (date) => {
   date = new Date(date);
@@ -36,7 +37,12 @@ export interface TimerProps {
 const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState('');
-  const [summaries, setSummaries] = useState<Array<Summary> | undefined>(undefined);
+  const summariesLoading = useSelector(getRestSelectorFor('timer', 'summariesLoading').inProgress);
+  const summariesSuccess = useSelector(getRestSelectorFor('timer', 'summariesLoading').success);
+  const summariesError = useSelector(getRestSelectorFor('timer', 'summariesLoading').error);
+  const summaryError = useSelector(getRestSelectorFor('timer', 'summaryCreated').error);
+  const loadingDate = useSelector(getLoadingDate);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     RestApi.greet((identity) => setIdentity(identity));
@@ -49,20 +55,21 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
         Hello, ${identity.DisplayName === '' ? 'my friend' : identity.DisplayName}!
         You are logged in with ${identity.ProviderName}.
       `);
-      if (summaries) {
-        // loadingn on nav, clear existing state first to eliminate any entered text
-        setSummaries(undefined);
-      }
-      RestApi.getSummaries(date, (summaries) => setSummaries(summaries));
     }
-    // Don't require summaries here or we'll fire the effect too often
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [identity, date]);
+  }, [identity]);
+
+  useEffect(() => {
+    if (!identity) return;
+    if (loadingDate !== date && !summariesLoading && !summariesError) {
+      fetchSummaries(date)(dispatch);
+      return;
+    }
+  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
-    if (summaries && !didScroll) {
+    if (summariesSuccess && !didScroll) {
       const targetTickNumber = currentTime.getHours() * 4 - 4;
       const targetTick = document.querySelector(`[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`);
       if (targetTick) {
@@ -70,56 +77,15 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       }
       setDidScroll(true);
     }
-  }, [currentTime, summaries, didScroll]);
+  }, [currentTime, summariesSuccess, didScroll]);
 
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
 
-  for (let i = 0; i < 12; i++) {
-    const foundSummary = () =>
-      summaries?.find((value) => value.Slot === i) ||
-      ({ TimerTicks: [], Slot: i, Date: date, Content: '', ID: undefined, UserID: undefined } as Summary);
-
-    const setSummaryState = useCallback(
-      (s: Summary) => {
-        setSummaries([{ ...s }, ...(summaries?.filter((_s) => _s.Slot !== i) || [])]);
-      },
-      [summaries, i],
-    );
-
-    const handleSummaryChange = useMemo(
-      () =>
-        debounce((text: string | undefined) => {
-          if (text !== undefined && foundSummary().Content !== text) {
-            RestApi.createSummary({ ...foundSummary(), Content: text } as Summary, (s: Summary) => {
-              setSummaryState(s);
-            });
-          }
-        }, 800),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [setSummaryState, summaries],
-    );
-
-    if (summaries !== undefined) {
-      summaryElements.push(
-        <TaskRowSummary
-          summaryText={foundSummary().Content}
-          handleSummaryChange={handleSummaryChange}
-          slot={i}
-          key={i}
-        />,
-      );
-
-      tickRowElements.push(
-        <TaskRowTicks
-          summaries={summaries}
-          setSummaryState={setSummaryState}
-          key={i}
-          useDate={date}
-          slot={i}
-          summary={foundSummary()}
-        />,
-      );
+  for (let slot = 0; slot < 12; slot++) {
+    if (summariesSuccess) {
+      summaryElements.push(<TaskRowSummary {...{ date, slot, key: slot }} />);
+      tickRowElements.push(<TaskRowTicks {...{ date, slot, key: slot }} />);
     }
   }
 
@@ -136,16 +102,23 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>
-          <div className={styles.left_column}>
-            <div key={'headerspacer'} className={styles.summary_header}>
-              Task Summary
-            </div>
-            {summaryElements}
-          </div>
-          <div className={styles.right_column}>
-            <Header />
-            {tickRowElements}
-          </div>
+          {summaryError && <span className={styles.error}>Error setting Summary text</span>}
+
+          {summariesError && 'Error loading Summary text and ticks!'}
+          {!summariesError && (
+            <>
+              <div className={styles.left_column}>
+                <div key={'headerspacer'} className={styles.summary_header}>
+                  Task Summary
+                </div>
+                {summaryElements}
+              </div>
+              <div className={styles.right_column}>
+                <Header />
+                {tickRowElements}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
