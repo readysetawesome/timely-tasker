@@ -1,13 +1,11 @@
-import React, { ReactElement, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { Identity } from '../../../lib/Identity';
-import { Summary } from '../../../functions/summaries';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
 import RestApi, { getRestSelectorFor } from '../../RestApi';
-import debounce from 'lodash/debounce';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummaries } from './Timer.selectors';
+import { getLoadingDate } from './Timer.selectors';
 import { fetchSummaries } from './Timer.actions';
 
 export const dateDisplay = (date) => {
@@ -39,11 +37,9 @@ export interface TimerProps {
 const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
   const [identity, setIdentity] = useState({} as Identity);
   const [greeting, setGreeting] = useState('');
-  //const [, setSummaries] = useState<Array<Summary> | undefined>(undefined);
-  const summaries = useSelector(getSummaries);
-  const summariesLoading = useSelector(getRestSelectorFor('timer', 'loadingSummaries').inProgress)
-  const summariesSuccess = useSelector(getRestSelectorFor('timer', 'loadingSummaries').success);
-  const summariesError = useSelector(getRestSelectorFor('timer', 'loadingSummaries').error);
+  const summariesLoading = useSelector(getRestSelectorFor('timer', 'summariesLoading').inProgress);
+  const summariesSuccess = useSelector(getRestSelectorFor('timer', 'summariesLoading').success);
+  const summariesError = useSelector(getRestSelectorFor('timer', 'summariesLoading').error);
   const loadingDate = useSelector(getLoadingDate);
   const dispatch = useDispatch();
 
@@ -72,7 +68,7 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
-    if (summaries && !didScroll) {
+    if (summariesSuccess && !didScroll) {
       const targetTickNumber = currentTime.getHours() * 4 - 4;
       const targetTick = document.querySelector(`[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`);
       if (targetTick) {
@@ -80,56 +76,15 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       }
       setDidScroll(true);
     }
-  }, [currentTime, summaries, didScroll]);
+  }, [currentTime, summariesSuccess, didScroll]);
 
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
 
-  for (let i = 0; i < 12; i++) {
-    const foundSummary = () =>
-      summaries[i] ||
-      ({ TimerTicks: [], Slot: i, Date: date, Content: '', ID: undefined, UserID: undefined } as Summary);
-
-    const setSummaryState = useCallback(
-      (/*s: Summary*/) => {
-        // setSummaries([{ ...s }, ...(summaries?.filter((_s) => _s.Slot !== i) || [])]);
-      },
-      [/*summaries, i*/],
-    );
-
-    const handleSummaryChange = useMemo(
-      () =>
-        debounce((text: string | undefined) => {
-          if (text !== undefined && foundSummary().Content !== text) {
-            RestApi.createSummary({ ...foundSummary(), Content: text } as Summary, (/*s: Summary*/) => {
-              //setSummaryState(s);
-            });
-          }
-        }, 800),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [setSummaryState, summaries],
-    );
-
-    if (summaries !== undefined) {
-      summaryElements.push(
-        <TaskRowSummary
-          summaryText={foundSummary().Content}
-          handleSummaryChange={handleSummaryChange}
-          slot={i}
-          key={i}
-        />,
-      );
-
-      tickRowElements.push(
-        <TaskRowTicks
-          summaries={Object.values(summaries)}
-          setSummaryState={setSummaryState}
-          key={i}
-          useDate={date}
-          slot={i}
-          summary={foundSummary()}
-        />,
-      );
+  for (let slot = 0; slot < 12; slot++) {
+    if (summariesSuccess) {
+      summaryElements.push(<TaskRowSummary {...{ date, slot, key: slot }} />);
+      tickRowElements.push(<TaskRowTicks {...{ date, slot, key: slot }} />);
     }
   }
 

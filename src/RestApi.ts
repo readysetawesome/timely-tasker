@@ -1,6 +1,6 @@
 import { RequestInitCfProperties } from '@cloudflare/workers-types';
 import { Summary } from '../functions/summaries';
-import { TickChangeEvent } from './components/Timer/Tick';
+import { TickChangeEvent } from './components/Timer/Timer.slice';
 
 export type RestApiStatus = {
   loaded: boolean;

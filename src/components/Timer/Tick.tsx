@@ -1,22 +1,17 @@
-import React, { useCallback, useEffect } from 'react';
-import { Summary } from '../../../functions/summaries';
-import styles from './Timer.module.scss';
-import RestApi from '../../RestApi';
-import PubSub from 'pubsub-js';
-import { TimerTick } from './TaskRowTicks';
+import React, { useCallback } from 'react';
 
-export type TickChangeEvent = {
-  tickNumber: number;
-  summary: Summary;
-  distracted: number;
-};
+import styles from './Timer.module.scss';
+
+import { TimerTick } from './TaskRowTicks';
+import { useDispatch, useSelector } from 'react-redux';
+import { getLoadingDate, getSummary } from './Timer.selectors';
+import { tickClicked } from './Timer.actions';
+import { TickChangeEvent } from './Timer.slice';
+import { Summary } from '../../../functions/summaries';
 
 export interface TickProps {
   tickNumber: number;
-  timerTick?: TimerTick;
-  setTick: React.Dispatch<React.SetStateAction<TimerTick | undefined>>;
-  summary: Summary;
-  summaries: Summary[];
+  slot: number;
 }
 
 const nextValue = (distracted) => {
@@ -24,129 +19,39 @@ const nextValue = (distracted) => {
   return distracted === 1 ? -1 : distracted === 0 ? 1 : 0;
 };
 
-type PubSubTickMessage = {
-  tick: TimerTick;
-  summaryID: number;
-  distracted: number;
-  fulfilled: boolean;
-  beingDistracted: () => void;
-};
+const Tick = ({ tickNumber, slot }: TickProps) => {
+  const summary = useSelector((state) => getSummary(state, slot));
+  const date = useSelector(getLoadingDate);
+  const dispatch = useDispatch();
+  const timerTick =
+    summary?.TimerTicks.find((value: TimerTick) => value.TickNumber === tickNumber) ||
+    ({ TickNumber: tickNumber, SummaryID: summary?.ID } as TimerTick);
 
-const Tick = ({ tickNumber, timerTick, setTick, summary, summaries }: TickProps) => {
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
-
-  const testIdAttr = `${summary.Slot}-${tickNumber}`;
+  const testIdAttr = `${slot}-${tickNumber}`;
 
   const style =
     distracted === 1 ? styles.tictac_distracted : distracted === 0 ? styles.tictac_focused : styles.tictac_empty;
-
-  useEffect(() => {
-    const sub = PubSub.subscribe(`tick:${tickNumber}`, (_, message: PubSubTickMessage) => {
-      // only respond to pubsub from other summary rows within the same column
-      if (message.summaryID !== summary?.ID) {
-        // Some other row was changed
-        if (message.tick.Distracted === 0 && (timerTick?.Distracted === 0 || timerTick?.Distracted === 1)) {
-          if (!message.fulfilled) {
-            // I need to update myself to distracted now...
-            RestApi.createTick(
-              {
-                tickNumber,
-                summary: summary,
-                distracted: 1,
-              } as TickChangeEvent,
-              (newTimerTick) => {
-                setTick(newTimerTick);
-                // ... and dispatch to the initiator so they can update to "distracted" state
-                message.beingDistracted();
-              },
-            );
-            message.fulfilled = true;
-          }
-        } else if (message.tick.Distracted === -1) {
-          // another tick was deleted from my column,
-          // check for last tick standing in column and update to focused
-          const anyOthers = summaries.find(
-            (s) =>
-              s.Slot !== summary.Slot && s.TimerTicks.find((t) => t.TickNumber === tickNumber && t.Distracted != -1),
-          );
-          if (timerTick?.Distracted === 1 && !anyOthers) {
-            RestApi.createTick(
-              {
-                tickNumber,
-                summary: summary,
-                distracted: 0,
-              } as TickChangeEvent,
-              setTick,
-            );
-          }
-        }
-      }
-    });
-    return () => PubSub.unsubscribe(sub);
-  }, [summary, timerTick, tickNumber, setTick, summaries]);
 
   const updateTick = useCallback(() => {
     // Do a visual update immediately for "fast" feeling UI
     const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
     if (element) element.className = styles.tictac_clicked;
 
-    const createTick = (s: Summary) => {
-      RestApi.createTick(
-        {
-          tickNumber,
-          summary: summary,
-          distracted: nextTickValue,
-        } as TickChangeEvent,
-        (newTimerTick: TimerTick) => {
-          if (nextTickValue !== -1) {
-            setTick(newTimerTick);
-            PubSub.publish(`tick:${tickNumber}`, {
-              tick: newTimerTick,
-              summaryID: s.ID,
-              distracted: nextTickValue,
-              fulfilled: false,
-              beingDistracted: () => {
-                // this callback is invoked to notify that user is distracted by engaging
-                // with multiple tasks as once.
-                // The receiver should only run it once! Then set fulfilled = true
-                RestApi.createTick(
-                  {
-                    tickNumber,
-                    summary: s,
-                    distracted: 1,
-                  } as TickChangeEvent,
-                  (newTimerTick: TimerTick) => {
-                    setTick(newTimerTick);
-                  },
-                );
-              },
-            });
-          } else {
-            if (timerTick) {
-              timerTick.Distracted = -1;
-              setTick({ ...timerTick });
-              PubSub.publish(`tick:${tickNumber}`, {
-                tick: timerTick,
-                summaryID: s.ID,
-                distracted: -1,
-              } as PubSubTickMessage);
-            }
-          }
-        },
-      );
-    };
-
-    if (summary.ID !== undefined) {
-      createTick(summary);
-    } else {
-      // We need a summaryID to associate the ticks with,
-      // thus we create an empty summary if not exists for this row
-      RestApi.createSummary(summary, (s) => {
-        createTick(s);
-      });
-    }
-  }, [testIdAttr, summary, tickNumber, nextTickValue, setTick, timerTick]);
+    tickClicked({
+      summary:
+        summary ||
+        ({
+          Date: date,
+          Slot: slot,
+          Content: '',
+        } as Summary),
+      slot,
+      tickNumber,
+      distracted: nextTickValue,
+    } as TickChangeEvent)(dispatch);
+  }, [testIdAttr, summary, date, slot, tickNumber, nextTickValue, dispatch]);
 
   return <div className={style} onClick={updateTick} data-test-id={testIdAttr} />;
 };

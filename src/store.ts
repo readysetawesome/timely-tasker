@@ -7,8 +7,6 @@ const reducer = combineReducers({
   timer,
 });
 
-const store = configureStore({
-  reducer,
-});
+const storeMaker = () => configureStore({ reducer });
 
-export default store;
+export default storeMaker;

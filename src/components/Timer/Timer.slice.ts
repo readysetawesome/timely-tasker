@@ -1,37 +1,89 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit'
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { Summary } from '../../../functions/summaries';
 import { ApiStates, RestApiStatus } from '../../RestApi';
-
+import { TimerTick } from './TaskRowTicks';
 
 export interface TimerState {
   summaries: { [slot: number]: Summary };
+  pendingSummaries: { [slot: number]: Summary };
   loadingDate?: number;
-  loadingSummaries: RestApiStatus;
+  summariesLoading: RestApiStatus;
+  // ticksChanging: { [slot: number]: TimerTick[] };
 }
 
-const initialState = { summaries: {}, loadingSummaries: ApiStates.Initial } as TimerState;
+const initialState = {
+  summaries: {},
+  pendingSummaries: {},
+  summariesLoading: ApiStates.Initial,
+  // ticksChanging: [],
+} as TimerState;
+
+export type TickChangeEvent = {
+  tickNumber: number;
+  slot: number;
+  summary: Summary;
+  distracted: number;
+};
 
 const slice = createSlice({
   name: 'timer',
   initialState,
   reducers: {
-    loadedSummaries: (state, action: PayloadAction<Summary[]>) => {
+    summariesLoaded: (state, action: PayloadAction<Summary[]>) => {
       action.payload.forEach((s) => {
-        console.log(s);
         state.summaries[s.Slot] = s;
       });
-      state.loadingSummaries = ApiStates.Success;
+      state.summariesLoading = ApiStates.Success;
     },
-    loadingSummaries: (state, action: PayloadAction<number>) => {
-      state.loadingSummaries = ApiStates.InProgress;
+    summariesLoading: (state, action: PayloadAction<number>) => {
+      state.summaries = {};
+      state.summariesLoading = ApiStates.InProgress;
       state.loadingDate = action.payload;
     },
-    errorSummaries: (state) => {
-      state.loadingSummaries = ApiStates.Error;
+    summariesError: (state) => {
+      state.summariesLoading = ApiStates.Error;
+    },
+
+    summaryCreated: (state, action: PayloadAction<Summary>) => {
+      state.summaries[action.payload.Slot] = action.payload;
+      delete state.pendingSummaries[action.payload.Slot];
+      // Check for ticks that we queued up because this was pending?
+    },
+    summaryPending: (state, action: PayloadAction<Summary>) => {
+      state.pendingSummaries[action.payload.Slot] = action.payload;
+    },
+    summaryError: (state, action: PayloadAction<Summary>) => {
+      state.pendingSummaries[action.payload.Slot] = action.payload;
+      delete state.pendingSummaries[action.payload.Slot];
+    },
+
+    /*tickChanged: (state, { payload: tickChangeEvent }: PayloadAction<TickChangeEvent>) => {
+      // state.ticksChanging[tickChangeEvent.slot].push(tickChangeEvent);
+    },*/
+    tickUpdated: (
+      state,
+      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>,
+    ) => {
+      const tickArray = [
+        ...state.summaries[tickChangeEvent.slot].TimerTicks.filter((t) => t.TickNumber !== tick.TickNumber),
+      ];
+      if (tickChangeEvent.distracted !== -1) tickArray.push(tick);
+      state.summaries[tickChangeEvent.slot] = {
+        ...state.summaries[tickChangeEvent.slot],
+        TimerTicks: tickArray,
+      };
     },
   },
 });
 
-export const { loadedSummaries, loadingSummaries, errorSummaries } = slice.actions;
+export const {
+  summariesLoaded,
+  summariesLoading,
+  summariesError,
+  summaryCreated,
+  summaryPending,
+  summaryError,
+  tickUpdated,
+} = slice.actions;
 export default slice.reducer;

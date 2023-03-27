@@ -5,6 +5,9 @@ import { mount } from 'cypress/react18';
 import summaries from '../../../cypress/fixtures/summaries.json';
 import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
+import { Provider } from 'react-redux';
+import storeMaker from '../../store';
+
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
 
@@ -16,7 +19,11 @@ beforeEach(() => {
   const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
   cy.clock().then((clock) => clock.setSystemTime(useCurrentTime));
 
-  mount(<App />).as('mountedComponent');
+  mount(
+    <Provider store={storeMaker()}>
+      <App />
+    </Provider>,
+  ).as('mountedComponent');
 
   cy.clock().then((clock) => clock.restore());
 
