@@ -31,7 +31,7 @@ export const ApiStates = {
   } as RestApiStatus,
 };
 
-export const getRestSelectorFor = (slice, target) => {
+export const getRestSelectorsFor = (slice, target) => {
   return {
     inProgress: (state) => state[slice][target].inProgress,
     error: (state) => state[slice][target].error,
