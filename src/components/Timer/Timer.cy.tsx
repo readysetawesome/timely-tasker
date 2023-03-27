@@ -141,6 +141,20 @@ describe('<Timer />', () => {
     });
   });
 
+  it('ticking a new row before typing should cause dependent summary object create', () => {
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=3`, {
+      fixture: 'summarySlotThree',
+    }).as('createSummaryNew');
+
+    cy.intercept('POST', `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`, {
+      fixture: 'summarySlotThreeTick',
+    }).as('createTick');
+
+    cy.get("[data-test-id='3-33']").click();
+
+    cy.wait(['@createSummaryNew', '@createTick']);
+  });
+
   it('tasks should not leak on nav', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
       fixture: 'summarySlotThree',

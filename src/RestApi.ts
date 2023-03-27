@@ -43,13 +43,11 @@ const isDevMode = process.env.NODE_ENV === 'development';
 const fetchPrefix = isDevMode ? 'http://127.0.0.1:8788' : '';
 const fetchOptions = (isDevMode ? { mode: 'cors' } : {}) as RequestInit<RequestInitCfProperties>;
 
-const createSummary = (summary: Summary, callback) =>
+const createSummary = (summary: Summary) =>
   fetch(
     fetchPrefix + `/summaries?date=${summary.Date}&text=${encodeURIComponent(summary.Content)}&slot=${summary.Slot}`,
     { ...fetchOptions, method: 'POST' },
-  )
-    .then((response) => response.json())
-    .then((data) => callback(data));
+  ).then((response) => response.json());
 
 const getSummaries = (useDate: number, callback: (summaries: Array<Summary>) => void, errorCallback: () => void) => {
   // List all summaries for the target date
