@@ -27,7 +27,7 @@ const onRequestCors: PagesFunction = async ({ next }) => {
   return response;
 };
 
-const onRequestDoPlugin: PagesFunction<Env> = context => {
+const onRequestDoPlugin: PagesFunction<Env> = (context) => {
   const aud = context.env.AUDIENCE;
   if (typeof aud !== 'string') {
     // must be local dev mode, just pass through

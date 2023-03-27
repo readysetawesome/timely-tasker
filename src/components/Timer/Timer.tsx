@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { Identity } from '../../../lib/Identity';
+import { AppIdentity } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
@@ -21,7 +21,7 @@ const Header = () => {
       <div key={i} className={styles.tictac_header}>
         {((i + 11) % 12) + 1}
         {suffix}
-      </div>,
+      </div>
     );
   }
   return <div className={styles.tictac_header_row}>{items}</div>;
@@ -35,7 +35,7 @@ export interface TimerProps {
 }
 
 const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
-  const [identity, setIdentity] = useState({} as Identity);
+  const [identity, setIdentity] = useState({} as AppIdentity);
   const [greeting, setGreeting] = useState('');
   const summariesRestSelectors = getRestSelectorsFor('timer', 'summariesLoading');
   const summariesLoading = useSelector(summariesRestSelectors.inProgress);
@@ -60,12 +60,13 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   }, [identity]);
 
   useEffect(() => {
-    if (!identity) return;
+    // Don't do anything until a greeting is set, it means identity exists in db
+    if (!identity || greeting === '') return;
     if (loadingDate !== date && !summariesLoading && !summariesError) {
       fetchSummaries(date)(dispatch);
       return;
     }
-  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch]);
+  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch, greeting]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);

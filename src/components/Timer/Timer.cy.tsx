@@ -22,7 +22,7 @@ beforeEach(() => {
   mount(
     <Provider store={storeMaker()}>
       <App />
-    </Provider>,
+    </Provider>
   ).as('mountedComponent');
 
   cy.clock().then((clock) => clock.restore());
@@ -61,16 +61,16 @@ describe('<Timer />', () => {
 
   it('renders ticks that interact with each other as intended, setting other ticks in the colum to distracted', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as(
-      'updateRelatedTick',
+      'updateRelatedTick'
     );
     cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`, { fixture: 'tickDistracted' }).as(
-      'updateTickDistracted',
+      'updateTickDistracted'
     );
     cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=-1`, { fixture: 'tickRemoved' }).as(
-      'updateTickRemoved',
+      'updateTickRemoved'
     );
     cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
-      'updateTickOriginal',
+      'updateTickOriginal'
     );
     cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
 
@@ -113,7 +113,7 @@ describe('<Timer />', () => {
       cy.get("[data-test-id='summary-text-2']").then(($el) => {
         expect($el[0].getAttribute('value')).to.equal(targetText);
       });
-    },
+    }
   );
 
   it('ticking a box should not erase the newly entered summary', () => {
@@ -157,7 +157,7 @@ describe('<Timer />', () => {
 
   it('handles errors with summary create', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, { forceNetworkError: true }).as(
-      'createSummaryFail',
+      'createSummaryFail'
     );
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
@@ -174,7 +174,7 @@ describe('<Timer />', () => {
     }).as('createSummaryNew');
 
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { fixture: 'summariesPast' }).as(
-      'getSummariesPast',
+      'getSummariesPast'
     );
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
@@ -192,7 +192,7 @@ describe('<Timer />', () => {
 
   it('handles errors from summary fetch step on nav', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { forceNetworkError: true }).as(
-      'getSummariesFail',
+      'getSummariesFail'
     );
     cy.get('[data-test-id="left-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);

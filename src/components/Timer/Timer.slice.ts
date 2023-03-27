@@ -6,7 +6,6 @@ import { TimerTick } from './TaskRowTicks';
 
 export interface TimerState {
   summaries: { [slot: number]: Summary };
-  pendingSummaries: { [slot: number]: Summary };
   loadingDate?: number;
   summariesLoading: RestApiStatus;
   summaryCreated: RestApiStatus;
@@ -14,7 +13,6 @@ export interface TimerState {
 
 const initialState = {
   summaries: {},
-  pendingSummaries: {},
   summariesLoading: ApiStates.Initial,
   summaryCreated: ApiStates.Initial,
 } as TimerState;
@@ -47,22 +45,18 @@ const slice = createSlice({
 
     summaryCreated: (state, action: PayloadAction<Summary>) => {
       state.summaries[action.payload.Slot] = action.payload;
-      delete state.pendingSummaries[action.payload.Slot];
       state.summaryCreated = ApiStates.Success;
     },
-    summaryPending: (state, action: PayloadAction<Summary>) => {
-      state.pendingSummaries[action.payload.Slot] = action.payload;
+    summaryPending: (state) => {
       state.summaryCreated = ApiStates.InProgress;
     },
-    summaryError: (state, action: PayloadAction<Summary>) => {
-      state.pendingSummaries[action.payload.Slot] = action.payload;
-      delete state.pendingSummaries[action.payload.Slot];
+    summaryError: (state) => {
       state.summaryCreated = ApiStates.Error;
     },
 
     tickUpdated: (
       state,
-      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>,
+      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>
     ) => {
       // Slice the old member out of the array
       const tickArray = [

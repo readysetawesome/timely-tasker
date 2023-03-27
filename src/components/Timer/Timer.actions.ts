@@ -11,8 +11,9 @@ import {
 import RestApi from '../../RestApi';
 import { Summary } from '../../../functions/summaries';
 import { TimerTick } from './TaskRowTicks';
+import { Dispatch } from '@reduxjs/toolkit';
 
-export const fetchSummaries = (useDate: number) => async (dispatch) => {
+export const fetchSummaries = (useDate: number) => async (dispatch: Dispatch) => {
   dispatch(summariesLoading(useDate));
   await RestApi.getSummaries(useDate)
     .then((response: Summary[]) => dispatch(summariesLoaded(response)))
@@ -20,18 +21,18 @@ export const fetchSummaries = (useDate: number) => async (dispatch) => {
 };
 
 export const setSummary = (s: Summary) => async (dispatch) => {
-  dispatch(summaryPending(s));
+  dispatch(summaryPending());
   await RestApi.createSummary(s)
     .then((s: Summary) => dispatch(summaryCreated(s)))
-    .catch(() => dispatch(summaryError(s)));
+    .catch(() => dispatch(summaryError()));
 };
 
-export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch) => {
+export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch: Dispatch) => {
   if (tickChangeEvent.summary.ID === undefined) {
     await RestApi.createSummary(tickChangeEvent.summary).then((summary: Summary) => {
       dispatch(summaryCreated(summary));
       RestApi.createTick({ ...tickChangeEvent, summary }, (tick: TimerTick) =>
-        dispatch(tickUpdated({ tick, tickChangeEvent })),
+        dispatch(tickUpdated({ tick, tickChangeEvent }))
       );
     }); // TODO: .catch()
   } else {
@@ -45,7 +46,7 @@ export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch
           summary: tickChangeEvent.summary,
         } as TimerTick,
         tickChangeEvent,
-      }),
+      })
     );
     // dubious of second dispatch, but it's going to add the record ID, so leave it for now
     await RestApi.createTick(tickChangeEvent, (tick: TimerTick) => dispatch(tickUpdated({ tick, tickChangeEvent })));
