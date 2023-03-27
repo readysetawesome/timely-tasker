@@ -20,10 +20,10 @@ export const fetchSummaries = (useDate: number) => async (dispatch) => {
 };
 
 export const setSummary = (s: Summary) => async (dispatch) => {
-  dispatch(summaryPending(s));
+  dispatch(summaryPending());
   await RestApi.createSummary(s)
     .then((s: Summary) => dispatch(summaryCreated(s)))
-    .catch(() => dispatch(summaryError(s)));
+    .catch(() => dispatch(summaryError()));
 };
 
 export const tickClicked = (tickChangeEvent: TickChangeEvent) => async (dispatch) => {
