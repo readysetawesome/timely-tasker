@@ -25,9 +25,21 @@
   </a>
 </p>
 
-#### Features:
-* built 100% using [CloudFlare Pages](https://pages.cloudflare.com/)
-* modern react front-end using hooks and all the latest goodies I can get my hands on
+#### Project Structure:
+```zsh
+./cypress    # Test fixtures and boilerplate
+./bin        # Dev tools
+./fixtures   # Fixtures for use in development
+./functions  # Serverless cloud-run code (the REST api lives here, routes map to these filenames)
+./lib        # Supporting code for serverless functions
+./migrations # Database migrations
+./public     # Static assets
+./src        # React application code
+```
+
+#### Project Details:
+* built with [CloudFlare Pages](https://pages.cloudflare.com/)
+* react.js front-end with reduxjs for state management
 * interactive browser-based test coverage with [Cypress](https://www.cypress.io/)
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
 * pipeline integration with github CI and [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker), ++README badges!
@@ -76,6 +88,3 @@ Runs migrations in preview/staging.
 
 Loads a local dev DB console (run migrations to create the db)
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
