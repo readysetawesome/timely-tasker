@@ -37,6 +37,15 @@
 ./src        # React application code
 ```
 
+#### React Component Structure:
+```zsh
+#  Timer.tsx
+#  |__TaskRowSummary.tsx
+#  |
+#  |__TaskRowTicks.tsx
+#     |__Tick.tsx
+```
+
 #### Project Details:
 * built with [CloudFlare Pages](https://pages.cloudflare.com/)
 * react.js front-end with reduxjs for state management
