@@ -10,7 +10,9 @@ import { fetchSummaries } from './Timer.actions';
 
 export const dateDisplay = (date) => {
   date = new Date(date);
-  return `${date.getUTCMonth() + 1}-${date.getUTCDate()}-${date.getUTCFullYear()}`;
+  return `${
+    date.getUTCMonth() + 1
+  }-${date.getUTCDate()}-${date.getUTCFullYear()}`;
 };
 
 const Header = () => {
@@ -34,14 +36,24 @@ export interface TimerProps {
   rightNavClicker: ReactElement;
 }
 
-const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProps) => {
+const Timer = ({
+  date,
+  currentTime,
+  leftNavClicker,
+  rightNavClicker,
+}: TimerProps) => {
   const [identity, setIdentity] = useState({} as AppIdentity);
   const [greeting, setGreeting] = useState('');
-  const summariesRestSelectors = getRestSelectorsFor('timer', 'summariesLoading');
+  const summariesRestSelectors = getRestSelectorsFor(
+    'timer',
+    'summariesLoading'
+  );
   const summariesLoading = useSelector(summariesRestSelectors.inProgress);
   const summariesSuccess = useSelector(summariesRestSelectors.success);
   const summariesError = useSelector(summariesRestSelectors.error);
-  const summaryError = useSelector(getRestSelectorsFor('timer', 'summaryCreated').error);
+  const summaryError = useSelector(
+    getRestSelectorsFor('timer', 'summaryCreated').error
+  );
   const loadingDate = useSelector(getLoadingDate);
   const dispatch = useDispatch();
 
@@ -53,7 +65,9 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
   useEffect(() => {
     if (identity.ID !== undefined) {
       setGreeting(`
-        Hello, ${identity.DisplayName === '' ? 'my friend' : identity.DisplayName}!
+        Hello, ${
+          identity.DisplayName === '' ? 'my friend' : identity.DisplayName
+        }!
         You are logged in with ${identity.ProviderName}.
       `);
     }
@@ -66,14 +80,24 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       fetchSummaries(date)(dispatch);
       return;
     }
-  }, [identity, date, summariesLoading, loadingDate, summariesError, dispatch, greeting]);
+  }, [
+    identity,
+    date,
+    summariesLoading,
+    loadingDate,
+    summariesError,
+    dispatch,
+    greeting,
+  ]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summariesSuccess && !didScroll) {
       const targetTickNumber = currentTime.getHours() * 4 - 4;
-      const targetTick = document.querySelector(`[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`);
+      const targetTick = document.querySelector(
+        `[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`
+      );
       if (targetTick) {
         targetTick.scrollIntoView({ block: 'nearest', inline: 'start' });
       }
@@ -104,7 +128,9 @@ const Timer = ({ date, currentTime, leftNavClicker, rightNavClicker }: TimerProp
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>
-          {summaryError && <span className={styles.error}>Error setting Summary text</span>}
+          {summaryError && (
+            <span className={styles.error}>Error setting Summary text</span>
+          )}
 
           {summariesError && 'Error loading Summary text and ticks!'}
           {!summariesError && (

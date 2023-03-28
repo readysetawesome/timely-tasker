@@ -4,19 +4,33 @@ import styles from './Timer.module.scss';
 
 import { TimerTick } from './TaskRowTicks';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getMatchingTicks, getSummary } from './Timer.selectors';
+import {
+  getLoadingDate,
+  getMatchingTicks,
+  getSummary,
+} from './Timer.selectors';
 import { tickClicked } from './Timer.actions';
 import { TickChangeEvent } from './Timer.slice';
 import { Summary } from '../../../functions/summaries';
+
+export enum TickState {
+  Focused = 0,
+  Distracted = 1,
+  Deleted = -1,
+}
 
 export interface TickProps {
   tickNumber: number;
   slot: number;
 }
 
-const nextValue = (distracted) => {
+const nextValue = (distracted: number | undefined) => {
   // rotate through the tictac states empty(-1/undef) => filled(0) => slash(1)
-  return distracted === 1 ? -1 : distracted === 0 ? 1 : 0;
+  return distracted === TickState.Distracted
+    ? TickState.Deleted
+    : distracted === TickState.Focused
+    ? TickState.Distracted
+    : TickState.Focused;
 };
 
 const Tick = ({ tickNumber, slot }: TickProps) => {
@@ -25,25 +39,31 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
   const date = useSelector(getLoadingDate);
   const dispatch = useDispatch();
   const timerTick =
-    summary?.TimerTicks.find((value: TimerTick) => value.TickNumber === tickNumber) ||
-    ({ TickNumber: tickNumber, SummaryID: summary?.ID, Distracted: -1 } as TimerTick);
+    summary?.TimerTicks.find(
+      (value: TimerTick) => value.TickNumber === tickNumber
+    ) ||
+    ({
+      TickNumber: tickNumber,
+      SummaryID: summary?.ID,
+      Distracted: TickState.Deleted,
+    } as TimerTick);
 
-  const matchingColumnTicks = useSelector((state) => getMatchingTicks(state, tickNumber)).filter(
-    (t) => t.summary?.Slot !== slot,
-  );
+  const matchingColumnTicks = useSelector((state) =>
+    getMatchingTicks(state, tickNumber)
+  ).filter((t) => t.summary?.Slot !== slot);
 
   const distracted = timerTick?.Distracted;
   const nextTickValue = nextValue(distracted);
   const testIdAttr = `${slot}-${tickNumber}`;
 
   const style =
-    distracted === 1 ? styles.tictac_distracted : distracted === 0 ? styles.tictac_focused : styles.tictac_empty;
+    distracted === TickState.Distracted
+      ? styles.tictac_distracted
+      : distracted === TickState.Focused
+      ? styles.tictac_focused
+      : styles.tictac_empty;
 
   const updateTick = useCallback(() => {
-    // Do a visual update immediately for "fast" feeling UI
-    const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
-    if (element) element.className = styles.tictac_clicked;
-
     tickClicked({
       summary:
         summary ||
@@ -54,39 +74,63 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
         } as Summary),
       slot,
       tickNumber,
-      distracted: nextTickValue === -1 ? -1 : matchingColumnTicks.length > 0 ? 1 : nextTickValue,
+      distracted:
+        nextTickValue === TickState.Deleted
+          ? TickState.Deleted
+          : matchingColumnTicks.length > 0
+          ? TickState.Distracted
+          : nextTickValue,
       previously: distracted,
     } as TickChangeEvent)(dispatch);
 
     // evaluate last tick standing rule and apply
-    if (nextTickValue === -1 && matchingColumnTicks.length === 1 && matchingColumnTicks[0].Distracted === 1) {
-      tickClicked({
-        summary: matchingColumnTicks[0].summary,
-        slot: matchingColumnTicks[0].summary?.Slot,
-        tickNumber,
-        distracted: 0,
-        previously: matchingColumnTicks[0].Distracted,
-      } as TickChangeEvent)(dispatch);
-    } else {
-      if (nextTickValue !== -1) {
-        // evaluate distracted column rule
-        matchingColumnTicks.forEach((t) => {
-          if (t.Distracted === 0) {
-            // some other tick in this column, mark it distracted
-            tickClicked({
-              summary: t.summary,
-              slot: t.summary?.Slot,
-              tickNumber,
-              distracted: 1,
-              previously: t.Distracted,
-            } as TickChangeEvent)(dispatch);
-          }
-        });
+    if (nextTickValue === TickState.Deleted) {
+      if (
+        matchingColumnTicks.length === 1 &&
+        matchingColumnTicks[0].Distracted === TickState.Distracted
+      ) {
+        tickClicked({
+          summary: matchingColumnTicks[0].summary,
+          slot: matchingColumnTicks[0].summary?.Slot,
+          tickNumber,
+          distracted: TickState.Focused,
+          previously: matchingColumnTicks[0].Distracted,
+        } as TickChangeEvent)(dispatch);
       }
+    } else {
+      // evaluate distracted column rule
+      matchingColumnTicks.forEach((t) => {
+        if (t.Distracted === TickState.Focused) {
+          // some other tick in this column, mark it distracted
+          tickClicked({
+            summary: t.summary,
+            slot: t.summary?.Slot,
+            tickNumber,
+            distracted: TickState.Distracted,
+            previously: t.Distracted,
+          } as TickChangeEvent)(dispatch);
+        }
+      });
     }
-  }, [date, dispatch, distracted, matchingColumnTicks, nextTickValue, slot, summary, testIdAttr, tickNumber]);
 
-  return <div className={style} onClick={updateTick} data-test-id={testIdAttr} />;
+    // Do a visual update immediately for "fast" feeling UI
+    const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
+    if (element) element.className += ` ${styles.tictac_clicked}`;
+  }, [
+    date,
+    dispatch,
+    distracted,
+    matchingColumnTicks,
+    nextTickValue,
+    slot,
+    summary,
+    testIdAttr,
+    tickNumber,
+  ]);
+
+  return (
+    <div className={style} onClick={updateTick} data-test-id={testIdAttr} />
+  );
 };
 
 export default Tick;

@@ -13,7 +13,9 @@ const TIME_NOW = 1679587374481; // at 9 am
 
 beforeEach(() => {
   cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
-  cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+  cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
+    fixture: 'summaries',
+  }).as('getSummaries');
   // we made these stamps in gmt-700 which is 420 minutes of offset
   const now = TIME_NOW - 420 * 60 * 1000;
   const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
@@ -38,11 +40,15 @@ describe('<Timer />', () => {
   });
 
   it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']").first().should('contain', 'You are logged in with github.');
+    cy.get("[data-test-id='greeting']")
+      .first()
+      .should('contain', 'You are logged in with github.');
   });
 
   it('renders loaded summary text in the <input>', () => {
-    cy.get("[data-test-id='summary-text-0']").first().should('have.value', 'replace jest with cypress');
+    cy.get("[data-test-id='summary-text-0']")
+      .first()
+      .should('have.value', 'replace jest with cypress');
   });
 
   it('renders ticks content', () => {
@@ -60,26 +66,38 @@ describe('<Timer />', () => {
   });
 
   it('renders ticks that interact with each other as intended, setting other ticks in the colum to distracted', () => {
-    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as(
-      'updateRelatedTick'
-    );
-    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`, { fixture: 'tickDistracted' }).as(
-      'updateTickDistracted'
-    );
-    cy.intercept('POST', `/ticks?summary=${summaries[1].ID}&tick=31&distracted=-1`, { fixture: 'tickRemoved' }).as(
-      'updateTickRemoved'
-    );
-    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`, { fixture: 'tick' }).as(
-      'updateTickOriginal'
-    );
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`,
+      { fixture: 'tickRelated' }
+    ).as('updateRelatedTick');
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`,
+      { fixture: 'tickDistracted' }
+    ).as('updateTickDistracted');
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summaries[1].ID}&tick=31&distracted=-1`,
+      { fixture: 'tickRemoved' }
+    ).as('updateTickRemoved');
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`,
+      { fixture: 'tick' }
+    ).as('updateTickOriginal');
     cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
 
     cy.get("[data-test-id='1-31'][class*=Timer_tictac_empty]").click();
 
     cy.wait(['@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', { timeout: 2000 });
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', { timeout: 2000 }).click();
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', {
+      timeout: 2000,
+    });
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', {
+      timeout: 2000,
+    }).click();
 
     cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
@@ -93,20 +111,34 @@ describe('<Timer />', () => {
       const targetText = summarySlotTwo.Content;
       const incompleteText = targetText.slice(0, targetText.length - 1);
 
-      cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(incompleteText)}&slot=2`, {
-        fixture: 'summarySlotTwoIncomplete',
-      }).as('createSummaryIncomplete');
+      cy.intercept(
+        'POST',
+        `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
+          incompleteText
+        )}&slot=2`,
+        {
+          fixture: 'summarySlotTwoIncomplete',
+        }
+      ).as('createSummaryIncomplete');
 
-      cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(targetText)}&slot=2`, {
-        fixture: 'summarySlotTwo',
-      }).as('createSummaryComplete');
+      cy.intercept(
+        'POST',
+        `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
+          targetText
+        )}&slot=2`,
+        {
+          fixture: 'summarySlotTwo',
+        }
+      ).as('createSummaryComplete');
 
       // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
       cy.get("[data-test-id='summary-text-2']").type(incompleteText);
 
       cy.wait(['@createSummaryIncomplete']);
 
-      cy.get("[data-test-id='summary-text-2']").type(targetText.slice(targetText.length - 1));
+      cy.get("[data-test-id='summary-text-2']").type(
+        targetText.slice(targetText.length - 1)
+      );
 
       cy.wait(['@createSummaryComplete']);
 
@@ -121,9 +153,13 @@ describe('<Timer />', () => {
       fixture: 'summarySlotThree',
     }).as('createSummaryNew');
 
-    cy.intercept('POST', `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`, {
-      fixture: 'summarySlotThreeTick',
-    }).as('createTick');
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`,
+      {
+        fixture: 'summarySlotThreeTick',
+      }
+    ).as('createTick');
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
@@ -134,7 +170,9 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick']);
 
-    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', { timeout: 200 });
+    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', {
+      timeout: 200,
+    });
 
     cy.get("[data-test-id='summary-text-3']").then(($el) => {
       expect($el[0].getAttribute('value')).to.equal('Hello');
@@ -146,9 +184,13 @@ describe('<Timer />', () => {
       fixture: 'summarySlotThree',
     }).as('createSummaryNew');
 
-    cy.intercept('POST', `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`, {
-      fixture: 'summarySlotThreeTick',
-    }).as('createTick');
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`,
+      {
+        fixture: 'summarySlotThreeTick',
+      }
+    ).as('createTick');
 
     cy.get("[data-test-id='3-33']").click();
 
@@ -156,9 +198,11 @@ describe('<Timer />', () => {
   });
 
   it('handles errors with tick click', () => {
-    cy.intercept('POST', `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`, { forceNetworkError: true }).as(
-      'updateTickFail'
-    );
+    cy.intercept(
+      'POST',
+      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`,
+      { forceNetworkError: true }
+    ).as('updateTickFail');
 
     cy.get("[data-test-id='0-31']").click();
 
@@ -168,9 +212,9 @@ describe('<Timer />', () => {
   });
 
   it('handles errors with summary create', () => {
-    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, { forceNetworkError: true }).as(
-      'createSummaryFail'
-    );
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
+      forceNetworkError: true,
+    }).as('createSummaryFail');
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
@@ -185,9 +229,11 @@ describe('<Timer />', () => {
       fixture: 'summarySlotThree',
     }).as('createSummaryNew');
 
-    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { fixture: 'summariesPast' }).as(
-      'getSummariesPast'
-    );
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`,
+      { fixture: 'summariesPast' }
+    ).as('getSummariesPast');
 
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
@@ -197,15 +243,19 @@ describe('<Timer />', () => {
 
     cy.wait(['@getSummariesPast']);
 
-    cy.get("[data-test-id='summary-text-0'][value='from a previous date'", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-0'][value='from a previous date'", {
+      timeout: 200,
+    });
     cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
     cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
   });
 
   it('handles errors from summary fetch step on nav', () => {
-    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`, { forceNetworkError: true }).as(
-      'getSummariesFail'
-    );
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`,
+      { forceNetworkError: true }
+    ).as('getSummariesFail');
     cy.get('[data-test-id="left-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
     cy.get('[class*=Timer_content]').then(($content) => {

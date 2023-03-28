@@ -9,9 +9,15 @@ const JsonHeader = {
   },
 };
 
-const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
+const errorResponse = (error: string) =>
+  new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, env, request, next }) => {
+export const onRequest: PagesFunction<Env, never, PluginData> = async ({
+  data,
+  env,
+  request,
+  next,
+}) => {
   const result = await GetIdentity(data, env);
   const { identity, error } = result;
 

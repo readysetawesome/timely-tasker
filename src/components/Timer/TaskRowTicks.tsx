@@ -28,7 +28,7 @@ const TaskRowTicks = ({ slot }: TaskRowTicksProps) => {
             tickNumber,
           }}
         />
-      </div>,
+      </div>
     );
   }
   return (

@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { Summary } from '../../../functions/summaries';
 import { ApiStates, RestApiStatus } from '../../RestApi';
 import { TimerTick } from './TaskRowTicks';
+import { TickState } from './Tick';
 
 export interface TimerState {
   summaries: { [slot: number]: Summary };
@@ -21,7 +22,7 @@ export type TickChangeEvent = {
   tickNumber: number;
   slot: number;
   summary: Summary;
-  distracted: number;
+  distracted: TickState;
   previously: number;
 };
 
@@ -57,15 +58,20 @@ const slice = createSlice({
 
     tickUpdated: (
       state,
-      { payload: { tick, tickChangeEvent } }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>
+      {
+        payload: { tick, tickChangeEvent },
+      }: PayloadAction<{ tick: TimerTick; tickChangeEvent: TickChangeEvent }>
     ) => {
       // Slice the old member out of the array
       const tickArray = [
-        ...state.summaries[tickChangeEvent.slot].TimerTicks.filter((t) => t.TickNumber !== tick.TickNumber),
+        ...state.summaries[tickChangeEvent.slot].TimerTicks.filter(
+          (t) => t.TickNumber !== tick.TickNumber
+        ),
       ];
 
       // pack the new member into array only if not deleted
-      if (tickChangeEvent.distracted !== -1) tickArray.push({ ...tick, Distracted: tickChangeEvent.distracted });
+      if (tickChangeEvent.distracted !== TickState.Deleted)
+        tickArray.push({ ...tick, Distracted: tickChangeEvent.distracted });
 
       state.summaries[tickChangeEvent.slot] = {
         ...state.summaries[tickChangeEvent.slot],
