@@ -121,7 +121,6 @@ describe('<Timer />', () => {
       }
     ).as('createSummaryComplete');
 
-    // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
     cy.get("[data-test-id='summary-text-2']").type(incompleteText);
 
     cy.wait(['@createSummaryIncomplete']);
