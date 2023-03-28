@@ -25,13 +25,23 @@ export type Provider = {
 export type IdentityResponse = {
   error?: string;
   identity?: AppIdentity;
-  jwtIdentity: { user_uuid: string; name: string; idp: { id: string; type: string }; email: string };
+  jwtIdentity: {
+    user_uuid: string;
+    name: string;
+    idp: { id: string; type: string };
+    email: string;
+  };
   provider?: Provider;
 };
 
-export const GetIdentity = async (data: PluginData, env: Env): Promise<IdentityResponse> => {
+export const GetIdentity = async (
+  data: PluginData,
+  env: Env
+): Promise<IdentityResponse> => {
   const pluginEnabled = typeof data.cloudflareAccess !== 'undefined';
-  const jwtIdentity = (pluginEnabled && (await data.cloudflareAccess.JWT.getIdentity())) || devUserJson;
+  const jwtIdentity =
+    (pluginEnabled && (await data.cloudflareAccess.JWT.getIdentity())) ||
+    devUserJson;
 
   const providerQuery = env.DB.prepare(`
     SELECT * FROM Providers WHERE CFProviderID = ?

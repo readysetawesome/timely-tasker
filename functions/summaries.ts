@@ -35,9 +35,14 @@ export type Summary = {
   TimerTicks: Array<TimerTick>;
 };
 
-const errorResponse = (error: string) => new Response(JSON.stringify({ error }), JsonHeader);
+const errorResponse = (error: string) =>
+  new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, env, request }) => {
+export const onRequest: PagesFunction<Env, never, PluginData> = async ({
+  data,
+  env,
+  request,
+}) => {
   const result = await GetIdentity(data, env);
   const { identity, error } = result;
 
@@ -48,7 +53,11 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, e
   }
 
   const { searchParams } = new URL(request.url);
-  const [text, date, slot] = [searchParams.get('text'), searchParams.get('date'), searchParams.get('slot')];
+  const [text, date, slot] = [
+    searchParams.get('text'),
+    searchParams.get('date'),
+    searchParams.get('slot'),
+  ];
 
   if (date?.length === 0) return errorResponse('Date is required');
 
@@ -67,7 +76,8 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, e
       .bind(identity?.UserID, date, slot)
       .all<Summary>();
 
-    if (!success) return errorResponse(`Error getting summary/task row. ${error}`);
+    if (!success)
+      return errorResponse(`Error getting summary/task row. ${error}`);
     summary = results?.[0];
 
     if (summary) {
@@ -86,7 +96,8 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, e
         .bind(text, slot, results?.[0].ID)
         .all<Summary>();
 
-      if (!success) return errorResponse(`Error updating summary/task row. ${error}`);
+      if (!success)
+        return errorResponse(`Error updating summary/task row. ${error}`);
       summary = _results?.[0];
     } else {
       const { success, results: _results } = await env.DB.prepare(
@@ -97,10 +108,12 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({ data, e
         .bind(identity?.UserID, text, date, slot)
         .all<Summary>();
 
-      if (!success) return errorResponse('Error inserting new summary/task row.');
+      if (!success)
+        return errorResponse('Error inserting new summary/task row.');
       summary = _results?.[0];
     }
-    if (summary === undefined) return errorResponse('Error inserting new summary/task row.');
+    if (summary === undefined)
+      return errorResponse('Error inserting new summary/task row.');
 
     // Slight hack to unpack json values returned by the sqlite api
     summary.TimerTicks = JSON.parse(summary.TimerTicks as unknown as string);

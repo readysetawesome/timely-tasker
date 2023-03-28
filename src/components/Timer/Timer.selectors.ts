@@ -2,7 +2,8 @@ import { createSelector } from '@reduxjs/toolkit';
 import { Summary } from '../../../functions/summaries';
 import { TimerTick } from './TaskRowTicks';
 
-export const getSummaries = (store): { [slot: number]: Summary } => store.timer.summaries;
+export const getSummaries = (store): { [slot: number]: Summary } =>
+  store.timer.summaries;
 export const getLoadingDate = (store) => store.timer.loadingDate;
 
 export const getSummary = createSelector(
