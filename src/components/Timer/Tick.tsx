@@ -64,10 +64,6 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
       : styles.tictac_empty;
 
   const updateTick = useCallback(() => {
-    // Do a visual update immediately for "fast" feeling UI
-    const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
-    if (element) element.className = styles.tictac_clicked;
-
     tickClicked({
       summary:
         summary ||
@@ -116,6 +112,10 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
         }
       });
     }
+
+    // Do a visual update immediately for "fast" feeling UI
+    const element = document.querySelector(`[data-test-id='${testIdAttr}']`);
+    if (element) element.className += ` ${styles.tictac_clicked}`;
   }, [
     date,
     dispatch,
