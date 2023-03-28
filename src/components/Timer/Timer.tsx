@@ -132,7 +132,11 @@ const Timer = ({
             <span className={styles.error}>Error setting Summary text</span>
           )}
 
-          {summariesError && 'Error loading Summary text and ticks!'}
+          {summariesError && (
+            <span className={styles.error}>
+              Error loading Summary text and ticks!
+            </span>
+          )}
           {!summariesError && (
             <>
               <div className={styles.left_column}>

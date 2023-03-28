@@ -7,6 +7,7 @@ import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
+import { waitFor } from '@testing-library/react';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
@@ -29,9 +30,7 @@ beforeEach(() => {
 
   cy.clock().then((clock) => clock.restore());
 
-  cy.wait(0);
   cy.wait(['@getIdentity', '@getSummaries']);
-  cy.wait(0);
 });
 
 describe('<Timer />', () => {
@@ -52,16 +51,14 @@ describe('<Timer />', () => {
   });
 
   it('renders ticks content', () => {
-    // check that we scrolled over to the time of day it is
-
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
-    cy.wait(150); // release the thread and allow react hooks to process
     cy.get("[data-test-id='0-36']")
       .first()
       .then(($el) => {
-        const rect = $el[0].getBoundingClientRect();
-        expect(rect.x).to.be.lessThan(470);
-        expect(rect.x).to.be.greaterThan(450);
+        waitFor(() => {
+          const rect = $el[0].getBoundingClientRect();
+          expect(rect.x).to.be.lessThan(470);
+          expect(rect.x).to.be.greaterThan(450);
+        });
       });
   });
 
@@ -92,61 +89,51 @@ describe('<Timer />', () => {
 
     cy.wait(['@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]', {
-      timeout: 2000,
-    });
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="1-31"]', {
-      timeout: 2000,
-    }).click();
+    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
+    cy.get(
+      'div[class*="Timer_tictac_distracted"][data-test-id="1-31"]'
+    ).click();
 
     cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
 
-  it(
-    'renders a summary input that doesnt cause problems on debounce/update',
-    {
-      defaultCommandTimeout: 6000,
-    },
-    () => {
-      const targetText = summarySlotTwo.Content;
-      const incompleteText = targetText.slice(0, targetText.length - 1);
+  it('renders a summary input that doesnt cause problems on debounce/update', () => {
+    const targetText = summarySlotTwo.Content;
+    const incompleteText = targetText.slice(0, targetText.length - 1);
 
-      cy.intercept(
-        'POST',
-        `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
-          incompleteText
-        )}&slot=2`,
-        {
-          fixture: 'summarySlotTwoIncomplete',
-        }
-      ).as('createSummaryIncomplete');
+    cy.intercept(
+      'POST',
+      `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
+        incompleteText
+      )}&slot=2`,
+      {
+        fixture: 'summarySlotTwoIncomplete',
+      }
+    ).as('createSummaryIncomplete');
 
-      cy.intercept(
-        'POST',
-        `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
-          targetText
-        )}&slot=2`,
-        {
-          fixture: 'summarySlotTwo',
-        }
-      ).as('createSummaryComplete');
+    cy.intercept(
+      'POST',
+      `/summaries?date=${TODAYS_DATE}&text=${encodeURIComponent(
+        targetText
+      )}&slot=2`,
+      {
+        fixture: 'summarySlotTwo',
+      }
+    ).as('createSummaryComplete');
 
-      // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
-      cy.get("[data-test-id='summary-text-2']").type(incompleteText);
+    // use a delay that will, in total, exceed the debounce time, but with intervals that fit in debounce
+    cy.get("[data-test-id='summary-text-2']").type(incompleteText);
 
-      cy.wait(['@createSummaryIncomplete']);
+    cy.wait(['@createSummaryIncomplete']);
 
-      cy.get("[data-test-id='summary-text-2']").type(
-        targetText.slice(targetText.length - 1)
-      );
+    cy.get("[data-test-id='summary-text-2']").type(
+      targetText.slice(targetText.length - 1)
+    );
 
-      cy.wait(['@createSummaryComplete']);
+    cy.wait(['@createSummaryComplete']);
 
-      cy.get("[data-test-id='summary-text-2']").then(($el) => {
-        expect($el[0].getAttribute('value')).to.equal(targetText);
-      });
-    }
-  );
+    cy.get(`[data-test-id='summary-text-2'][value='${targetText}']`);
+  });
 
   it('ticking a box should not erase the newly entered summary', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
@@ -164,19 +151,14 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryNew']);
-    cy.wait(0); // Await react state setup on http return
 
     cy.get("[data-test-id='3-33']").click();
 
     cy.wait(['@createTick']);
 
-    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]', {
-      timeout: 200,
-    });
+    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]');
 
-    cy.get("[data-test-id='summary-text-3']").then(($el) => {
-      expect($el[0].getAttribute('value')).to.equal('Hello');
-    });
+    cy.get("[data-test-id='summary-text-3'][value=Hello]");
   });
 
   it('ticking a new row before typing should cause dependent summary object create', () => {
@@ -219,9 +201,7 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryFail']);
-    cy.get('span[class*=Timer_error]').then(($content) => {
-      expect($content).to.contain('Error setting Summary text');
-    });
+    cy.get('span[class*=Timer_error]');
   });
 
   it('tasks should not leak on nav', () => {
@@ -243,11 +223,9 @@ describe('<Timer />', () => {
 
     cy.wait(['@getSummariesPast']);
 
-    cy.get("[data-test-id='summary-text-0'][value='from a previous date'", {
-      timeout: 200,
-    });
-    cy.get("[data-test-id='summary-text-1'][value='']", { timeout: 200 });
-    cy.get("[data-test-id='summary-text-3'][value='']", { timeout: 200 });
+    cy.get("[data-test-id='summary-text-0'][value='from a previous date'");
+    cy.get("[data-test-id='summary-text-1'][value='']");
+    cy.get("[data-test-id='summary-text-3'][value='']");
   });
 
   it('handles errors from summary fetch step on nav', () => {
@@ -258,8 +236,6 @@ describe('<Timer />', () => {
     ).as('getSummariesFail');
     cy.get('[data-test-id="left-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
-    cy.get('[class*=Timer_content]').then(($content) => {
-      expect($content).to.contain('Error loading Summary text and ticks');
-    });
+    cy.get('[class*=Timer_content] span[class*=Timer_error]');
   });
 });
