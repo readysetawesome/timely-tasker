@@ -8,6 +8,7 @@ import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
 import { waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 const TIME_NOW = 1679587374481; // at 9 am
@@ -24,7 +25,12 @@ beforeEach(() => {
 
   mount(
     <Provider store={storeMaker()}>
-      <App />
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="timer" element={<App />} />
+        </Routes>
+      </MemoryRouter>
     </Provider>
   ).as('mountedComponent');
 
