@@ -115,13 +115,15 @@ const Timer = ({
     }
   }
 
+  /*const navigate = useNavigate();
+  onClick={navigate(`?date=${date}`)*/
   return (
     <>
       <div>
         <h1>The Timely Tasker</h1>
         <h2>
           {leftNavClicker}
-          Work Date: {dateDisplay(date)}
+          <a href={`?date=${date}`}>Work Date: {dateDisplay(date)}</a>
           {rightNavClicker}
         </h2>
         <p data-test-id="greeting">{greeting || 'loading...'}</p>

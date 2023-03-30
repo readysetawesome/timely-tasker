@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import './App.css';
 
 import Timer from './components/Timer/Timer';
@@ -19,25 +20,27 @@ export const todaysDateInt = (now?: Date) => {
 };
 
 function App() {
-  const [date, setDate] = useState(todaysDateInt());
+  const [searchParams] = useSearchParams();
+  const date = parseInt(searchParams.get('date') || '') || todaysDateInt();
+
   const leftNavClicker = (
-    <span
+    <Link
       data-test-id="left-nav-clicker"
       style={{ cursor: 'pointer' }}
-      onClick={() => setDate(date - ONE_DAY_MILLIS)}
+      to={`/timer?date=${date - ONE_DAY_MILLIS}`}
     >
       &lt;&lt;&nbsp;&nbsp;&nbsp;
-    </span>
+    </Link>
   );
 
   const rightNavClicker = (
-    <span
+    <Link
       data-test-id="right-nav-clicker"
       style={{ cursor: 'pointer' }}
-      onClick={() => setDate(date + ONE_DAY_MILLIS)}
+      to={`/timer?date=${date + ONE_DAY_MILLIS}`}
     >
       &nbsp;&nbsp;&nbsp;&gt;&gt;
-    </span>
+    </Link>
   );
 
   return (
