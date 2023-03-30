@@ -8,11 +8,11 @@ export interface TaskRowTicksProps {
 }
 
 export type TimerTick = {
-  ID?: number;
-  UserID?: number;
-  TickNumber: number;
-  Distracted?: number;
-  SummaryID?: number;
+  id?: number;
+  userId?: number;
+  tickNumber: number;
+  distracted?: number;
+  summaryId?: number;
   summary?: Summary;
 };
 

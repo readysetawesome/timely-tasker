@@ -63,12 +63,12 @@ const Timer = ({
 
   // Once we have identity, set greeting and get summaries+ticks
   useEffect(() => {
-    if (identity.ID !== undefined) {
+    if (identity.id !== undefined) {
       setGreeting(`
         Hello, ${
-          identity.DisplayName === '' ? 'my friend' : identity.DisplayName
+          identity.displayName === '' ? 'my friend' : identity.displayName
         }!
-        You are logged in with ${identity.ProviderName}.
+        You are logged in with ${identity.providerName}.
       `);
     }
   }, [identity]);
@@ -94,9 +94,9 @@ const Timer = ({
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summariesSuccess && !didScroll) {
-      const targetTickNumber = currentTime.getHours() * 4 - 4;
+      const targettickNumber = currentTime.getHours() * 4 - 4;
       const targetTick = document.querySelector(
-        `[data-test-id='0-${targetTickNumber >= 0 ? targetTickNumber : 0}']`
+        `[data-test-id='0-${targettickNumber >= 0 ? targettickNumber : 0}']`
       );
       if (targetTick) {
         targetTick.scrollIntoView({ block: 'nearest', inline: 'start' });

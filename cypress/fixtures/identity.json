@@ -1,10 +1,10 @@
 {
-  "ID": 123,
-  "DisplayName": "Bert",
+  "id": 123,
+  "displayName": "Bert",
   "Email": "qbert@example.com",
-  "ProviderName": "github",
-  "CFProviderID": "xxxxxx-11111-222222-3333",
+  "providerName": "github",
+  "cfProviderId": "xxxxxx-11111-222222-3333",
   "ProviderID": 1,
-  "UserID": 1,
-  "ProviderIdentityID": "abcdev-zzzxxx-111222"
+  "userId": 1,
+  "providerIdentityId": "abcdev-zzzxxx-111222"
 }

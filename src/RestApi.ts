@@ -45,7 +45,7 @@ const fetchOptions = (isDevMode ? { mode: 'cors' } : {}) as RequestInit<RequestI
 
 const createSummary = (summary: Summary) =>
   fetch(
-    fetchPrefix + `/summaries?date=${summary.Date}&text=${encodeURIComponent(summary.Content)}&slot=${summary.Slot}`,
+    fetchPrefix + `/summaries?date=${summary.date}&text=${encodeURIComponent(summary.content)}&slot=${summary.slot}`,
     { ...fetchOptions, method: 'POST' },
   ).then((response) => response.json());
 
@@ -60,7 +60,7 @@ const greet = (callback) =>
 const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
   fetch(
     fetchPrefix +
-      `/ticks?summary=${tickChangeEvent.summary.ID}&tick=${tickChangeEvent.tickNumber}&distracted=${tickChangeEvent.distracted}`,
+      `/ticks?summary=${tickChangeEvent.summary.id}&tick=${tickChangeEvent.tickNumber}&distracted=${tickChangeEvent.distracted}`,
     { ...fetchOptions, method: 'POST' },
   )
     .then((response) => response.json())

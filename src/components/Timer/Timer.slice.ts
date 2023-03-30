@@ -32,7 +32,7 @@ const slice = createSlice({
   reducers: {
     summariesLoaded: (state, action: PayloadAction<Summary[]>) => {
       action.payload.forEach((s) => {
-        state.summaries[s.Slot] = s;
+        state.summaries[s.slot] = s;
       });
       state.summariesLoading = ApiStates.Success;
     },
@@ -46,7 +46,7 @@ const slice = createSlice({
     },
 
     summaryCreated: (state, action: PayloadAction<Summary>) => {
-      state.summaries[action.payload.Slot] = action.payload;
+      state.summaries[action.payload.slot] = action.payload;
       state.summaryCreated = ApiStates.Success;
     },
     summaryPending: (state) => {
@@ -65,13 +65,13 @@ const slice = createSlice({
       // Slice the old member out of the array
       const tickArray = [
         ...state.summaries[tickChangeEvent.slot].TimerTicks.filter(
-          (t) => t.TickNumber !== tick.TickNumber
+          (t) => t.tickNumber !== tick.tickNumber
         ),
       ];
 
       // pack the new member into array only if not deleted
       if (tickChangeEvent.distracted !== TickState.Deleted)
-        tickArray.push({ ...tick, Distracted: tickChangeEvent.distracted });
+        tickArray.push({ ...tick, distracted: tickChangeEvent.distracted });
 
       state.summaries[tickChangeEvent.slot] = {
         ...state.summaries[tickChangeEvent.slot],

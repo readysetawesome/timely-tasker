@@ -28,9 +28,9 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
 
     const userQuery = env.DB.prepare(`
       SELECT * FROM  Identities, Providers, Users
-      WHERE Email = ?
-        AND Users.ID = UserID
-        AND Providers.ID = ProviderID
+      WHERE email = ?
+        AND Users.id = userId
+        AND Providers.id = providerId
     `);
 
     const existingUser = await userQuery
@@ -39,8 +39,8 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
 
     if (existingUser)
       return errorResponse(`
-      A user already signed up with this email address using ${existingUser.ProviderName}.
-      Was it you? If it was you, try logging in with ${existingUser.ProviderName} instead.
+      A user already signed up with this email address using ${existingUser.providerName}.
+      Was it you? If it was you, try logging in with ${existingUser.providerName} instead.
     `);
 
     if (provider === undefined)
@@ -48,16 +48,16 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
 
     const batch = await env.DB.batch<AppIdentity>([
       env.DB.prepare(
-        `INSERT INTO Users (DisplayName, Email) values (?, ?)`
+        `INSERT INTO Users (displayName, email) values (?, ?)`
       ).bind(jwtIdentity.name || '', jwtIdentity.email),
       env.DB.prepare(
-        `INSERT INTO Identities (ProviderID, UserID, ProviderIdentityID) values (?, last_insert_rowid(), ?)`
-      ).bind(provider.ID, jwtIdentity.user_uuid),
+        `INSERT INTO Identities (providerId, userId, providerIdentityId) values (?, last_insert_rowid(), ?)`
+      ).bind(provider.id, jwtIdentity.user_uuid),
       env.DB.prepare(`
         SELECT * FROM Identities, Providers, Users
-        WHERE Users.ID = UserID
-          AND Providers.ID = ProviderID
-          AND Identities.ID = last_insert_rowid()
+        WHERE Users.id = userId
+          AND Providers.id = providerId
+          AND Identities.id = last_insert_rowid()
       `),
     ]);
 

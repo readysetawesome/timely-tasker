@@ -1,7 +1,7 @@
 {
-  "ID": 77,
-  "Content": "Full sentence",
-  "Date": 1679529600000,
-  "Slot": 2,
+  "id": 77,
+  "content": "Full sentence",
+  "date": 1679529600000,
+  "slot": 2,
   "TimerTicks": []
 }

@@ -18,13 +18,13 @@ const TaskRowSummary = ({ slot, date }: TaskRowSummaryProps) => {
 
   const handleSummaryChange = useMemo(() => {
     return debounce((text: string | undefined) => {
-      if (text !== undefined && summary?.Content !== text) {
+      if (text !== undefined && summary?.content !== text) {
         setSummary({
           TimerTicks: summary?.TimerTicks || [],
-          Slot: slot,
-          Date: date,
-          Content: text,
-          ID: summary?.ID,
+          slot,
+          date,
+          content: text,
+          id: summary?.id,
         } as Summary)(dispatch);
       }
     }, 800);
@@ -35,7 +35,7 @@ const TaskRowSummary = ({ slot, date }: TaskRowSummaryProps) => {
       <input
         className={styles.summary_input_container}
         type="text"
-        value={text === undefined ? summary?.Content || '' : text}
+        value={text === undefined ? summary?.content || '' : text}
         onChange={(e) => [
           setText(e.target.value),
           handleSummaryChange(e.target.value),

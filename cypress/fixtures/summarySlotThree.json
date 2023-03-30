@@ -1,7 +1,7 @@
 {
-  "ID": 78,
-  "Content": "Hello",
-  "Date": 1679529600000,
-  "Slot": 3,
+  "id": 78,
+  "content": "Hello",
+  "date": 1679529600000,
+  "slot": 3,
   "TimerTicks": []
 }

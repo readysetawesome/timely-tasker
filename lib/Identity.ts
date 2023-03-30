@@ -6,20 +6,20 @@ export interface Env {
 }
 
 export type AppIdentity = {
-  ID: number;
-  DisplayName: string;
-  Email: string;
-  ProviderName: string;
-  CFProviderID: string;
-  ProviderID: number;
-  UserID: number;
-  ProviderIdentityID: string;
+  id: number;
+  displayName: string;
+  email: string;
+  providerName: string;
+  cfProviderId: string;
+  providerId: number;
+  userId: number;
+  providerIdentityId: string;
 };
 
 export type Provider = {
-  ID: number;
-  ProviderName: string;
-  CFProviderID: string;
+  id: number;
+  providerName: string;
+  cfProviderId: string;
 };
 
 export type IdentityResponse = {
@@ -44,7 +44,7 @@ export const GetIdentity = async (
     devUserJson;
 
   const providerQuery = env.DB.prepare(`
-    SELECT * FROM Providers WHERE CFProviderID = ?
+    SELECT * FROM Providers WHERE cfProviderId = ?
   `);
 
   let provider = await providerQuery.bind(jwtIdentity.idp.id).first<Provider>();
@@ -54,7 +54,7 @@ export const GetIdentity = async (
 
     const { success, results } = await env.DB.prepare(
       `
-      INSERT INTO Providers (ProviderName, CFProviderId) values (?, ?) RETURNING *
+      INSERT INTO Providers (providerName, cfProviderId) values (?, ?) RETURNING *
     `
     )
       .bind(jwtIdentity.idp.type, jwtIdentity.idp.id)
@@ -70,13 +70,13 @@ export const GetIdentity = async (
   const identity = await env.DB.prepare(
     `
     SELECT * FROM Identities, Providers, Users
-    WHERE CFProviderID = ?
-      AND Users.ID = UserID
-      AND Providers.ID = ?
-      AND ProviderIdentityID = ?
+    WHERE cfProviderId = ?
+      AND Users.id = userId
+      AND Providers.id = ?
+      AND providerIdentityId = ?
   `
   )
-    .bind(jwtIdentity.idp.id, provider.ID, jwtIdentity.user_uuid)
+    .bind(jwtIdentity.idp.id, provider.id, jwtIdentity.user_uuid)
     .first<AppIdentity>();
 
   return { identity, jwtIdentity, provider };

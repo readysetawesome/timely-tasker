@@ -17,10 +17,10 @@ export const getMatchingTicks = createSelector(
   [getSummaries, (state, tickNumber: number) => tickNumber],
   (summaries, tickNumber): TimerTick[] => {
     const matching: TimerTick[] = [];
-    Object.values(summaries).forEach((s) => {
-      s.TimerTicks.forEach((t) => {
+    Object.values(summaries).forEach((summary) => {
+      summary.TimerTicks.forEach((t) => {
         // pack a pointer to the summary with this tick, used to process after effects
-        if (t.TickNumber === tickNumber) matching.push({ ...t, summary: s });
+        if (t.tickNumber === tickNumber) matching.push({ ...t, summary });
       });
     });
     return matching;
