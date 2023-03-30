@@ -115,8 +115,6 @@ const Timer = ({
     }
   }
 
-  /*const navigate = useNavigate();
-  onClick={navigate(`?date=${date}`)*/
   return (
     <>
       <div>
