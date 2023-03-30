@@ -230,10 +230,10 @@ describe('<Timer />', () => {
   it('handles errors from summary fetch step on nav', () => {
     cy.intercept(
       'GET',
-      `/summaries?date=${TODAYS_DATE - 24 * 60 * 60 * 1000}`,
+      `/summaries?date=${TODAYS_DATE + 24 * 60 * 60 * 1000}`,
       { forceNetworkError: true }
     ).as('getSummariesFail');
-    cy.get('[data-test-id="left-nav-clicker"]').click();
+    cy.get('[data-test-id="right-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
     cy.get('[class*=Timer_content] span[class*=Timer_error]');
   });
