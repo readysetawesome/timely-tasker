@@ -1,7 +1,7 @@
 {
-  "ID": 191,
-  "UserID": 1,
-  "TickNumber": 33,
-  "Distracted": 0,
-  "SummaryID": 78
+  "id": 191,
+  "userId": 1,
+  "tickNumber": 33,
+  "distracted": 0,
+  "summaryId": 78
 }

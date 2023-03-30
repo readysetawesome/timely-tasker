@@ -4,19 +4,19 @@ import { GetIdentity } from '../lib/Identity';
 import { TimerTick } from '../src/components/Timer/TaskRowTicks';
 
 const FULL_JSON_OBJECT_SELECT = `
-  Summaries.ID, Summaries.Content, Summaries.Date, Summaries.Slot, (
+  Summaries.id, Summaries.content, Summaries.date, Summaries.slot, (
     SELECT json_group_array(
       json_object(
-        'ID', ID,
-        'UserID', UserID,
-        'Date', Date,
-        'TickNumber', TickNumber,
-        'Distracted', Distracted,
-        'SummaryID', SummaryID
+        'id', id,
+        'userId', userId,
+        'date', date,
+        'tickNumber', tickNumber,
+        'distracted', distracted,
+        'summaryId', summaryId
       )
     )
     FROM TimerTicks TT
-    WHERE TT.SummaryID = Summaries.ID
+    WHERE TT.summaryId = Summaries.id
   ) as TimerTicks
 `;
 
@@ -27,11 +27,11 @@ const JsonHeader = {
 };
 
 export type Summary = {
-  ID?: number;
-  UserID?: number;
-  Content: string;
-  Date: number;
-  Slot: number;
+  id?: number;
+  userId?: number;
+  content: string;
+  date: number;
+  slot: number;
   TimerTicks: Array<TimerTick>;
 };
 
@@ -70,10 +70,10 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
     const { results, success, error } = await env.DB.prepare(
       `
       SELECT * FROM Summaries
-      WHERE UserID = ? AND Date = ? AND Slot = ?
+      WHERE userId = ? AND date = ? AND slot = ?
     `
     )
-      .bind(identity?.UserID, date, slot)
+      .bind(identity?.userId, date, slot)
       .all<Summary>();
 
     if (!success)
@@ -88,12 +88,12 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
       } = await env.DB.prepare(
         `
         UPDATE Summaries
-        SET Content = ?, Slot = ?
-        WHERE ID = ?
+        SET content = ?, slot = ?
+        WHERE id = ?
         RETURNING ${FULL_JSON_OBJECT_SELECT}
       `
       )
-        .bind(text, slot, results?.[0].ID)
+        .bind(text, slot, results?.[0].id)
         .all<Summary>();
 
       if (!success)
@@ -102,10 +102,10 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
     } else {
       const { success, results: _results } = await env.DB.prepare(
         `
-        INSERT INTO Summaries (UserID, Content, Date, Slot) values (?, ?, ?, ?) RETURNING ${FULL_JSON_OBJECT_SELECT}
+        INSERT INTO Summaries (userId, content, date, slot) values (?, ?, ?, ?) RETURNING ${FULL_JSON_OBJECT_SELECT}
       `
       )
-        .bind(identity?.UserID, text, date, slot)
+        .bind(identity?.userId, text, date, slot)
         .all<Summary>();
 
       if (!success)
@@ -126,10 +126,10 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
       `
       SELECT ${FULL_JSON_OBJECT_SELECT}
       FROM Summaries
-      WHERE UserID=? AND Date = ? ORDER BY Slot;
+      WHERE userId=? AND date = ? ORDER BY slot;
     `
     )
-      .bind(identity?.UserID, searchParams.get('date'))
+      .bind(identity?.userId, searchParams.get('date'))
       .all<Summary>();
 
     // Slight hack to unpack json values returned by the sqlite api

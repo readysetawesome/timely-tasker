@@ -15,7 +15,7 @@ import { Summary } from '../../../functions/summaries';
 
 export enum TickState {
   Focused = 0,
-  Distracted = 1,
+  distracted = 1,
   Deleted = -1,
 }
 
@@ -26,10 +26,10 @@ export interface TickProps {
 
 const nextValue = (distracted: number | undefined) => {
   // rotate through the tictac states empty(-1/undef) => filled(0) => slash(1)
-  return distracted === TickState.Distracted
+  return distracted === TickState.distracted
     ? TickState.Deleted
     : distracted === TickState.Focused
-    ? TickState.Distracted
+    ? TickState.distracted
     : TickState.Focused;
 };
 
@@ -40,24 +40,24 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
   const dispatch = useDispatch();
   const timerTick =
     summary?.TimerTicks.find(
-      (value: TimerTick) => value.TickNumber === tickNumber
+      (value: TimerTick) => value.tickNumber === tickNumber
     ) ||
     ({
-      TickNumber: tickNumber,
-      SummaryID: summary?.ID,
-      Distracted: TickState.Deleted,
+      tickNumber: tickNumber,
+      summaryId: summary?.id,
+      distracted: TickState.Deleted,
     } as TimerTick);
 
   const matchingColumnTicks = useSelector((state) =>
     getMatchingTicks(state, tickNumber)
-  ).filter((t) => t.summary?.Slot !== slot);
+  ).filter((t) => t.summary?.slot !== slot);
 
-  const distracted = timerTick?.Distracted;
+  const distracted = timerTick?.distracted;
   const nextTickValue = nextValue(distracted);
   const testIdAttr = `${slot}-${tickNumber}`;
 
   const style =
-    distracted === TickState.Distracted
+    distracted === TickState.distracted
       ? styles.tictac_distracted
       : distracted === TickState.Focused
       ? styles.tictac_focused
@@ -65,20 +65,14 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
 
   const updateTick = useCallback(() => {
     tickClicked({
-      summary:
-        summary ||
-        ({
-          Date: date,
-          Slot: slot,
-          Content: '',
-        } as Summary),
+      summary: summary || ({ date, slot, content: '' } as Summary),
       slot,
       tickNumber,
       distracted:
         nextTickValue === TickState.Deleted
           ? TickState.Deleted
           : matchingColumnTicks.length > 0
-          ? TickState.Distracted
+          ? TickState.distracted
           : nextTickValue,
       previously: distracted,
     } as TickChangeEvent)(dispatch);
@@ -87,27 +81,26 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
     if (nextTickValue === TickState.Deleted) {
       if (
         matchingColumnTicks.length === 1 &&
-        matchingColumnTicks[0].Distracted === TickState.Distracted
+        matchingColumnTicks[0].distracted === TickState.distracted
       ) {
         tickClicked({
-          summary: matchingColumnTicks[0].summary,
-          slot: matchingColumnTicks[0].summary?.Slot,
-          tickNumber,
+          ...matchingColumnTicks[0],
+          slot: matchingColumnTicks[0].summary?.slot,
           distracted: TickState.Focused,
-          previously: matchingColumnTicks[0].Distracted,
+          previously: matchingColumnTicks[0].distracted,
         } as TickChangeEvent)(dispatch);
       }
     } else {
       // evaluate distracted column rule
       matchingColumnTicks.forEach((t) => {
-        if (t.Distracted === TickState.Focused) {
+        if (t.distracted === TickState.Focused) {
           // some other tick in this column, mark it distracted
           tickClicked({
             summary: t.summary,
-            slot: t.summary?.Slot,
+            slot: t.summary?.slot,
             tickNumber,
-            distracted: TickState.Distracted,
-            previously: t.Distracted,
+            distracted: TickState.distracted,
+            previously: t.distracted,
           } as TickChangeEvent)(dispatch);
         }
       });

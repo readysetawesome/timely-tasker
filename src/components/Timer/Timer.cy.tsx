@@ -65,22 +65,22 @@ describe('<Timer />', () => {
   it('renders ticks that interact with each other as intended, setting other ticks in the colum to distracted', () => {
     cy.intercept(
       'POST',
-      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`,
+      `/ticks?summary=${summaries[0].id}&tick=31&distracted=1`,
       { fixture: 'tickRelated' }
     ).as('updateRelatedTick');
     cy.intercept(
       'POST',
-      `/ticks?summary=${summaries[1].ID}&tick=31&distracted=1`,
+      `/ticks?summary=${summaries[1].id}&tick=31&distracted=1`,
       { fixture: 'tickDistracted' }
     ).as('updateTickDistracted');
     cy.intercept(
       'POST',
-      `/ticks?summary=${summaries[1].ID}&tick=31&distracted=-1`,
+      `/ticks?summary=${summaries[1].id}&tick=31&distracted=-1`,
       { fixture: 'tickRemoved' }
     ).as('updateTickRemoved');
     cy.intercept(
       'POST',
-      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=0`,
+      `/ticks?summary=${summaries[0].id}&tick=31&distracted=0`,
       { fixture: 'tick' }
     ).as('updateTickOriginal');
     cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
@@ -98,7 +98,7 @@ describe('<Timer />', () => {
   });
 
   it('renders a summary input that doesnt cause problems on debounce/update', () => {
-    const targetText = summarySlotTwo.Content;
+    const targetText = summarySlotTwo.content;
     const incompleteText = targetText.slice(0, targetText.length - 1);
 
     cy.intercept(
@@ -141,7 +141,7 @@ describe('<Timer />', () => {
 
     cy.intercept(
       'POST',
-      `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`,
+      `/ticks?summary=${summarySlotThree.id}&tick=33&distracted=0`,
       {
         fixture: 'summarySlotThreeTick',
       }
@@ -167,7 +167,7 @@ describe('<Timer />', () => {
 
     cy.intercept(
       'POST',
-      `/ticks?summary=${summarySlotThree.ID}&tick=33&distracted=0`,
+      `/ticks?summary=${summarySlotThree.id}&tick=33&distracted=0`,
       {
         fixture: 'summarySlotThreeTick',
       }
@@ -181,7 +181,7 @@ describe('<Timer />', () => {
   it('handles errors with tick click', () => {
     cy.intercept(
       'POST',
-      `/ticks?summary=${summaries[0].ID}&tick=31&distracted=1`,
+      `/ticks?summary=${summaries[0].id}&tick=31&distracted=1`,
       { forceNetworkError: true }
     ).as('updateTickFail');
 

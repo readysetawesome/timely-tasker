@@ -43,7 +43,7 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
     const { results, success, error } = await env.DB.prepare(
       `
       SELECT * FROM TimerTicks
-      WHERE SummaryID = ? AND TickNumber = ?
+      WHERE summaryId = ? AND tickNumber = ?
     `
     )
       .bind(summary, tick)
@@ -56,21 +56,21 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
         // there should be no tick, delete it
         const { success, error } = await env.DB.prepare(
           `
-          DELETE FROM TimerTicks WHERE ID = ?
+          DELETE FROM TimerTicks WHERE id = ?
         `
         )
-          .bind(timerTick.ID)
+          .bind(timerTick.id)
           .run();
         if (!success) return errorResponse(`Error deleting tick. ${error}`);
       } else {
         const { success, results } = await env.DB.prepare(
           `
           UPDATE TimerTicks
-          SET Distracted = ?
-          WHERE ID = ? RETURNING *
+          SET distracted = ?
+          WHERE id = ? RETURNING *
         `
         )
-          .bind(distracted, timerTick.ID)
+          .bind(distracted, timerTick.id)
           .all<TimerTick>();
 
         if (!success) return errorResponse(`Error updating tick. ${error}`);
@@ -79,10 +79,10 @@ export const onRequest: PagesFunction<Env, never, PluginData> = async ({
     } else {
       const { success, results } = await env.DB.prepare(
         `
-        INSERT INTO TimerTicks (UserID, TickNumber, Distracted, SummaryID) values (?, ?, ?, ?) RETURNING *
+        INSERT INTO TimerTicks (userId, tickNumber, distracted, summaryId) values (?, ?, ?, ?) RETURNING *
       `
       )
-        .bind(identity.UserID, tick, distracted, summary)
+        .bind(identity.userId, tick, distracted, summary)
         .all<TimerTick>();
 
       if (!success) return errorResponse('Error inserting new tick.');

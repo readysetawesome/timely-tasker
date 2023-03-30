@@ -1,33 +1,33 @@
 [
   {
-    "ID": 75,
-    "Content": "replace jest with cypress",
-    "Date": 1679529600000,
-    "Slot": 0,
+    "id": 75,
+    "content": "replace jest with cypress",
+    "date": 1679529600000,
+    "slot": 0,
     "TimerTicks": [
       {
-        "ID": 292,
-        "UserID": 1,
-        "Date": 1679529600000,
-        "TickNumber": 31,
-        "Distracted": 0,
-        "SummaryID": 75
+        "id": 292,
+        "userId": 1,
+        "date": 1679529600000,
+        "tickNumber": 31,
+        "distracted": 0,
+        "summaryId": 75
       },
       {
-        "ID": 293,
-        "UserID": 1,
-        "Date": 1679529600000,
-        "TickNumber": 32,
-        "Distracted": 1,
-        "SummaryID": 75
+        "id": 293,
+        "userId": 1,
+        "date": 1679529600000,
+        "tickNumber": 32,
+        "distracted": 1,
+        "summaryId": 75
       }
     ]
   },
   {
-    "ID": 76,
-    "Content": "other stuff",
-    "Date": 1679529600000,
-    "Slot": 1,
+    "id": 76,
+    "content": "other stuff",
+    "date": 1679529600000,
+    "slot": 1,
     "TimerTicks": []
   }
 ]

@@ -1,9 +1,9 @@
 [
   {
-    "ID": 99,
-    "Content": "from a previous date",
-    "Date": 1679443200000,
-    "Slot": 0,
+    "id": 99,
+    "content": "from a previous date",
+    "date": 1679443200000,
+    "slot": 0,
     "TimerTicks": [    ]
   }
 ]

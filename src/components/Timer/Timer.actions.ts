@@ -30,15 +30,13 @@ export const setSummary = (s: Summary) => async (dispatch) => {
 
 export const synthesizeTick = (tickChangeEvent: TickChangeEvent) =>
   ({
-    TickNumber: tickChangeEvent.tickNumber,
-    SummaryID: tickChangeEvent.summary.ID,
-    Distracted: tickChangeEvent.distracted,
-    summary: tickChangeEvent.summary,
+    ...tickChangeEvent,
+    summaryId: tickChangeEvent.summary.id,
   } as TimerTick);
 
 export const tickClicked =
   (tickChangeEvent: TickChangeEvent) => async (dispatch: Dispatch) => {
-    if (tickChangeEvent.summary.ID === undefined) {
+    if (tickChangeEvent.summary.id === undefined) {
       await RestApi.createSummary(tickChangeEvent.summary).then(
         (summary: Summary) => {
           dispatch(summaryCreated(summary));
