@@ -41,16 +41,23 @@ export const getRestSelectorsFor = (slice, target) => {
 
 const isDevMode = process.env.NODE_ENV === 'development';
 const fetchPrefix = isDevMode ? 'http://127.0.0.1:8788' : '';
-const fetchOptions = (isDevMode ? { mode: 'cors' } : {}) as RequestInit<RequestInitCfProperties>;
+const fetchOptions = (
+  isDevMode ? { mode: 'cors' } : {}
+) as RequestInit<RequestInitCfProperties>;
 
 const createSummary = (summary: Summary) =>
   fetch(
-    fetchPrefix + `/summaries?date=${summary.date}&text=${encodeURIComponent(summary.content)}&slot=${summary.slot}`,
-    { ...fetchOptions, method: 'POST' },
+    fetchPrefix +
+      `/summaries?date=${summary.date}&text=${encodeURIComponent(
+        summary.content
+      )}&slot=${summary.slot}`,
+    { ...fetchOptions, method: 'POST' }
   ).then((response) => response.json());
 
 const getSummaries = (useDate: number) =>
-  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions).then((response) => response.json());
+  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions).then(
+    (response) => response.json()
+  );
 
 const greet = (callback) =>
   fetch(fetchPrefix + '/greet', fetchOptions)
@@ -61,7 +68,7 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
   fetch(
     fetchPrefix +
       `/ticks?summary=${tickChangeEvent.summary.id}&tick=${tickChangeEvent.tickNumber}&distracted=${tickChangeEvent.distracted}`,
-    { ...fetchOptions, method: 'POST' },
+    { ...fetchOptions, method: 'POST' }
   )
     .then((response) => response.json())
     .then((data) => callback(data));
