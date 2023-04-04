@@ -3,6 +3,10 @@ $tictac-width: .69em;
 $tictac-height: 1.35em;
 $tictac-margin: 2px 2px 2px 2px;
 
+button {
+  cursor: pointer;
+}
+
 .Timer {
   .error {
     color: darkred;

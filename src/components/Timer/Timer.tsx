@@ -4,6 +4,7 @@ import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
+import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate } from './Timer.selectors';
 import { fetchSummaries } from './Timer.actions';
@@ -36,6 +37,12 @@ export interface TimerProps {
   rightNavClicker: ReactElement;
 }
 
+const LOCAL_STORAGE = 'TimelyTasker:UseLocalStorage';
+const USELOCAL = {
+  YES: 'yes',
+  NO: 'no',
+};
+
 const Timer = ({
   date,
   currentTime,
@@ -57,9 +64,24 @@ const Timer = ({
   const loadingDate = useSelector(getLoadingDate);
   const dispatch = useDispatch();
 
+  const [useLocal, setUseLocal] = useState(localStorage.getItem(LOCAL_STORAGE));
   useEffect(() => {
-    RestApi.greet((identity) => setIdentity(identity));
-  }, []);
+    if (useLocal !== null && useLocal !== localStorage.getItem(LOCAL_STORAGE)) {
+      localStorage.setItem(LOCAL_STORAGE, useLocal);
+    }
+  }, [useLocal]);
+
+  const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
+
+  useEffect(() => {
+    if (useLocal === USELOCAL.NO) {
+      RestApi.greet((identity: React.SetStateAction<AppIdentity>) =>
+        setIdentity(identity)
+      );
+    } else if (useLocal === USELOCAL.YES) {
+      setGreeting('Hello! Currently using Local Storage');
+    }
+  }, [useLocal]);
 
   // Once we have identity, set greeting and get summaries+ticks
   useEffect(() => {
@@ -74,10 +96,14 @@ const Timer = ({
   }, [identity]);
 
   useEffect(() => {
+    // Fetch summaries after checking requirements, starting with storage selection
+    if (useLocal === null) return;
+
     // Don't do anything until a greeting is set, it means identity exists in db
-    if (!identity || greeting === '') return;
+    if (useLocal === USELOCAL.NO && greeting === '') return;
+
     if (loadingDate !== date && !summariesLoading && !summariesError) {
-      fetchSummaries(date)(dispatch);
+      fetchSummaries(date)(dispatch, useApi);
       return;
     }
   }, [
@@ -88,6 +114,8 @@ const Timer = ({
     summariesError,
     dispatch,
     greeting,
+    useApi,
+    useLocal,
   ]);
 
   // Once the summaries have loaded, scroll horiz to bring current hour into view
@@ -110,10 +138,29 @@ const Timer = ({
 
   for (let slot = 0; slot < 12; slot++) {
     if (summariesSuccess) {
-      summaryElements.push(<TaskRowSummary {...{ date, slot, key: slot }} />);
-      tickRowElements.push(<TaskRowTicks {...{ date, slot, key: slot }} />);
+      summaryElements.push(
+        <TaskRowSummary {...{ date, slot, key: slot, useApi }} />
+      );
+      tickRowElements.push(
+        <TaskRowTicks {...{ date, slot, key: slot, useApi }} />
+      );
     }
   }
+
+  const UseCloudStorage = (
+    <button onClick={() => setUseLocal(USELOCAL.NO)}>
+      <strong>Use cloudflare d1 (reqiures login)</strong>
+    </button>
+  );
+
+  const UseLocalStorage = (
+    <button
+      onClick={() => setUseLocal(USELOCAL.YES)}
+      title="public computer users: by clicking you agree that you understand the risks"
+    >
+      <strong>Use browser localStorage</strong>
+    </button>
+  );
 
   return (
     <>
@@ -124,14 +171,35 @@ const Timer = ({
           <a href={`?date=${date}`}>Work Date: {dateDisplay(date)}</a>
           {rightNavClicker}
         </h2>
-        <p data-test-id="greeting">{greeting || 'loading...'}</p>
+        <p data-test-id="greeting">{greeting || ''}</p>
+        <p>
+          {useLocal === USELOCAL.YES ? UseCloudStorage : ''}
+          {useLocal === USELOCAL.NO ? UseLocalStorage : ''}
+        </p>
       </div>
       <div className={styles.Timer}>
         <div className={styles.content}>
           {summaryError && (
             <span className={styles.error}>Error setting Summary text</span>
           )}
-
+          {useLocal !== null ? (
+            <></>
+          ) : (
+            <>
+              <h4>
+                This app stores a small amount of data including your task
+                summary text and tick marks by date/time/task. Choose a Storage
+                option below.
+              </h4>
+              <p>We share nothing! We don't make money or have partnerships.</p>
+              <p>
+                <strong>Public computer users:</strong> by choosing localStorage
+                you agree that you understand the risks.
+              </p>
+              <p>{UseLocalStorage}</p>
+              <p>{UseCloudStorage}</p>
+            </>
+          )}
           {summariesError && (
             <span className={styles.error}>
               Error loading Summary text and ticks!
