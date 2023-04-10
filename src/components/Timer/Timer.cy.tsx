@@ -18,13 +18,15 @@ beforeEach(() => {
   cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
     fixture: 'summaries',
   }).as('getSummaries');
+
+  cy.window().then((win) =>
+    win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
+  );
+
   // we made these stamps in gmt-700 which is 420 minutes of offset
   const now = TIME_NOW - 420 * 60 * 1000;
   const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
   cy.clock().then((clock) => clock.setSystemTime(useCurrentTime));
-  cy.window().then((win) =>
-    win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
-  );
   mount(
     <Provider store={storeMaker()}>
       <MemoryRouter>
@@ -35,8 +37,6 @@ beforeEach(() => {
       </MemoryRouter>
     </Provider>
   ).as('mountedComponent');
-
-
 
   cy.clock().then((clock) => clock.restore());
 
