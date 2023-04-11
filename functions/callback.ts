@@ -1,5 +1,5 @@
 import { Env, AppIdentity, TASKER_COOKIE } from '../lib/Identity';
-import crypto from 'crypto';
+
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 
@@ -74,7 +74,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     }
 
     // 3. insert new session based on securely random session id
-    const mySession = crypto.randomBytes(48).toString('base64');
+    const mySession = crypto.randomUUID();
     env.DB.prepare(`
       INSERT INTO UserSessions (userId, sessionId) VALUES (?, ?)`
     )
