@@ -7,8 +7,6 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import storeMaker from './store';
 import { Provider } from 'react-redux';
-import Login from './components/Login/Login';
-
 const root = ReactDOM.createRoot(document.getElementById('root') as Element);
 
 root.render(
@@ -17,8 +15,6 @@ root.render(
       <Routes>
         <Route path="/" element={<App />}></Route>
         <Route path="timer" element={<App />} />
-        <Route path="auth/login" element={<Login />} />
-        <Route path="auth/callback" element={<Login />} />
       </Routes>
     </BrowserRouter>
   </Provider>

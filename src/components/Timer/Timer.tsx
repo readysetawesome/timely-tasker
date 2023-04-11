@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { AppIdentity } from '../../../lib/Identity';
+import { AppIdentity, IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
@@ -75,9 +75,11 @@ const Timer = ({
 
   useEffect(() => {
     if (useLocal === USELOCAL.NO) {
-      RestApi.greet((identity: React.SetStateAction<AppIdentity>) =>
-        setIdentity(identity)
-      );
+      RestApi.greet((identityResponse: IdentityResponse) => {
+        if (identityResponse.identity) setIdentity(identityResponse.identity);
+        else if (identityResponse.authorizeUrl)
+          window.location.href = identityResponse.authorizeUrl;
+      });
     } else if (useLocal === USELOCAL.YES) {
       setGreeting('Hello! Currently using Local Storage');
     }

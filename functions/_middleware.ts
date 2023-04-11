@@ -1,8 +1,11 @@
-import cloudflareAccessPlugin from '@cloudflare/pages-plugin-cloudflare-access';
+// import cloudflareAccessPlugin from '@cloudflare/pages-plugin-cloudflare-access';
 
+/*
 interface Env {
   AUDIENCE: string;
+  ENVIRONMENT: string;
 }
+*/
 
 // Respond to OPTIONS method
 // TODO only enable this for dev until needed otherwise
@@ -26,7 +29,7 @@ const onRequestCors: PagesFunction = async ({ next }) => {
   response.headers.set('Access-Control-Max-Age', '86400');
   return response;
 };
-
+/*
 const onRequestDoPlugin: PagesFunction<Env> = (context) => {
   const aud = context.env.AUDIENCE;
   if (typeof aud !== 'string') {
@@ -40,5 +43,6 @@ const onRequestDoPlugin: PagesFunction<Env> = (context) => {
     })(context);
   }
 };
+*/
 
-export const onRequest = [onRequestCors, onRequestDoPlugin];
+export const onRequest = [onRequestCors];
