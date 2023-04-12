@@ -17,7 +17,7 @@ jobs:
         run: npm install
 
       - name: Cypress run
-        run: npm ci-cypress
+        run: npm run ci-cypress
         env:
           # See issue https://github.com/cypress-io/cypress/issues/25357
           ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
