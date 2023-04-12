@@ -14,7 +14,6 @@
     "pubsub-js": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-oauth2-code-pkce": "^1.13.1",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.9.0",
     "sass": "^1.59.2",
