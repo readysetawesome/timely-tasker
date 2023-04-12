@@ -53,6 +53,13 @@
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
 * pipeline integration with github CI and [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker), ++README badges!
 
+##### oAuth Identity via Google
+* Goal: only to establish identity/ownership of data, no google APIs will be authorized via oAuth scopes. For this we can target only the id_token info.
+* Uses oAuth only, not OIDC, only supports google accounts.
+* authorization code flow, server->server code exchange which results in a crypto-safe unique session ID cookie that is not visible to JS (i.e. marked 'httpOnly' to bust XSRF).
+* this cookie comes with all future XHRs to CRUD my app's cloud data, that's how we associate it with you
+* the direct server->server call to google over TLS for token exchange means we don't have to validate a JWT separately, the identity returned is always valid in server context
+
 #### Coming:
 * ~~speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)~~
 * ~~navigate to prevoius dates~~
