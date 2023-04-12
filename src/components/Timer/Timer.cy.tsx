@@ -51,7 +51,7 @@ describe('<Timer />', () => {
   it('renders greeting text', () => {
     cy.get("[data-test-id='greeting']")
       .first()
-      .should('contain', 'You are logged in with github.');
+      .should('contain', 'You are logged in with google.');
   });
 
   it('renders loaded summary text in the <input>', () => {

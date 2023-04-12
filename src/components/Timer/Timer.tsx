@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { AppIdentity, IdentityResponse } from '../../../lib/Identity';
+import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
@@ -49,7 +49,6 @@ const Timer = ({
   leftNavClicker,
   rightNavClicker,
 }: TimerProps) => {
-  const [identity, setIdentity] = useState({} as AppIdentity);
   const [greeting, setGreeting] = useState('');
   const summariesRestSelectors = getRestSelectorsFor(
     'timer',
@@ -75,27 +74,20 @@ const Timer = ({
 
   useEffect(() => {
     if (useLocal === USELOCAL.NO) {
-      RestApi.greet((identityResponse: IdentityResponse) => {
-        if (identityResponse.identity) setIdentity(identityResponse.identity);
-        else if (identityResponse.authorizeUrl)
-          window.location.href = identityResponse.authorizeUrl;
+      RestApi.greet((res: IdentityResponse) => {
+        if (res.identity) {
+          setGreeting(`
+            Hello, ${
+              res.identity.displayName === '' ? 'my friend' : res.identity.displayName
+            }!
+            You are logged in with ${res.identity.providerName}.
+          `);
+        } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;
       });
     } else if (useLocal === USELOCAL.YES) {
       setGreeting('Hello! Currently using Local Storage');
     }
   }, [useLocal]);
-
-  // Once we have identity, set greeting and get summaries+ticks
-  useEffect(() => {
-    if (identity.id !== undefined) {
-      setGreeting(`
-        Hello, ${
-          identity.displayName === '' ? 'my friend' : identity.displayName
-        }!
-        You are logged in with ${identity.providerName}.
-      `);
-    }
-  }, [identity]);
 
   useEffect(() => {
     // Fetch summaries after checking requirements, starting with storage selection
@@ -109,7 +101,6 @@ const Timer = ({
       return;
     }
   }, [
-    identity,
     date,
     summariesLoading,
     loadingDate,
