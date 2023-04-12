@@ -145,7 +145,7 @@ describe('<Timer />', () => {
   });
 
   it('ticking a box should not erase the newly entered summary', () => {
-    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hello&slot=3`, {
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hi&slot=3`, {
       fixture: 'summarySlotThree',
     }).as('createSummaryNew');
 
@@ -157,7 +157,7 @@ describe('<Timer />', () => {
       }
     ).as('createTick');
 
-    cy.get("[data-test-id='summary-text-3']").type('Hello');
+    cy.get("[data-test-id='summary-text-3']").type('Hi');
 
     cy.wait(['@createSummaryNew']);
 
@@ -167,7 +167,7 @@ describe('<Timer />', () => {
 
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]');
 
-    cy.get("[data-test-id='summary-text-3'][value=Hello]");
+    cy.get("[data-test-id='summary-text-3'][value=Hi]");
   });
 
   it('ticking a new row before typing should cause dependent summary object create', () => {
