@@ -78,7 +78,9 @@ const Timer = ({
         if (res.identity) {
           setGreeting(`
             Hello, ${
-              res.identity.displayName === '' ? 'my friend' : res.identity.displayName
+              res.identity.displayName === ''
+                ? 'my friend'
+                : res.identity.displayName
             }!
             You are logged in with ${res.identity.providerName}.
           `);

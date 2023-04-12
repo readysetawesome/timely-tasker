@@ -65,29 +65,3 @@ export const onRequest: PagesFunction<Env, never> = async ({
     return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);
   }
 };
-
-/*
-  const batch = await env.DB.batch<AppIdentity>([
-    env.DB.prepare(`INSERT INTO Users (displayName, email) values (?, ?)`).bind(
-      email,
-      email
-    ),
-    env.DB.prepare(
-      `INSERT INTO Identities (providerId, userId, providerIdentityId) values (?, last_insert_rowid(), ?)`
-    ).bind(provider.id, jwtIdentity.user_uuid),
-    env.DB.prepare(`
-      SELECT * FROM Identities, Providers, Users
-      WHERE Users.id = userId
-        AND Providers.id = providerId
-        AND Identities.id = last_insert_rowid()
-    `),
-  ]);
-
-  if (!batch[1].success)
-    return errorResponse('unable to insert new  User & Identity mapping');
-
-  identity = batch[2].results?.[0];
-
-  return new Response(JSON.stringify(identity, null, 2), JsonHeader);
-};
-*/
