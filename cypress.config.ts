@@ -6,6 +6,7 @@ const codeCoverageTask = require('@cypress/code-coverage/task');
 module.exports = defineConfig({
   viewportHeight: 800,
   viewportWidth: 1100,
+  chromeWebSecurity: false,
   component: {
     setupNodeEvents(on, config) {
       return Object.assign({}, config, codeCoverageTask(on, config));

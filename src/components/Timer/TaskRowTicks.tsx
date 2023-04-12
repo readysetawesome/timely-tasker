@@ -2,9 +2,11 @@ import React from 'react';
 import styles from './Timer.module.scss';
 import Tick from './Tick';
 import { Summary } from '../../../functions/summaries';
+import { StorageApiType } from '../../LocalStorageApi';
 
 export interface TaskRowTicksProps {
   slot: number;
+  useApi: StorageApiType;
 }
 
 export type TimerTick = {
@@ -16,7 +18,7 @@ export type TimerTick = {
   summary?: Summary;
 };
 
-const TaskRowTicks = ({ slot }: TaskRowTicksProps) => {
+const TaskRowTicks = ({ slot, useApi }: TaskRowTicksProps) => {
   const ticks = new Array<JSX.Element>();
 
   for (let tickNumber = 0; tickNumber < 96; tickNumber++) {
@@ -26,6 +28,7 @@ const TaskRowTicks = ({ slot }: TaskRowTicksProps) => {
           {...{
             slot,
             tickNumber,
+            useApi,
           }}
         />
       </div>

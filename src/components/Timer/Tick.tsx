@@ -12,6 +12,7 @@ import {
 import { tickClicked } from './Timer.actions';
 import { TickChangeEvent } from './Timer.slice';
 import { Summary } from '../../../functions/summaries';
+import { StorageApiType } from '../../LocalStorageApi';
 
 export enum TickState {
   Focused = 0,
@@ -22,6 +23,7 @@ export enum TickState {
 export interface TickProps {
   tickNumber: number;
   slot: number;
+  useApi: StorageApiType;
 }
 
 const nextValue = (distracted: number | undefined) => {
@@ -33,7 +35,7 @@ const nextValue = (distracted: number | undefined) => {
     : TickState.Focused;
 };
 
-const Tick = ({ tickNumber, slot }: TickProps) => {
+const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
   const summary = useSelector((state) => getSummary(state, slot));
 
   const date = useSelector(getLoadingDate);
@@ -65,7 +67,8 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
 
   const updateTick = useCallback(() => {
     tickClicked({
-      summary: summary || ({ date, slot, content: '' } as Summary),
+      summary:
+        summary || ({ date, slot, content: '', TimerTicks: [] } as Summary),
       slot,
       tickNumber,
       distracted:
@@ -75,7 +78,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
           ? TickState.distracted
           : nextTickValue,
       previously: distracted,
-    } as TickChangeEvent)(dispatch);
+    } as TickChangeEvent)(dispatch, useApi);
 
     // evaluate last tick standing rule and apply
     if (nextTickValue === TickState.Deleted) {
@@ -88,7 +91,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
           slot: matchingColumnTicks[0].summary?.slot,
           distracted: TickState.Focused,
           previously: matchingColumnTicks[0].distracted,
-        } as TickChangeEvent)(dispatch);
+        } as TickChangeEvent)(dispatch, useApi);
       }
     } else {
       // evaluate distracted column rule
@@ -101,7 +104,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
             tickNumber,
             distracted: TickState.distracted,
             previously: t.distracted,
-          } as TickChangeEvent)(dispatch);
+          } as TickChangeEvent)(dispatch, useApi);
         }
       });
     }
@@ -119,6 +122,7 @@ const Tick = ({ tickNumber, slot }: TickProps) => {
     summary,
     testIdAttr,
     tickNumber,
+    useApi,
   ]);
 
   return (

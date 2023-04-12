@@ -1,6 +1,5 @@
-import type { PluginData } from '@cloudflare/pages-plugin-cloudflare-access';
-import type { Env, AppIdentity } from '../lib/Identity';
-import { GetIdentity } from '../lib/Identity';
+import { Env, AppIdentity, parseCookies, TASKER_COOKIE } from '../lib/Identity';
+import devUser from '../fixtures/devUser.json';
 
 const JsonHeader = {
   headers: {
@@ -8,64 +7,66 @@ const JsonHeader = {
   },
 };
 
-const errorResponse = (error: string) =>
-  new Response(JSON.stringify({ error }), JsonHeader);
-
-export const onRequest: PagesFunction<Env, never, PluginData> = async ({
-  data,
+export const onRequest: PagesFunction<Env, never> = async ({
   env,
+  request,
 }) => {
-  const result = await GetIdentity(data, env);
-  let { identity } = result;
-  const { jwtIdentity, provider, error } = result;
+  /*
+    get information about the session
+      - no cookie?
+        create session state
+        respond with oAuth authorize url
+      - cookie?
+        respond with user email address
+  */
 
-  if (error) return errorResponse(error);
+  if (env.ENVIRONMENT === 'development') {
+    return new Response(JSON.stringify({ identity: devUser }), JsonHeader);
+  }
 
-  if (identity === null) {
-    // Check if email already exists, if it does, suggest login with orig provider.
-    // Why? Users will forget which provider they logged in with.
-    // If their data "disappears" because they switch providers, they are confused.
+  const cookies = parseCookies(request);
 
+  if (!cookies[TASKER_COOKIE]) {
+    // insert new session based on securely random session id
+    // by keeping this on the client we provie a means to XSRF bust
+    const mySession = crypto.randomUUID();
+    const response = await fetch(
+      'https://accounts.google.com/.well-known/openid-configuration'
+    );
+    const { authorization_endpoint } = await response.json<{
+      authorization_endpoint: string;
+    }>();
+    const url = new URL(authorization_endpoint);
+    url.search = [
+      ['client_id', env.GOOGLE_OAUTH_CLIENT],
+      ['response_type', 'code'],
+      ['scope', 'openid email'],
+      ['state', mySession],
+      ['nonce', crypto.randomUUID()],
+      ['redirect_uri', env.GOOGLE_OAUTH_REDIRECT_URI],
+    ]
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+
+    return new Response(JSON.stringify({ authorizeUrl: url }), {
+      headers: {
+        ...JsonHeader.headers,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly`,
+      },
+    });
+  } else {
+    // repond with authorized user email address from sesssion lookup
     const userQuery = env.DB.prepare(`
       SELECT * FROM  Identities, Providers, Users
-      WHERE email = ?
-        AND Users.id = userId
+      WHERE Users.id = userId
         AND Providers.id = providerId
+        AND Users.id IN (SELECT userId from UserSessions where sessionId = ?)
     `);
 
     const existingUser = await userQuery
-      .bind(jwtIdentity.email)
+      .bind(cookies.timelyTaskerSession)
       .first<AppIdentity>();
 
-    if (existingUser)
-      return errorResponse(`
-      A user already signed up with this email address using ${existingUser.providerName}.
-      Was it you? If it was you, try logging in with ${existingUser.providerName} instead.
-    `);
-
-    if (provider === undefined)
-      return errorResponse('Unable to find/intialize provider record.');
-
-    const batch = await env.DB.batch<AppIdentity>([
-      env.DB.prepare(
-        `INSERT INTO Users (displayName, email) values (?, ?)`
-      ).bind(jwtIdentity.name || '', jwtIdentity.email),
-      env.DB.prepare(
-        `INSERT INTO Identities (providerId, userId, providerIdentityId) values (?, last_insert_rowid(), ?)`
-      ).bind(provider.id, jwtIdentity.user_uuid),
-      env.DB.prepare(`
-        SELECT * FROM Identities, Providers, Users
-        WHERE Users.id = userId
-          AND Providers.id = providerId
-          AND Identities.id = last_insert_rowid()
-      `),
-    ]);
-
-    if (!batch[1].success)
-      return errorResponse('unable to insert new  User & Identity mapping');
-
-    identity = batch[2].results?.[0];
+    return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);
   }
-
-  return new Response(JSON.stringify(identity, null, 2), JsonHeader);
 };

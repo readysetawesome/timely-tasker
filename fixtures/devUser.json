@@ -1,9 +1,10 @@
 {
-  "user_uuid": "xxxx-12345",
-  "name": "dev user",
+  "id": 1,
+  "displayName": "cbecker333@gmail.com",
   "idp": {
     "id": "6a2cf522-5232-46c9-9da2-528e6ece1842",
-    "type": "github"
+    "type": "google"
   },
-  "email": "foo@zoo.dev.com"
+  "email": "cbecker333@gmail.com",
+  "providerName": "google"
 }

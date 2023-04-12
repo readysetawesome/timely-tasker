@@ -8,25 +8,28 @@ import {
   TickChangeEvent,
   tickUpdated,
 } from './Timer.slice';
-import RestApi from '../../RestApi';
 import { Summary } from '../../../functions/summaries';
 import { TimerTick } from './TaskRowTicks';
 import { Dispatch } from '@reduxjs/toolkit';
+import { StorageApiType } from '../../LocalStorageApi';
 
 export const fetchSummaries =
-  (useDate: number) => async (dispatch: Dispatch) => {
+  (useDate: number) => async (dispatch: Dispatch, useApi: StorageApiType) => {
     dispatch(summariesLoading(useDate));
-    await RestApi.getSummaries(useDate)
+    await useApi
+      .getSummaries(useDate)
       .then((response: Summary[]) => dispatch(summariesLoaded(response)))
       .catch(() => dispatch(summariesError()));
   };
 
-export const setSummary = (s: Summary) => async (dispatch) => {
-  dispatch(summaryPending());
-  await RestApi.createSummary(s)
-    .then((s: Summary) => dispatch(summaryCreated(s)))
-    .catch(() => dispatch(summaryError()));
-};
+export const setSummary =
+  (s: Summary) => async (dispatch: Dispatch, useApi: StorageApiType) => {
+    dispatch(summaryPending());
+    await useApi
+      .createSummary(s)
+      .then((s: Summary) => dispatch(summaryCreated(s)))
+      .catch(() => dispatch(summaryError()));
+  };
 
 export const synthesizeTick = (tickChangeEvent: TickChangeEvent) =>
   ({
@@ -35,18 +38,19 @@ export const synthesizeTick = (tickChangeEvent: TickChangeEvent) =>
   } as TimerTick);
 
 export const tickClicked =
-  (tickChangeEvent: TickChangeEvent) => async (dispatch: Dispatch) => {
+  (tickChangeEvent: TickChangeEvent) =>
+  async (dispatch: Dispatch, useApi: StorageApiType) => {
     if (tickChangeEvent.summary.id === undefined) {
-      await RestApi.createSummary(tickChangeEvent.summary).then(
-        (summary: Summary) => {
+      await useApi
+        .createSummary(tickChangeEvent.summary)
+        .then((summary: Summary) => {
           dispatch(summaryCreated(summary));
-          RestApi.createTick(
+          useApi.createTick(
             { ...tickChangeEvent, summary },
             (tick: TimerTick) =>
               dispatch(tickUpdated({ tick, tickChangeEvent }))
           );
-        }
-      ); // TODO: .catch()
+        }); // TODO: .catch()
     } else {
       // Dispatch immediately if the summary already exists, to ensure snappy UI response
       dispatch(
@@ -55,17 +59,20 @@ export const tickClicked =
           tickChangeEvent,
         })
       );
+
       // dubious of second dispatch, but it's going to add the record ID, so leave it for now
-      await RestApi.createTick(tickChangeEvent, (tick: TimerTick) =>
-        dispatch(tickUpdated({ tick, tickChangeEvent }))
-      ).catch(() => {
-        tickChangeEvent.distracted = tickChangeEvent.previously;
-        dispatch(
-          tickUpdated({
-            tick: synthesizeTick(tickChangeEvent),
-            tickChangeEvent,
-          })
-        );
-      });
+      await useApi
+        .createTick(tickChangeEvent, (tick: TimerTick) =>
+          dispatch(tickUpdated({ tick, tickChangeEvent }))
+        )
+        .catch(() => {
+          tickChangeEvent.distracted = tickChangeEvent.previously;
+          dispatch(
+            tickUpdated({
+              tick: synthesizeTick(tickChangeEvent),
+              tickChangeEvent,
+            })
+          );
+        });
     }
   };

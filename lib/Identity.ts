@@ -1,8 +1,9 @@
-import type { PluginData } from '@cloudflare/pages-plugin-cloudflare-access';
-import devUserJson from '../fixtures/devUser.json';
-
 export interface Env {
   DB: D1Database;
+  ENVIRONMENT: string;
+  GOOGLE_OAUTH_CLIENT: string;
+  GOOGLE_OAUTH_SECRET: string;
+  GOOGLE_OAUTH_REDIRECT_URI: string;
 }
 
 export type AppIdentity = {
@@ -22,62 +23,71 @@ export type Provider = {
   cfProviderId: string;
 };
 
+export type UserSession = {
+  id: number;
+  sessionId: string;
+  userId: number;
+};
+
 export type IdentityResponse = {
   error?: string;
   identity?: AppIdentity;
-  jwtIdentity: {
-    user_uuid: string;
-    name: string;
-    idp: { id: string; type: string };
-    email: string;
-  };
-  provider?: Provider;
+  authorizeUrl?: string;
+};
+
+export const TASKER_COOKIE = 'timelyTaskerSession';
+export type taskerCookies = {
+  [TASKER_COOKIE]: string;
+};
+
+export const parseCookies = (request: Request): taskerCookies => {
+  const cookieChunks = (request.headers.get('Cookie') ?? '').split(';');
+  return cookieChunks.reduce((acc, cur) => {
+    const [k, v] = cur.trim().split('=');
+    if (k === TASKER_COOKIE) acc[k] = v.trim();
+    return acc;
+  }, {}) as taskerCookies;
 };
 
 export const GetIdentity = async (
-  data: PluginData,
+  request: Request,
   env: Env
 ): Promise<IdentityResponse> => {
-  const pluginEnabled = typeof data.cloudflareAccess !== 'undefined';
-  const jwtIdentity =
-    (pluginEnabled && (await data.cloudflareAccess.JWT.getIdentity())) ||
-    devUserJson;
+  const isDevMode = env.ENVIRONMENT === 'development';
+  const idp = 'google'; //only google supported for now
+  let userId: number;
 
-  const providerQuery = env.DB.prepare(`
-    SELECT * FROM Providers WHERE cfProviderId = ?
-  `);
-
-  let provider = await providerQuery.bind(jwtIdentity.idp.id).first<Provider>();
-
-  if (provider === null) {
-    // provider does not exist, lazy initialize
-
-    const { success, results } = await env.DB.prepare(
-      `
-      INSERT INTO Providers (providerName, cfProviderId) values (?, ?) RETURNING *
-    `
+  if (isDevMode) {
+    userId = 1;
+  } else {
+    const { results, success } = await env.DB.prepare(
+      `SELECT userId FROM UserSessions WHERE sessionId = ?`
     )
-      .bind(jwtIdentity.idp.type, jwtIdentity.idp.id)
-      .all<Provider>();
+      .bind(parseCookies(request)[TASKER_COOKIE])
+      .all<UserSession>();
 
-    if (!success) {
-      return { jwtIdentity, error: 'unable to insert new IDP' };
+    if (!success || results.length === 0) {
+      return { error: 'invalid user session' };
     } else {
-      provider = results[0];
+      userId = results[0].userId;
     }
   }
 
+  const providerQuery = env.DB.prepare(
+    `SELECT * FROM Providers WHERE providerName = ?`
+  );
+
+  const provider = await providerQuery.bind(idp).first<Provider>();
+
   const identity = await env.DB.prepare(
-    `
-    SELECT * FROM Identities, Providers, Users
-    WHERE cfProviderId = ?
+    `SELECT * FROM Identities, Providers, Users
+    WHERE providerName = ?
       AND Users.id = userId
       AND Providers.id = ?
-      AND providerIdentityId = ?
-  `
+      AND userId = ?`
   )
-    .bind(jwtIdentity.idp.id, provider.id, jwtIdentity.user_uuid)
+    .bind(idp, provider.id, userId)
     .first<AppIdentity>();
 
-  return { identity, jwtIdentity, provider };
+  return { identity };
 };

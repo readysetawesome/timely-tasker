@@ -1,4 +1,3 @@
-import type { PluginData } from '@cloudflare/pages-plugin-cloudflare-access';
 import type { Env } from '../lib/Identity';
 import { GetIdentity } from '../lib/Identity';
 import { TimerTick } from '../src/components/Timer/TaskRowTicks';
@@ -38,12 +37,11 @@ export type Summary = {
 const errorResponse = (error: string) =>
   new Response(JSON.stringify({ error }), JsonHeader);
 
-export const onRequest: PagesFunction<Env, never, PluginData> = async ({
-  data,
+export const onRequest: PagesFunction<Env, never> = async ({
   env,
   request,
 }) => {
-  const result = await GetIdentity(data, env);
+  const result = await GetIdentity(request, env);
   const { identity, error } = result;
 
   if (error) return errorResponse(error);

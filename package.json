@@ -10,6 +10,7 @@
     "@types/node": "^17.0.21",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
+    "jwt-decode": "^3.1.2",
     "pubsub-js": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -23,7 +24,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "npx nyc cypress run --component",
-    "eject": "react-scripts eject",
+    "ci-cypress": "npx nyc cypress run --component --config screenshotOnRunFailure=false,video=false",
     "lint": "eslint --ext .js,.ts ./src ./functions"
   },
   "eslintConfig": {
