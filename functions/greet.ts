@@ -27,8 +27,11 @@ export const onRequest: PagesFunction<Env, never> = async ({
   const cookies = parseCookies(request);
 
   if (!cookies[TASKER_COOKIE]) {
-    // insert new session based on securely random session id
-    // by keeping this on the client we provie a means to XSRF bust
+    /*
+      generate a session cookie based on securely random string
+      nothing is stored in the db yet, this is an ephemeral session until auth completes
+      kept on the client to provie a means to XSRF bust the code exchange via 'state'
+    */
     const mySession = crypto.randomUUID();
     const response = await fetch(
       'https://accounts.google.com/.well-known/openid-configuration'
