@@ -78,14 +78,17 @@ const Timer = ({
         if (res.identity) {
           setGreeting(`
             Hello, ${res.identity.displayName}!
-            You are logged in with ${res.identity.providerName}.
+            Login via ${res.identity.providerName},
+            using cloud-based storage from our domain.
           `);
+          fetchSummaries(date)(dispatch, useApi);
         } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;
       });
     } else if (useLocal === USELOCAL.YES) {
       setGreeting('Hello! Currently using Local Storage');
+      fetchSummaries(date)(dispatch, useApi);
     }
-  }, [useLocal]);
+  }, [date, dispatch, useApi, useLocal]);
 
   useEffect(() => {
     // Fetch summaries after checking requirements, starting with storage selection

@@ -1,4 +1,5 @@
 import { Env, AppIdentity, parseCookies, TASKER_COOKIE } from '../lib/Identity';
+import devUser from '../fixtures/devUser.json';
 
 const JsonHeader = {
   headers: {
@@ -18,6 +19,10 @@ export const onRequest: PagesFunction<Env, never> = async ({
       - cookie?
         respond with user email address
   */
+
+  if (env.ENVIRONMENT === 'development') {
+    return new Response(JSON.stringify({ identity: devUser }), JsonHeader);
+  }
 
   const cookies = parseCookies(request);
 
