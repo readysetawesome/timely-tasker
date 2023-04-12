@@ -47,6 +47,8 @@ const createTick = (
       localStoragePrefix + tickChangeEvent.summary.date.toString();
 
     const summariesStr = storage.getItem(itemKey);
+    // unreachable line: the front end always creates summary first if not existing
+    /* istanbul ignore next */
     const summaries = summariesStr
       ? (JSON.parse(summariesStr) as Summary[])
       : [];

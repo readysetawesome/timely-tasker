@@ -13,7 +13,6 @@ import { Summary } from '../../../functions/summaries';
 import { waitFor } from '@testing-library/react';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
-const TIME_NOW = 1679587374481; // at 9 am
 
 describe('<Timer /> no localStorage setting', () => {
   beforeEach(() => {
@@ -21,8 +20,7 @@ describe('<Timer /> no localStorage setting', () => {
       <Provider store={storeMaker()}>
         <MemoryRouter>
           <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="timer" element={<App />} />
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
           </Routes>
         </MemoryRouter>
       </Provider>
@@ -36,6 +34,63 @@ describe('<Timer /> no localStorage setting', () => {
   });
 });
 
+describe('<Timer /> using localStorage, with no existing data', () => {
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+    });
+
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    ).as('mountedComponent');
+  });
+
+  it('renders greeting text', () => {
+    cy.get("[data-test-id='greeting']")
+      .first()
+      .should('contain', 'Currently using Local Storage');
+  });
+
+  it('creates new summary from scratch', () => {
+    cy.get('[data-test-id=summary-text-0]').type('Hi');
+    cy.wait(900); // we have to wait for debounce to fire before checking data
+    cy.getAllLocalStorage().then((result) => {
+      expect(
+        (
+          JSON.parse(
+            result[Cypress.config('baseUrl') ?? ''][
+              'TimelyTasker:1679529600000'
+            ] as string
+          ) as Summary[]
+        ).find((s) => s.slot === 0)?.content
+      ).to.equal('Hi');
+    });
+  });
+
+  it('creates new tick from scratch', () => {
+    cy.get('[data-test-id=0-33]').click();
+    cy.getAllLocalStorage().then((result) => {
+      expect(
+        (
+          JSON.parse(
+            result[Cypress.config('baseUrl') ?? ''][
+              'TimelyTasker:1679529600000'
+            ] as string
+          ) as Summary[]
+        )
+          .find((s) => s.slot === 0)
+          ?.TimerTicks?.find((t) => t.tickNumber === 33)?.distracted
+      ).to.equal(0);
+    });
+  });
+});
+
 describe('<Timer /> using localStorage', () => {
   beforeEach(() => {
     cy.window().then((win) => {
@@ -46,22 +101,15 @@ describe('<Timer /> using localStorage', () => {
       );
     });
 
-    // we made these stamps in gmt-700 which is 420 minutes of offset
-    const now = TIME_NOW - 420 * 60 * 1000;
-    const useCurrentTime = now + new Date().getTimezoneOffset() * 60 * 1000;
-    cy.clock().then((clock) => clock.setSystemTime(useCurrentTime));
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
           <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="timer" element={<App />} />
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
           </Routes>
         </MemoryRouter>
       </Provider>
     ).as('mountedComponent');
-
-    cy.clock().then((clock) => clock.restore());
   });
 
   it('renders the date', () => {

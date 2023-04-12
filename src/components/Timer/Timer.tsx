@@ -77,11 +77,7 @@ const Timer = ({
       RestApi.greet((res: IdentityResponse) => {
         if (res.identity) {
           setGreeting(`
-            Hello, ${
-              res.identity.displayName === ''
-                ? 'my friend'
-                : res.identity.displayName
-            }!
+            Hello, ${res.identity.displayName}!
             You are logged in with ${res.identity.providerName}.
           `);
         } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;

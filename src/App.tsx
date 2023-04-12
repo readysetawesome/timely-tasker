@@ -6,8 +6,8 @@ import Timer from './components/Timer/Timer';
 
 const ONE_DAY_MILLIS = 86400000;
 
-export const todaysDateInt = (now?: Date) => {
-  if (!now) now = new Date();
+export const todaysDateInt = () => {
+  const now = new Date();
   const myZeroHour = Date.UTC(
     now.getFullYear(),
     now.getMonth(),
@@ -19,9 +19,13 @@ export const todaysDateInt = (now?: Date) => {
   return myZeroHour;
 };
 
-function App() {
+export interface AppProps {
+  useDate?: number;
+};
+
+function App({ useDate = todaysDateInt() }: AppProps) {
   const [searchParams] = useSearchParams();
-  const date = parseInt(searchParams.get('date') || '') || todaysDateInt();
+  const date = parseInt(searchParams.get('date') ?? useDate.toString());
 
   const leftNavClicker = (
     <Link
