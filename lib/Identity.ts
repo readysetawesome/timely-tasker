@@ -41,7 +41,7 @@ export type taskerCookies = {
 };
 
 export const parseCookies = (request: Request): taskerCookies => {
-  const cookieChunks = request.headers.get('Cookie').split(';');
+  const cookieChunks = (request.headers.get('Cookie') ?? '').split(';');
   return cookieChunks.reduce((acc, cur) => {
     const [k, v] = cur.trim().split('=');
     if (k === TASKER_COOKIE) acc[k] = v.trim();
