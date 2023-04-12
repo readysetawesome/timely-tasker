@@ -59,7 +59,7 @@ export const tickClicked =
           tickChangeEvent,
         })
       );
-      console.log('using api ', useApi);
+
       // dubious of second dispatch, but it's going to add the record ID, so leave it for now
       await useApi
         .createTick(tickChangeEvent, (tick: TimerTick) =>

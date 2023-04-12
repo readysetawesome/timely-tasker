@@ -2,7 +2,7 @@
 DROP INDEX IF EXISTS UserSessionsSessionId;
 DROP TABLE IF EXISTS UserSessions;
 CREATE TABLE UserSessions (
-  id INT PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   userId INT,
   sessionId TEXT,
   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -1,5 +1,4 @@
 import { Env, AppIdentity, parseCookies, TASKER_COOKIE } from '../lib/Identity';
-import { google } from 'googleapis';
 
 const JsonHeader = {
   headers: {
@@ -14,6 +13,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
   /*
     get information about the session
       - no cookie?
+        create session state
         respond with oAuth authorize url
       - cookie?
         respond with user email address
@@ -22,16 +22,33 @@ export const onRequest: PagesFunction<Env, never> = async ({
   const cookies = parseCookies(request);
 
   if (!cookies[TASKER_COOKIE]) {
-    const oauth2Client = new google.auth.OAuth2(
-      env.GOOGLE_OAUTH_CLIENT,
-      env.GOOGLE_OAUTH_SECRET,
-      'https://preview-oauth.timely-tasker.pages.dev/callback'
+    // insert new session based on securely random session id
+    // by keeping this on the client we provie a means to XSRF bust
+    const mySession = crypto.randomUUID();
+    const response = await fetch(
+      'https://accounts.google.com/.well-known/openid-configuration'
     );
+    const { authorization_endpoint } = await response.json<{
+      authorization_endpoint: string;
+    }>();
+    const url = new URL(authorization_endpoint);
+    url.search = [
+      ['client_id', env.GOOGLE_OAUTH_CLIENT],
+      ['response_type', 'code'],
+      ['scope', 'openid email'],
+      ['state', mySession],
+      ['nonce', crypto.randomUUID()],
+      ['redirect_uri', env.GOOGLE_OAUTH_REDIRECT_URI],
+    ]
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
 
-    const authorizeUrl = oauth2Client.generateAuthUrl({
-      scope: ['openid', 'email'],
+    return new Response(JSON.stringify({ authorizeUrl: url }), {
+      headers: {
+        ...JsonHeader.headers,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly`,
+      },
     });
-    return new Response(JSON.stringify({ authorizeUrl }), JsonHeader);
   } else {
     // repond with authorized user email address from sesssion lookup
     const userQuery = env.DB.prepare(`
@@ -45,13 +62,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
       .bind(cookies.timelyTaskerSession)
       .first<AppIdentity>();
 
-    return new Response(
-      JSON.stringify({
-        email: existingUser.email,
-        provider: existingUser.providerName,
-      }),
-      JsonHeader
-    );
+    return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);
   }
 };
 
