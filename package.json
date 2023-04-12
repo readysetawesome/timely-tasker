@@ -24,7 +24,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "npx nyc cypress run --component",
-    "eject": "react-scripts eject",
+    "ci-cypress": "npx nyc cypress run --component --config screenshotOnRunFailure=false,video=false",
     "lint": "eslint --ext .js,.ts ./src ./functions"
   },
   "eslintConfig": {
