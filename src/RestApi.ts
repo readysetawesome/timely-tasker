@@ -41,7 +41,9 @@ export const getRestSelectorsFor = (slice, target) => {
 };
 
 const isDevMode = process.env.NODE_ENV === 'development';
+/* istanbul ignore next */
 const fetchPrefix = isDevMode ? 'http://127.0.0.1:8788' : '';
+/* istanbul ignore next */
 const fetchOptions = (
   isDevMode ? { mode: 'cors' } : {}
 ) as RequestInit<RequestInitCfProperties>;

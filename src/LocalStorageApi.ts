@@ -2,24 +2,24 @@ import { Summary } from '../functions/summaries';
 import { synthesizeTick } from './components/Timer/Timer.actions';
 import { TickChangeEvent } from './components/Timer/Timer.slice';
 
-const localStoragePrefix = 'TimelyTasker:';
+export const localStoragePrefix = 'TimelyTasker:';
 
-const createSummary = (summary: Summary) =>
+const createSummary = (summary: Summary, storage = localStorage) =>
   new Promise<Summary>((resolve) => {
     summary.id =
-      parseInt(
-        localStorage.getItem(localStoragePrefix + 'lastSummaryId') ?? '0'
-      ) + 1;
-    localStorage.setItem(
+      parseInt(storage.getItem(localStoragePrefix + 'lastSummaryId') ?? '0') +
+      1;
+    storage.setItem(
       localStoragePrefix + 'lastSummaryId',
       summary.id.toString()
     );
 
     const itemKey = localStoragePrefix + summary.date.toString();
-    const summaries = JSON.parse(
-      localStorage.getItem(itemKey) ?? '[]'
-    ) as Summary[];
-    localStorage.setItem(
+    const summariesStr = storage.getItem(itemKey);
+    const summaries = summariesStr
+      ? (JSON.parse(summariesStr) as Summary[])
+      : [];
+    storage.setItem(
       itemKey,
       JSON.stringify([
         ...summaries.filter((s) => s.slot !== summary.slot),
@@ -29,23 +29,31 @@ const createSummary = (summary: Summary) =>
     resolve(summary);
   });
 
-const getSummaries = (date: number) =>
+const getSummaries = (date: number, storage = localStorage) =>
   new Promise<Summary[]>((resolve) => {
     const summaries = JSON.parse(
-      localStorage.getItem(localStoragePrefix + date.toString()) ?? '[]'
+      storage.getItem(localStoragePrefix + date.toString()) ?? '[]'
     ) as Summary[];
     resolve(summaries);
   });
 
-const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
+const createTick = (
+  tickChangeEvent: TickChangeEvent,
+  callback,
+  storage = localStorage
+) =>
   new Promise<Summary[]>((resolve) => {
     const itemKey =
       localStoragePrefix + tickChangeEvent.summary.date.toString();
-    const summaries = JSON.parse(
-      localStorage.getItem(itemKey) ?? '[]'
-    ) as Summary[];
+
+    const summariesStr = storage.getItem(itemKey);
+    const summaries = summariesStr
+      ? (JSON.parse(summariesStr) as Summary[])
+      : [];
+
     const summary = summaries.find((s) => s.slot === tickChangeEvent.slot);
-    if (summary === undefined) return; // should never happen
+    /* istanbul ignore next */
+    if (summary === undefined) return resolve(callback(undefined));
 
     const tick = synthesizeTick(tickChangeEvent);
     summary.TimerTicks = [
@@ -55,7 +63,7 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
       tick,
     ];
 
-    localStorage.setItem(
+    storage.setItem(
       itemKey,
       JSON.stringify([
         ...summaries.filter((s) => s.slot !== summary.slot),
