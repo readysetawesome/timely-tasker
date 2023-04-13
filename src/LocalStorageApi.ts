@@ -6,7 +6,12 @@ export const localStoragePrefix = 'TimelyTasker:';
 
 const safeTickSerializer = (key, value) => {
   // prevent duplication in serializations below, due to the tick.summary ref
-  if (key === 'summary' || key === 'previously' || key === 'summaryId')
+  if (
+    key === 'summary' ||
+    key === 'previously' ||
+    key === 'summaryId' ||
+    key === 'date'
+  )
     return undefined;
   else return value;
 };
@@ -65,12 +70,12 @@ const createTick = (
     if (summary === undefined) return resolve(callback(undefined));
 
     const tick = synthesizeTick(tickChangeEvent);
-    summary.TimerTicks = [
-      ...summary.TimerTicks.filter(
-        (t) => t.tickNumber !== tickChangeEvent.tickNumber
-      ),
-      tick,
-    ];
+    summary.TimerTicks = summary.TimerTicks.filter(
+      (t) => t.tickNumber !== tickChangeEvent.tickNumber
+    );
+
+    if (tick.distracted !== -1 && tick.distracted !== undefined)
+      summary.TimerTicks.push(tick);
 
     storage.setItem(
       itemKey,

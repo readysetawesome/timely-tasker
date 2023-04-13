@@ -21,7 +21,7 @@ export const todaysDateInt = () => {
 
 export interface AppProps {
   useDate?: number;
-};
+}
 
 function App({ useDate = todaysDateInt() }: AppProps) {
   const [searchParams] = useSearchParams();
