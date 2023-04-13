@@ -78,7 +78,7 @@ const Timer = ({
         if (res.identity) {
           setGreeting(`
             Hello, ${res.identity.displayName}!
-            Login via ${res.identity.providerName},
+            Logged in with ${res.identity.providerName},
             using cloud-based storage from our domain.
           `);
           fetchSummaries(date)(dispatch, useApi);
