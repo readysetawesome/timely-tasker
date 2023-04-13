@@ -6,13 +6,7 @@ export const localStoragePrefix = 'TimelyTasker:';
 
 const safeTickSerializer = (key, value) => {
   // prevent duplication in serializations below, due to the tick.summary ref
-  if (
-    key === 'summary' ||
-    key === 'previously' ||
-    key === 'summaryId' ||
-    key === 'date'
-  )
-    return undefined;
+  if (key === 'summary' || key === 'previously') return undefined;
   else return value;
 };
 
