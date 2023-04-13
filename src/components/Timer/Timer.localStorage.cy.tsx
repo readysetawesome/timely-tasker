@@ -65,10 +65,10 @@ describe('<Timer /> using localStorage, with no existing data', () => {
         (
           JSON.parse(
             result[Cypress.config('baseUrl') ?? ''][
-              'TimelyTasker:1679529600000'
+              'TimelyTasker:1679529600000-0'
             ] as string
-          ) as Summary[]
-        ).find((s) => s.slot === 0)?.content
+          ) as Summary
+        ).content
       ).to.equal('Hi');
     });
   });
@@ -80,12 +80,10 @@ describe('<Timer /> using localStorage, with no existing data', () => {
         (
           JSON.parse(
             result[Cypress.config('baseUrl') ?? ''][
-              'TimelyTasker:1679529600000'
+              'TimelyTasker:1679529600000-0'
             ] as string
-          ) as Summary[]
-        )
-          .find((s) => s.slot === 0)
-          ?.TimerTicks?.find((t) => t.tickNumber === 33)?.distracted
+          ) as Summary
+        ).TimerTicks?.find((t) => t.tickNumber === 33)?.distracted
       ).to.equal(0);
     });
   });
@@ -95,9 +93,15 @@ describe('<Timer /> using localStorage', () => {
   beforeEach(() => {
     cy.window().then((win) => {
       win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+      summaries.forEach((s) =>
+        win.localStorage.setItem(
+          `${localStoragePrefix + TODAYS_DATE}-${s.slot}`,
+          JSON.stringify(s)
+        )
+      );
       win.localStorage.setItem(
         localStoragePrefix + TODAYS_DATE,
-        JSON.stringify(summaries)
+        JSON.stringify(summaries.map((s) => s.slot))
       );
     });
 
@@ -136,10 +140,10 @@ describe('<Timer /> using localStorage', () => {
         (
           JSON.parse(
             result[Cypress.config('baseUrl') ?? ''][
-              'TimelyTasker:1679529600000'
+              'TimelyTasker:1679529600000-0'
             ] as string
-          ) as Summary[]
-        ).find((s) => s.slot === 0)?.content
+          ) as Summary
+        ).content
       ).to.equal('replace jest with cypress,ok');
     });
   });
