@@ -16,7 +16,7 @@
   Inspired by D. Shea's ETT productivity worksheet, read more of the philosophy here:
   https://davidseah.com/node/the-emergent-task-timer/
 
-  Try the app out here right now: (github login or single use code login required)
+  Try the app out here right now:
   http://timely-tasker.com/timer
 
 <p align="center">
