@@ -53,18 +53,15 @@
 * backend data stored using [Functions](https://developers.cloudflare.com/pages/platform/functions/) & [D1](https://developers.cloudflare.com/d1/) for lightweight relational storage
 * pipeline integration with github CI and [codecov](https://app.codecov.io/gh/readysetawesome/timely-tasker), ++README badges!
 
-#### oAuth Identity via Google
+#### oAuth 2.0 / OpenID Connect via Google
 ![web sequence for oAuth interaction](https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgVGltZWx5IFRhc2tlciBvQXV0aCBsb2dpbiBmbG93Cgpicm93c2VyLT4AAgc6IGxvYWQAMActADEGABsKdAARBnQASQUuY29tOiBHRVQgL2dyZWV0CmFsdCBubyBodHRwIHJlcXVlc3QgY29va2llCiAgICAALBEtPmFjY291bnRzLmdvb2dsZQBHCy53ZWxsLWtub3duL29wZW5pZC1jb25maWd1cmF0aW9uAE0FACwTAIEPFXsgLi4uAIF2BgA_BnMuLi4gfQB-GACBUxNjcmVhdGUgc2Vzc2lvbiBzdGF0ZVxuIGFzc2VtYmxlIGF1dGggdXJsAIFRGACCVQl7ACYFb3JpemVVcmwgfSArIFNldC1DAIIiBTogWwBVDV0AgkcFT25seQCCPAUAgyMJAIIdGm8vb2F1dGgyL3YyL2F1dGg_AIElBT0mc2NvcGU9JmNsaWVudF9pZD0mcmVkaXJlY3RfdXJpPQCCNBoAhA4JSFRUUCAyMDAgY29uc2VudCBzY3JlZW4gaHRtAIFwBgCBAB5zdWJtaXQAhHUGLwA7CHRvIGNsYWltcwBYKDMwMiBMb2MAg30FOgCEZAVzOi8vAIUFES9jYWxsYmFjaz9jb2RlPS4uLiYAggIGLi4uAII8DgCFORgAISAAhTkTAIJzBgCFQwdhcGlzAIYaBlBPU1QgL3Rva2VuPwB3CAAWFQCGSRUAgm0JanNvbiB3aXRoIGFjY2VzcyBhbmQgaWQgAFQFAII6BgCFJCZEQiBzZWxlY3QgZm9yIGV4aXN0aW5nIGlkZW50aXR5XG4AiB4Gc3ViamVjdCA9PT0gSQAWBmllcy5wcm92aWRlcgAMB3lJZACHAwZsdACGGwhuZXcARAkgaWYgbm90AGAGAINfBgB8LWluc2VydAB4CHksIFVzZXIAiEcFZW4AcwYAGzBVc2VyUwCHPwYAcx0AhEE2XG4AhzgUSWRdOyBIAIdBCAplbHNlAIoQFACCGgwAgxc0AIkUCGpvaW5lZCB0bwCDSwkAiHIjAIMpCX0KZW5kAIwMCwCLXxMAhUwGc3VtbWFyaWVzPy4uLlxuAIFXHgCEazAAhQYIK3VzZXIgYnkAinEISWQAISoAhDYHUwCBIAgAcRQAiUwST0sgeyAAgVYGeSB9Cg&s=default)
-* Goal: only to establish identity/ownership of data, no google APIs will be authorized via oAuth scopes. For this we can target only the id_token info.
-* Uses oAuth only, not OIDC, only supports google accounts.
-* authorization code flow, server->server code exchange which results in a crypto-safe unique session ID cookie that is not visible to JS (i.e. marked 'httpOnly' to bust XSRF).
-* this cookie comes with all future XHRs to CRUD my app's cloud data, that's how we associate it with you
+* only supports google accounts
+* establish identity/ownership of data, no google APIs will be authorized via oAuth scopes. For this we can target only the id_token info.
+* use authorization code flow, server->server code exchange
+* successful auth results in a crypto-safe unique session ID cookie that is not visible to JS (i.e. marked 'httpOnly' to bust XSRF).
+* this cookie comes with all future XHRs to CRUD the app's cloud data, that's how we associate it with you
 * the direct server->server call to google over TLS for token exchange means we don't have to validate a JWT separately, the identity returned is always valid in server context
-
-#### Coming:
-* ~~speed/ui responsiveness improvements (avoid re-fetch and re-render the whole list if possible)~~
-* ~~navigate to prevoius dates~~
-* something to highlight the current hour and bring attention
+* reference: https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo , https://developers.google.com/identity/openid-connect/openid-connect#authuser
 
 ## Database Schema
 
