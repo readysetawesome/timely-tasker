@@ -20,26 +20,37 @@ const createSummary = (summary: Summary, storage = localStorage) =>
       summary.id.toString()
     );
 
-    const itemKey = localStoragePrefix + summary.date.toString();
-    const summariesStr = storage.getItem(itemKey);
-    const summaries = summariesStr
-      ? (JSON.parse(summariesStr) as Summary[])
+    const summariesKey = localStoragePrefix + summary.date.toString();
+    const summariesStr = storage.getItem(summariesKey);
+    const summarySlots = summariesStr
+      ? (JSON.parse(summariesStr) as number[])
       : [];
+
+    // store the individual row of summary + ticks
+    const summaryKey = `${summariesKey}-${summary.slot}`;
+    storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
+
+    // store an array of summary slots for lookup, under this date's key
     storage.setItem(
-      itemKey,
-      JSON.stringify(
-        [...summaries.filter((s) => s.slot !== summary.slot), summary],
-        safeTickSerializer
-      )
+      summariesKey,
+      JSON.stringify([
+        ...summarySlots.filter((slot) => slot !== summary.slot),
+        summary.slot,
+      ])
     );
+
     resolve(summary);
   });
 
 const getSummaries = (date: number, storage = localStorage) =>
   new Promise<Summary[]>((resolve) => {
-    const summaries = JSON.parse(
-      storage.getItem(localStoragePrefix + date.toString()) ?? '[]'
-    ) as Summary[];
+    const summariesKey = localStoragePrefix + date.toString();
+    const summarySlots = JSON.parse(
+      storage.getItem(summariesKey) ?? '[]'
+    ) as number[];
+    const summaries = summarySlots.map((s) =>
+      JSON.parse(storage.getItem(`${summariesKey}-${s}`) ?? '[]')
+    );
     resolve(summaries);
   });
 
@@ -49,19 +60,14 @@ const createTick = (
   storage = localStorage
 ) =>
   new Promise<Summary[]>((resolve) => {
-    const itemKey =
+    const summariesKey =
       localStoragePrefix + tickChangeEvent.summary.date.toString();
 
-    const summariesStr = storage.getItem(itemKey);
-    // unreachable line: the front end always creates summary first if not existing
-    /* istanbul ignore next */
-    const summaries = summariesStr
-      ? (JSON.parse(summariesStr) as Summary[])
-      : [];
+    const summaryKey = `${summariesKey}-${tickChangeEvent.slot}`;
 
-    const summary = summaries.find((s) => s.slot === tickChangeEvent.slot);
+    const summary = JSON.parse(storage.getItem(summaryKey) ?? 'null');
     /* istanbul ignore next */
-    if (summary === undefined) return resolve(callback(undefined));
+    if (summary === null) return resolve(callback(undefined));
 
     const tick = synthesizeTick(tickChangeEvent);
     summary.TimerTicks = summary.TimerTicks.filter(
@@ -71,13 +77,7 @@ const createTick = (
     if (tick.distracted !== -1 && tick.distracted !== undefined)
       summary.TimerTicks.push(tick);
 
-    storage.setItem(
-      itemKey,
-      JSON.stringify(
-        [...summaries.filter((s) => s.slot !== summary.slot), summary],
-        safeTickSerializer
-      )
-    );
+    storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
 
     resolve(callback(tick));
   });
