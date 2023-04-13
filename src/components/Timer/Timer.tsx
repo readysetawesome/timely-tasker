@@ -146,7 +146,7 @@ const Timer = ({
       onClick={() => setUseLocal(USELOCAL.NO)}
       data-test-id="use-cloud-storage"
     >
-      <strong>Use cloudflare d1 (reqiures login)</strong>
+      <strong>Use Timely-Tasker.com cloud database (reqiures login)</strong>
     </button>
   );
 
@@ -156,7 +156,7 @@ const Timer = ({
       title="public computer users: by clicking you agree that you understand the risks"
       data-test-id="use-local-storage"
     >
-      <strong>Use browser localStorage</strong>
+      <strong>Use browser localStorage (experimental)</strong>
     </button>
   );
 
