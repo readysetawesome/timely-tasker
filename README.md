@@ -61,6 +61,7 @@
 * successful auth results in a crypto-safe unique session ID cookie that is not visible to JS (i.e. marked 'httpOnly' to bust XSRF).
 * this cookie comes with all future XHRs to CRUD the app's cloud data, that's how we associate it with you
 * the direct server->server call to google over TLS for token exchange means we don't have to validate a JWT separately, the identity returned is always valid in server context
+* reference: https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo , https://developers.google.com/identity/openid-connect/openid-connect#authuser
 
 ## Database Schema
 
