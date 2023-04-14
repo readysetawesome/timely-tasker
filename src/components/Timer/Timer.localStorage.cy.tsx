@@ -152,8 +152,6 @@ describe('<Timer /> using localStorage', () => {
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="0-31"]').click();
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
 
-    // we have to get this reference to cypress's window object,
-    // without it the storage is bifurcated via global `localStorage`
     waitFor(() =>
       Api.getSummaries(TODAYS_DATE).then((summaries) =>
         expect(
