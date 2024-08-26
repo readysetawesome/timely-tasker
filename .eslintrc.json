@@ -24,7 +24,6 @@
     "no-empty-function": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-esline/property-will-be-overwritten-by-spread": "off",
     "react-hooks/exhaustive-deps": "warn",
     "prettier/prettier": [
       "warn",
