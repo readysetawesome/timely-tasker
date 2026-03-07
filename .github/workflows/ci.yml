@@ -23,7 +23,3 @@ jobs:
           # See issue https://github.com/cypress-io/cypress/issues/25357
           ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-         files: .nyc_output/out.json
