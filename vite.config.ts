@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   css: {
     modules: {
-      generateScopedName: '[name]_[local]',
+      generateScopedName: (name: string, filename: string) => {
+        const base = filename.split('/').pop()!.replace(/\.module\.\w+$/, '');
+        return `${base}_${name}`;
+      },
     },
   },
   server: {
