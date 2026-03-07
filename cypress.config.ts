@@ -6,6 +6,7 @@ module.exports = defineConfig({
   chromeWebSecurity: false,
   component: {
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
+    experimentalCoverage: true,
     devServer: {
       framework: 'react',
       bundler: 'vite',
