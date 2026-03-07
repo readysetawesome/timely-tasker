@@ -105,7 +105,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     // 4. respond with a redirect that includes a same-origin, http-only cookie.
     return new Response(undefined, {
       headers: {
-        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Strict`,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Lax`,
         Location: '/',
       },
       status: 302,

@@ -54,7 +54,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     return new Response(JSON.stringify({ authorizeUrl: url }), {
       headers: {
         ...JsonHeader.headers,
-        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Strict`,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Lax`,
       },
     });
   } else {
