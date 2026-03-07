@@ -1,7 +1,7 @@
 /* eslint-disable cypress/no-unnecessary-waiting */
 import React from 'react';
 import App from '../../App';
-import { mount } from 'cypress/react18';
+import { mount } from 'cypress/react';
 import summaries from '../../../cypress/fixtures/summaries.json';
 
 import { Provider } from 'react-redux';
