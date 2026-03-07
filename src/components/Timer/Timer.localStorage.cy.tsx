@@ -148,15 +148,17 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('renders tick marks from the data, they respond to clicks', () => {
-    cy.get('div[class*="Timer_tictac_focused"][data-test-id="0-31"]').click();
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
+    cy.get('[data-test-id="0-31"][data-tick-state="focused"]').click();
+    cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
 
-    cy.wrap(Api.getSummaries(TODAYS_DATE)).then((summaries) =>
-      expect(
-        (summaries as Summary[])
-          .find((s) => s.slot === 0)
-          ?.TimerTicks.find((t) => t.tickNumber === 31)?.distracted
-      ).to.equal(1)
+    cy.wrap(null).then(() =>
+      cy.wrap(Api.getSummaries(TODAYS_DATE)).then((summaries) =>
+        expect(
+          (summaries as Summary[])
+            .find((s) => s.slot === 0)
+            ?.TimerTicks.find((t) => t.tickNumber === 31)?.distracted
+        ).to.equal(1)
+      )
     );
   });
 

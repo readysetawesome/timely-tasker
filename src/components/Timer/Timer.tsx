@@ -176,9 +176,9 @@ const Timer = ({
         </p>
       </div>
       <div className={styles.Timer}>
-        <div className={styles.content}>
+        <div className={styles.content} data-test-id="timer-content">
           {summaryError && (
-            <span className={styles.error}>Error setting Summary text</span>
+            <span className={styles.error} data-test-id="timer-error">Error setting Summary text</span>
           )}
           {useLocal !== null ? (
             <></>
@@ -199,7 +199,7 @@ const Timer = ({
             </>
           )}
           {summariesError && (
-            <span className={styles.error}>
+            <span className={styles.error} data-test-id="timer-error">
               Error loading Summary text and ticks!
             </span>
           )}

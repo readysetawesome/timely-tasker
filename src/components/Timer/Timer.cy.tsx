@@ -90,16 +90,14 @@ describe('<Timer />', () => {
       `/ticks?summary=${summaries[0].id}&tick=31&distracted=0`,
       { fixture: 'tick' }
     ).as('updateTickOriginal');
-    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
+    cy.get("[data-test-id='0-31'][data-tick-state='focused']");
 
-    cy.get("[data-test-id='1-31'][class*=Timer_tictac_empty]").click();
+    cy.get("[data-test-id='1-31'][data-tick-state='empty']").click();
 
     cy.wait(['@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
-    cy.get(
-      'div[class*="Timer_tictac_distracted"][data-test-id="1-31"]'
-    ).click();
+    cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
+    cy.get('[data-test-id="1-31"][data-tick-state="distracted"]').click();
 
     cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
@@ -162,7 +160,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick']);
 
-    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]');
+    cy.get('[data-test-id="3-33"][data-tick-state="focused"]');
 
     cy.get("[data-test-id='summary-text-3'][value=Hi]");
   });
@@ -196,7 +194,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@updateTickFail']);
 
-    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused");
+    cy.get("[data-test-id='0-31'][data-tick-state='focused']");
   });
 
   it('handles errors with summary create', () => {
@@ -207,7 +205,7 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryFail']);
-    cy.get('span[class*=Timer_error]');
+    cy.get('[data-test-id="timer-error"]');
   });
 
   it('tasks should not leak on nav', () => {
@@ -242,6 +240,6 @@ describe('<Timer />', () => {
     ).as('getSummariesFail');
     cy.get('[data-test-id="right-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
-    cy.get('[class*=Timer_content] span[class*=Timer_error]');
+    cy.get('[data-test-id="timer-content"] [data-test-id="timer-error"]');
   });
 });
