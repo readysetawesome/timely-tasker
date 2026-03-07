@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    modules: {
+      generateScopedName: '[name]_[local]',
+    },
+  },
   server: {
     port: 3000,
   },

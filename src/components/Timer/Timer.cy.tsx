@@ -7,7 +7,6 @@ import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
-import { waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
@@ -64,11 +63,9 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='0-36']")
       .first()
       .then(($el) => {
-        waitFor(() => {
-          const rect = $el[0].getBoundingClientRect();
+        const rect = $el[0].getBoundingClientRect();
           expect(rect.x).to.be.lessThan(470);
           expect(rect.x).to.be.greaterThan(450);
-        });
       });
   });
 

@@ -10,7 +10,6 @@ import storeMaker from '../../store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Api, { localStoragePrefix } from '../../LocalStorageApi';
 import { Summary } from '../../../functions/summaries';
-import { waitFor } from '@testing-library/react';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 
@@ -152,14 +151,12 @@ describe('<Timer /> using localStorage', () => {
     cy.get('div[class*="Timer_tictac_focused"][data-test-id="0-31"]').click();
     cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
 
-    waitFor(() =>
-      Api.getSummaries(TODAYS_DATE).then((summaries) =>
-        expect(
-          summaries
-            .find((s) => s.slot === 0)
-            ?.TimerTicks.find((t) => t.tickNumber === 31)?.distracted
-        ).to.equal(1)
-      )
+    cy.wrap(Api.getSummaries(TODAYS_DATE)).then((summaries) =>
+      expect(
+        (summaries as Summary[])
+          .find((s) => s.slot === 0)
+          ?.TimerTicks.find((t) => t.tickNumber === 31)?.distracted
+      ).to.equal(1)
     );
   });
 
