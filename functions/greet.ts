@@ -54,7 +54,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     return new Response(JSON.stringify({ authorizeUrl: url }), {
       headers: {
         ...JsonHeader.headers,
-        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly`,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Strict`,
       },
     });
   } else {
@@ -67,7 +67,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     `);
 
     const existingUser = await userQuery
-      .bind(cookies.timelyTaskerSession)
+      .bind(cookies[TASKER_COOKIE])
       .first<AppIdentity>();
 
     return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);

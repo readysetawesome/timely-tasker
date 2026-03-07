@@ -29,11 +29,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
 
   const taskerCookies = parseCookies(request);
   if (taskerCookies[TASKER_COOKIE] !== searchParams.get('state')) {
-    return errorResponse(
-      `state parameter [${searchParams.get(
-        'state'
-      )}] does not match cookie [via ${request.headers.get('Cookie')}]`
-    );
+    return errorResponse('state parameter does not match session cookie');
   }
 
   const response = await fetch(
@@ -109,7 +105,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     // 4. respond with a redirect that includes a same-origin, http-only cookie.
     return new Response(undefined, {
       headers: {
-        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly`,
+        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Strict`,
         Location: '/',
       },
       status: 302,
