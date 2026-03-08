@@ -145,7 +145,7 @@ const Timer = ({
   const focusedRowElements = new Array<JSX.Element>();
 
   for (let slot = 0; slot < 12; slot++) {
-    if (summariesSuccess) {
+    if (summariesSuccess && useLocal !== null) {
       summaryElements.push(
         <TaskRowSummary {...{ date, slot, key: slot, useApi }} />
       );
@@ -224,7 +224,7 @@ const Timer = ({
               Error loading Summary text and ticks!
             </span>
           )}
-          {!summariesError && (
+          {!summariesError && useLocal !== null && (
             <>
               <div className={styles.left_column}>
                 <div key={'headerspacer'} className={styles.summary_header}>
