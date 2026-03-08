@@ -10,8 +10,9 @@ module.exports = defineConfig({
       framework: 'react',
       bundler: 'vite',
     },
-    setupNodeEvents(on) {
-      require('@cypress/code-coverage/task')(on, {});
+    setupNodeEvents(on, config) {
+      require('@cypress/code-coverage/task')(on, config);
+      return config;
     },
   },
 });
