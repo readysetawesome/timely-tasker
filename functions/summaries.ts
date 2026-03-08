@@ -120,15 +120,25 @@ export const onRequest: PagesFunction<Env, never> = async ({
     // END CREATE/UPDATE REQUEST
   } else {
     // BEGIN INDEX REQUEST
-    const { results } = await env.DB.prepare(
-      `
-      SELECT ${FULL_JSON_OBJECT_SELECT}
-      FROM Summaries
-      WHERE userId=? AND date = ? ORDER BY slot;
-    `
-    )
-      .bind(identity?.userId, searchParams.get('date'))
-      .all<Summary>();
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const singleDate = searchParams.get('date');
+
+    const query = startDate && endDate
+      ? env.DB.prepare(
+          `SELECT ${FULL_JSON_OBJECT_SELECT}
+           FROM Summaries
+           WHERE userId=? AND date >= ? AND date <= ?
+           ORDER BY date, slot`
+        ).bind(identity?.userId, startDate, endDate)
+      : env.DB.prepare(
+          `SELECT ${FULL_JSON_OBJECT_SELECT}
+           FROM Summaries
+           WHERE userId=? AND date = ?
+           ORDER BY slot`
+        ).bind(identity?.userId, singleDate);
+
+    const { results } = await query.all<Summary>();
 
     // Slight hack to unpack json values returned by the sqlite api
     results?.forEach((value) => {

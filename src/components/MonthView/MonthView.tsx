@@ -106,21 +106,22 @@ const MonthView = ({ useApi: propApi }: MonthViewProps) => {
     const allDays: number[] = [];
     for (let d = monthStart; d <= monthEnd; d += ONE_DAY) allDays.push(d);
 
-    Promise.allSettled(
-      allDays.map((d) =>
-        useApi.getSummaries(d).then((summaries) => ({ date: d, summaries }))
-      )
-    ).then((results) => {
-      const settled: DayData[] = results.map((r, i) => {
-        if (r.status === 'fulfilled') return r.value;
-        if ((r.reason as Error)?.message === 'session_expired') {
-          setSessionExpired(true);
-        }
-        return { date: allDays[i], summaries: [] };
+    useApi
+      .getSummariesRange(monthStart, monthEnd)
+      .then((summaries) => {
+        const byDate = new Map<number, Summary[]>();
+        summaries.forEach((s) => {
+          const bucket = byDate.get(s.date) ?? [];
+          bucket.push(s);
+          byDate.set(s.date, bucket);
+        });
+        setDays(allDays.map((d) => ({ date: d, summaries: byDate.get(d) ?? [] })));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if ((err as Error)?.message === 'session_expired') setSessionExpired(true);
+        setLoading(false);
       });
-      setDays(settled);
-      setLoading(false);
-    });
   }, [monthStart, monthEnd, useApi]);
 
   const today = todaysDateInt();

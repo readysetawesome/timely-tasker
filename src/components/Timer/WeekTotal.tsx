@@ -24,19 +24,15 @@ const WeekTotal = ({ useApi, date }: WeekTotalProps) => {
   useEffect(() => {
     let cancelled = false;
     const weekStart = getWeekStart(date);
-    const days: number[] = [];
-    for (let d = weekStart; d <= date; d += ONE_DAY) days.push(d);
 
-    Promise.all(days.map((d) => useApi.getSummaries(d)))
-      .then((results) => {
+    useApi.getSummariesRange(weekStart, date)
+      .then((summaries) => {
         if (cancelled) return;
-        const focusedTicks = results
-          .flat()
-          .reduce(
-            (sum, s) =>
-              sum + (s.TimerTicks?.filter((t) => t.distracted === 0).length ?? 0),
-            0
-          );
+        const focusedTicks = summaries.reduce(
+          (sum, s) =>
+            sum + (s.TimerTicks?.filter((t) => t.distracted === 0).length ?? 0),
+          0
+        );
         setWeekHours(focusedTicks / 4);
       })
       .catch(() => {}); // silently ignore — don't break the main UI

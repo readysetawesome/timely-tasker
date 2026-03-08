@@ -8,6 +8,7 @@ import summaries from '../../../cypress/fixtures/summaries.json';
 
 // March 2023: starts on Wednesday; 31 days
 const MARCH_2023_DATE = 1677628800000; // March 1, 2023 00:00 UTC
+const MARCH_2023_END  = 1680220800000; // March 31, 2023 00:00 UTC
 const TODAYS_DATE = 1679529600000;     // March 23, 2023 (used as fixture date)
 
 const mountMonthView = (date = MARCH_2023_DATE, api = LocalStorageApi) =>
@@ -88,30 +89,26 @@ describe('<MonthView /> using localStorage', () => {
 });
 
 describe('<MonthView /> using REST API', () => {
-  beforeEach(() => {
-    // Only intercept the one day we care about; other days fall back to []
-    // via allSettled error handling in MonthView
-    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
-      fixture: 'summaries',
-    }).as('getTodaySummaries');
-  });
+  const RANGE_URL = `/summaries?startDate=${MARCH_2023_DATE}&endDate=${MARCH_2023_END}`;
 
   it('shows the month title via REST', () => {
+    cy.intercept('GET', RANGE_URL, { body: [] });
     mountMonthView(MARCH_2023_DATE, RestApi);
     cy.get("[data-test-id='month-title']").should('contain', 'March 2023');
   });
 
   it('shows task names from REST response', () => {
+    // Fixture summaries have date=TODAYS_DATE; MonthView groups by date field
+    cy.intercept('GET', RANGE_URL, { fixture: 'summaries' }).as('getRange');
     mountMonthView(MARCH_2023_DATE, RestApi);
-    cy.wait('@getTodaySummaries');
+    cy.wait('@getRange');
     cy.get(`[data-test-id='month-day-${TODAYS_DATE}']`).within(() => {
       cy.contains('replace jest with cypress');
     });
   });
 
   it('shows session-expired error when api returns invalid session', () => {
-    // RestApi.getSummaries throws 'session_expired' for this response shape
-    cy.intercept('GET', `/summaries?date=${MARCH_2023_DATE}`, {
+    cy.intercept('GET', RANGE_URL, {
       body: { error: 'invalid user session' },
     }).as('sessionExpired');
     mountMonthView(MARCH_2023_DATE, RestApi);

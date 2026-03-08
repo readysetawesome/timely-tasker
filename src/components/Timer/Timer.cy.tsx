@@ -20,10 +20,12 @@ beforeEach(() => {
   cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
     fixture: 'summaries',
   }).as('getSummaries');
-  // Intercept the rest of the week so WeekTotal resolves (Sat–Wed return empty)
-  for (let d = WEEK_START; d < TODAYS_DATE; d += ONE_DAY) {
-    cy.intercept('GET', `/summaries?date=${d}`, { body: [] });
-  }
+  // WeekTotal uses a single range request — return today's fixture so we get 0.25 hrs
+  cy.intercept(
+    'GET',
+    `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE}`,
+    { fixture: 'summaries' }
+  ).as('getWeekSummaries');
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')

@@ -66,6 +66,18 @@ const getSummaries = (useDate: number) =>
       return data as Summary[];
     });
 
+const getSummariesRange = (startDate: number, endDate: number) =>
+  fetch(
+    fetchPrefix + `/summaries?startDate=${startDate}&endDate=${endDate}`,
+    fetchOptions
+  )
+    .then((response) => response.json<Summary[] | { error: string }>())
+    .then((data) => {
+      if (!Array.isArray(data) && data?.error === 'invalid user session')
+        throw new Error('session_expired');
+      return data as Summary[];
+    });
+
 const greet = (callback) =>
   fetch(fetchPrefix + '/greet', fetchOptions)
     .then((response) => response.json<IdentityResponse>())
@@ -83,5 +95,5 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
     .then((response) => response.json())
     .then((data) => callback(data));
 
-const exports = { greet, logout, createTick, getSummaries, createSummary };
+const exports = { greet, logout, createTick, getSummaries, getSummariesRange, createSummary };
 export default exports;
