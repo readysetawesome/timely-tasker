@@ -4,6 +4,7 @@ module.exports = defineConfig({
   viewportHeight: 800,
   viewportWidth: 1100,
   chromeWebSecurity: false,
+  allowCypressEnv: false,
   component: {
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     devServer: {
