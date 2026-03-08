@@ -7,8 +7,8 @@ import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate } from './Timer.selectors';
-import { fetchSummaries } from './Timer.actions';
+import { getLoadingDate, getSummaries } from './Timer.selectors';
+import { fetchSummaries, setSummary } from './Timer.actions';
 
 export const dateDisplay = (date) => {
   date = new Date(date);
@@ -118,6 +118,21 @@ const Timer = ({
     useLocal,
   ]);
 
+  const todaySummaries = useSelector(getSummaries);
+
+  const [copyingYesterday, setCopyingYesterday] = useState(false);
+  const handleCopyYesterday = async () => {
+    setCopyingYesterday(true);
+    const ONE_DAY = 86400000;
+    const yesterdaySummaries = await useApi.getSummaries(date - ONE_DAY);
+    for (const ys of yesterdaySummaries) {
+      if (ys.content && !todaySummaries[ys.slot]?.content) {
+        await setSummary({ slot: ys.slot, date, content: ys.content, TimerTicks: [] })(dispatch, useApi);
+      }
+    }
+    setCopyingYesterday(false);
+  };
+
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summariesSuccess && !didScroll) {
@@ -194,6 +209,16 @@ const Timer = ({
         <div className="tt-actions">
           {useLocal === USELOCAL.YES && UseCloudStorage}
           {useLocal === USELOCAL.NO && UseLocalStorage}
+          {useLocal !== null && (
+            <button
+              onClick={handleCopyYesterday}
+              disabled={copyingYesterday}
+              data-test-id="copy-yesterday-button"
+              className="tt-btn tt-btn-ghost"
+            >
+              {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+            </button>
+          )}
           {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
             <button
               onClick={handleLogout}
