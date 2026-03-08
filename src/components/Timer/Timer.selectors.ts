@@ -5,6 +5,7 @@ import { TimerTick } from './TaskRowTicks';
 export const getSummaries = (store): { [slot: number]: Summary } =>
   store.timer.summaries;
 export const getLoadingDate = (store) => store.timer.loadingDate;
+export const getSessionExpired = (store): boolean => store.timer.sessionExpired;
 
 export const getSummary = createSelector(
   [getSummaries, (state, slot: number) => slot],

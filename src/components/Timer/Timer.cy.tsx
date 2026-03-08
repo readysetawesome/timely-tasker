@@ -288,6 +288,63 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="timer-content"] [data-test-id="timer-error"]');
   });
 
+  it('shows session-expired banner when summaries returns auth error', () => {
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE + 24 * 60 * 60 * 1000}`,
+      { body: { error: 'invalid user session' } }
+    ).as('getSummariesExpired');
+
+    cy.get('[data-test-id="right-nav-clicker"]').click();
+    cy.wait(['@getSummariesExpired']);
+
+    cy.get('[data-test-id="session-expired-error"]').should('be.visible');
+    cy.get('[data-test-id="relogin-button"]').should('be.visible');
+    cy.get('[data-test-id="timer-error"]').should('not.exist');
+  });
+
+  it('re-login button calls greet to get an authorization URL', () => {
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE + 24 * 60 * 60 * 1000}`,
+      { body: { error: 'invalid user session' } }
+    ).as('getSummariesExpired');
+
+    cy.get('[data-test-id="right-nav-clicker"]').click();
+    cy.wait(['@getSummariesExpired']);
+
+    // Set up greet intercept only after banner appears — the date-change greet call has
+    // already completed by the time we waited for the summaries response above.
+    // Use the identity fixture (not authorizeUrl) to avoid a window.location redirect
+    // that would break subsequent tests in the component test runner.
+    cy.get('[data-test-id="relogin-button"]').should('be.visible');
+    cy.intercept('GET', '/greet', { fixture: 'identity' }).as('greetRelogin');
+    cy.get('[data-test-id="relogin-button"]').click();
+    cy.wait(['@greetRelogin']);
+  });
+
+  it('arrow down moves focus to the next summary input', () => {
+    cy.get("[data-test-id='summary-text-0']").focus();
+    cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowDown' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+  });
+
+  it('arrow up moves focus to the previous summary input', () => {
+    cy.get("[data-test-id='summary-text-2']").focus();
+    cy.get("[data-test-id='summary-text-2']").trigger('keydown', { key: 'ArrowUp' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+  });
+
+  it('arrow up on first row and arrow down on last row do nothing', () => {
+    cy.get("[data-test-id='summary-text-0']").focus();
+    cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowUp' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-0');
+
+    cy.get("[data-test-id='summary-text-11']").focus();
+    cy.get("[data-test-id='summary-text-11']").trigger('keydown', { key: 'ArrowDown' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-11');
+  });
+
   it('navigates back to today from a previous date', () => {
     // Mock clock before any navigation so todaysDateInt() returns TODAYS_DATE
     // on every re-render, including after clicking left nav

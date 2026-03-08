@@ -10,12 +10,14 @@ export interface TimerState {
   loadingDate?: number;
   summariesLoading: RestApiStatus;
   summaryCreated: RestApiStatus;
+  sessionExpired: boolean;
 }
 
 const initialState = {
   summaries: {},
   summariesLoading: ApiStates.Initial,
   summaryCreated: ApiStates.Initial,
+  sessionExpired: false,
 } as TimerState;
 
 export type TickChangeEvent = {
@@ -43,6 +45,10 @@ const slice = createSlice({
     },
     summariesError: (state) => {
       state.summariesLoading = ApiStates.Error;
+    },
+    sessionExpired: (state) => {
+      state.summariesLoading = ApiStates.Error;
+      state.sessionExpired = true;
     },
 
     summaryCreated: (state, action: PayloadAction<Summary>) => {
@@ -85,6 +91,7 @@ export const {
   summariesLoaded,
   summariesLoading,
   summariesError,
+  sessionExpired,
   summaryCreated,
   summaryPending,
   summaryError,

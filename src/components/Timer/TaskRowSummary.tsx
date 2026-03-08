@@ -32,6 +32,13 @@ const TaskRowSummary = ({ slot, date, useApi }: TaskRowSummaryProps) => {
     }, 800);
   }, [date, dispatch, slot, summary, useApi]);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const nextSlot = e.key === 'ArrowDown' ? slot + 1 : slot - 1;
+    document.querySelector<HTMLInputElement>(`[data-test-id="summary-text-${nextSlot}"]`)?.focus();
+  };
+
   return (
     <div className={styles.summary_cell}>
       <input
@@ -42,6 +49,7 @@ const TaskRowSummary = ({ slot, date, useApi }: TaskRowSummaryProps) => {
           setText(e.target.value),
           handleSummaryChange(e.target.value),
         ]}
+        onKeyDown={handleKeyDown}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />

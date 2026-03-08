@@ -93,6 +93,10 @@ html, body {
   padding: 28px 20px 16px;
   border-bottom: 1px solid var(--color-surface-border);
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-surface-base);
 }
 
 .tt-title {

@@ -2,6 +2,7 @@ import {
   summariesError,
   summariesLoaded,
   summariesLoading,
+  sessionExpired,
   summaryCreated,
   summaryError,
   summaryPending,
@@ -19,7 +20,10 @@ export const fetchSummaries =
     await useApi
       .getSummaries(useDate)
       .then((response: Summary[]) => dispatch(summariesLoaded(response)))
-      .catch(() => dispatch(summariesError()));
+      .catch((err) => {
+        if (err?.message === 'session_expired') dispatch(sessionExpired());
+        else dispatch(summariesError());
+      });
   };
 
 export const setSummary =

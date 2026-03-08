@@ -9,7 +9,7 @@ import DragHint from './DragHint';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummaries } from './Timer.selectors';
+import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
 
 export const dateDisplay = (date) => {
@@ -66,6 +66,7 @@ const Timer = ({
     getRestSelectorsFor('timer', 'summaryCreated').error
   );
   const loadingDate = useSelector(getLoadingDate);
+  const isSessionExpired = useSelector(getSessionExpired);
   const dispatch = useDispatch();
 
   const [useLocal, setUseLocal] = useState(localStorage.getItem(LOCAL_STORAGE));
@@ -84,6 +85,12 @@ const Timer = ({
         setUseLocal(null);
         setGreeting('');
       }
+    });
+  };
+
+  const handleRelogin = () => {
+    RestApi.greet((res: IdentityResponse) => {
+      if (res.authorizeUrl) window.location.href = res.authorizeUrl;
     });
   };
 
@@ -256,7 +263,15 @@ const Timer = ({
           {summaryError && (
             <span className={styles.error} data-test-id="timer-error">Error setting summary text</span>
           )}
-          {summariesError && (
+          {isSessionExpired && (
+            <span className={styles.error} data-test-id="session-expired-error">
+              Session expired.{' '}
+              <button onClick={handleRelogin} className="tt-btn tt-btn-primary" data-test-id="relogin-button">
+                Re-login
+              </button>
+            </span>
+          )}
+          {summariesError && !isSessionExpired && (
             <span className={styles.error} data-test-id="timer-error">
               Error loading summaries and ticks!
             </span>
