@@ -20,11 +20,11 @@ beforeEach(() => {
   cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
     fixture: 'summaries',
   }).as('getSummaries');
-  // WeekTotal uses a single range request — return today's fixture so we get 0.25 hrs
+  // WeekTotal fetches only prior days; today's hours come from live Redux state
   cy.intercept(
     'GET',
-    `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE}`,
-    { fixture: 'summaries' }
+    `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`,
+    { body: [] }
   ).as('getWeekSummaries');
 
   cy.window().then((win) =>
@@ -87,9 +87,8 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='focused-hours-1']").should('contain', '0 hrs');
   });
 
-  it('renders week total from api (1 focused tick today = 0.25 hrs)', () => {
-    // TODAYS_DATE has 1 focused tick (summaries fixture); the rest of the week
-    // is empty → week total = 0.25 hrs
+  it('renders week total combining prior days (api) + today (redux)', () => {
+    // Prior days return empty; today's 1 focused tick comes from live Redux state → 0.25 hrs
     cy.get("[data-test-id='week-total']").should('contain', 'Week: 0.25 hrs');
   });
 

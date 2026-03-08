@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { StorageApiType } from '../../LocalStorageApi';
+import { getTotalFocusedHours } from './Timer.selectors';
 
 const ONE_DAY = 86400000;
 
@@ -19,13 +21,17 @@ interface WeekTotalProps {
 }
 
 const WeekTotal = ({ useApi, date }: WeekTotalProps) => {
-  const [weekHours, setWeekHours] = useState<number | null>(null);
+  const [priorHours, setPriorHours] = useState<number | null>(null);
+  // Live Redux state for the currently-viewed day — updates immediately on tick clicks
+  const todayHours = useSelector(getTotalFocusedHours);
 
   useEffect(() => {
     let cancelled = false;
     const weekStart = getWeekStart(date);
+    const yesterday = date - ONE_DAY;
 
-    useApi.getSummariesRange(weekStart, date)
+    // Fetch only days before the current date; today's hours come from Redux
+    useApi.getSummariesRange(weekStart, yesterday)
       .then((summaries) => {
         if (cancelled) return;
         const focusedTicks = summaries.reduce(
@@ -33,7 +39,7 @@ const WeekTotal = ({ useApi, date }: WeekTotalProps) => {
             sum + (s.TimerTicks?.filter((t) => t.distracted === 0).length ?? 0),
           0
         );
-        setWeekHours(focusedTicks / 4);
+        setPriorHours(focusedTicks / 4);
       })
       .catch(() => {}); // silently ignore — don't break the main UI
 
@@ -42,11 +48,11 @@ const WeekTotal = ({ useApi, date }: WeekTotalProps) => {
     };
   }, [useApi, date]);
 
-  if (weekHours === null) return null;
+  if (priorHours === null) return null;
 
   return (
     <span className="tt-week-total" data-test-id="week-total">
-      Week: {weekHours} hrs
+      Week: {priorHours + todayHours} hrs
     </span>
   );
 };
