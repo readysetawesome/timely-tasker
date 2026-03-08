@@ -42,6 +42,7 @@ Cloudflare Pages app for daily task/time tracking. Two storage modes behind one 
 - Tick state is asserted via `data-tick-state` attribute (`focused`, `distracted`, `empty`), not CSS class names
 - `cy.clock()` must be called **before** any navigation that causes a re-render, not just before the assertion — `todaysDateInt()` is evaluated during render
 - Timezone adjustment for clock mocks: `TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000`
+- Ticks use **Pointer Events** (`onPointerDown/Enter/Up`), not mouse events — in tests use `trigger('pointerdown')`, `trigger('pointerover')`, `trigger('pointerup')` for drag sequences. React maps `onPointerEnter` to native `pointerover` via root delegation, same as `onMouseEnter` → `mouseover`.
 
 ## Cloudflare preview deployments & OAuth
 
@@ -52,6 +53,15 @@ For any new branch where you need OAuth to work, register these two URIs in the 
 - `https://branch-name.timely-tasker.pages.dev/callback`
 
 👉 [Google OAuth client config](https://console.cloud.google.com/auth/clients/520908376805-qng7l5f1sj9s0mq7brelq74lalmskdpk.apps.googleusercontent.com?project=timely-tasker)
+
+## Pull request checklist
+
+Before marking a PR ready / requesting review:
+
+1. `npm test` — all specs pass
+2. `CYPRESS_COVERAGE=true npm test` — check coverage report, fill any gaps introduced by the PR
+3. `npm run lint` — no new lint errors
+4. PR description updated to reflect final state of changes
 
 ## Toolchain
 

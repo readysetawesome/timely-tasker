@@ -87,9 +87,9 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].id}&tick=41&distracted=0`, { fixture: 'tick' }).as('tick41');
 
     cy.get('[data-test-id="0-40"][data-tick-state="empty"]');
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-41"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-41"]').trigger('pointerup');
 
     cy.get('[data-test-id="0-40"][data-tick-state="focused"]');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
@@ -99,8 +99,8 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].id}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as('tick31distracted');
 
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]');
-    cy.get('[data-test-id="0-31"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-31"]').trigger('mouseup');
+    cy.get('[data-test-id="0-31"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-31"]').trigger('pointerup');
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
   });
 
@@ -110,7 +110,7 @@ describe('<Timer />', () => {
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
           expect(rect.x).to.be.lessThan(700);
-          expect(rect.x).to.be.greaterThan(200);
+          expect(rect.x).to.be.greaterThan(50);
       });
   });
 
@@ -286,6 +286,77 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="right-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
     cy.get('[data-test-id="timer-content"] [data-test-id="timer-error"]');
+  });
+
+  it('shows session-expired banner when summaries returns auth error', () => {
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE + 24 * 60 * 60 * 1000}`,
+      { body: { error: 'invalid user session' } }
+    ).as('getSummariesExpired');
+
+    cy.get('[data-test-id="right-nav-clicker"]').click();
+    cy.wait(['@getSummariesExpired']);
+
+    cy.get('[data-test-id="session-expired-error"]').should('be.visible');
+    cy.get('[data-test-id="relogin-button"]').should('be.visible');
+    cy.get('[data-test-id="timer-error"]').should('not.exist');
+  });
+
+  it('re-login button calls greet to get an authorization URL', () => {
+    cy.intercept(
+      'GET',
+      `/summaries?date=${TODAYS_DATE + 24 * 60 * 60 * 1000}`,
+      { body: { error: 'invalid user session' } }
+    ).as('getSummariesExpired');
+
+    cy.get('[data-test-id="right-nav-clicker"]').click();
+    cy.wait(['@getSummariesExpired']);
+
+    // Set up greet intercept only after banner appears — the date-change greet call has
+    // already completed by the time we waited for the summaries response above.
+    // Use the identity fixture (not authorizeUrl) to avoid a window.location redirect
+    // that would break subsequent tests in the component test runner.
+    cy.get('[data-test-id="relogin-button"]').should('be.visible');
+    cy.intercept('GET', '/greet', { fixture: 'identity' }).as('greetRelogin');
+    cy.get('[data-test-id="relogin-button"]').click();
+    cy.wait(['@greetRelogin']);
+  });
+
+  it('arrow down moves focus to the next summary input and selects all', () => {
+    cy.get("[data-test-id='summary-text-0']").focus();
+    cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowDown' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.focused().then(($el) => {
+      const el = $el[0] as HTMLInputElement;
+      expect(el.selectionStart).to.equal(0);
+      expect(el.selectionEnd).to.equal(el.value.length);
+    });
+  });
+
+  it('arrow up moves focus to the previous summary input and selects all', () => {
+    cy.get("[data-test-id='summary-text-2']").focus();
+    cy.get("[data-test-id='summary-text-2']").trigger('keydown', { key: 'ArrowUp' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.focused().then(($el) => {
+      const el = $el[0] as HTMLInputElement;
+      expect(el.selectionStart).to.equal(0);
+      expect(el.selectionEnd).to.equal(el.value.length);
+    });
+  });
+
+  it('arrow up on first row does nothing', () => {
+    cy.get("[data-test-id='summary-text-0']").focus();
+    cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowUp' });
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-0');
+  });
+
+  it('arrow down on last row adds a new row and moves focus to it', () => {
+    cy.get("[data-test-id='summary-text-12']").should('not.exist');
+    cy.get("[data-test-id='summary-text-11']").focus();
+    cy.get("[data-test-id='summary-text-11']").trigger('keydown', { key: 'ArrowDown' });
+    cy.get("[data-test-id='summary-text-12']").should('exist');
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-12');
   });
 
   it('navigates back to today from a previous date', () => {

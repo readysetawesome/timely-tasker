@@ -58,9 +58,13 @@ const createSummary = (summary: Summary) =>
   ).then((response) => response.json<Summary>());
 
 const getSummaries = (useDate: number) =>
-  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions).then(
-    (response) => response.json<Summary[]>()
-  );
+  fetch(fetchPrefix + `/summaries?date=${useDate}`, fetchOptions)
+    .then((response) => response.json<Summary[] | { error: string }>())
+    .then((data) => {
+      if (!Array.isArray(data) && data?.error === 'invalid user session')
+        throw new Error('session_expired');
+      return data as Summary[];
+    });
 
 const greet = (callback) =>
   fetch(fetchPrefix + '/greet', fetchOptions)

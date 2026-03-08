@@ -1,15 +1,16 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
 import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
 import { DragProvider } from './DragContext';
+import DatePicker from './DatePicker';
 import DragHint from './DragHint';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummaries } from './Timer.selectors';
+import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
 
 export const dateDisplay = (date) => {
@@ -38,7 +39,7 @@ export interface TimerProps {
   currentTime: Date;
   leftNavClicker: ReactElement;
   rightNavClicker: ReactElement;
-  todayNavClicker: ReactElement;
+  todayNavClicker: ReactElement | null;
 }
 
 const LOCAL_STORAGE = 'TimelyTasker:UseLocalStorage';
@@ -55,6 +56,7 @@ const Timer = ({
   todayNavClicker,
 }: TimerProps) => {
   const [greeting, setGreeting] = useState('');
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const summariesRestSelectors = getRestSelectorsFor(
     'timer',
     'summariesLoading'
@@ -66,6 +68,7 @@ const Timer = ({
     getRestSelectorsFor('timer', 'summaryCreated').error
   );
   const loadingDate = useSelector(getLoadingDate);
+  const isSessionExpired = useSelector(getSessionExpired);
   const dispatch = useDispatch();
 
   const [useLocal, setUseLocal] = useState(localStorage.getItem(LOCAL_STORAGE));
@@ -75,6 +78,28 @@ const Timer = ({
     }
   }, [useLocal]);
 
+  // Connecting interstitial: show while greet is pending, minimum 600ms so it
+  // doesn't flash invisibly for pre-authorized users.
+  const connectingStartRef = useRef<number>(0);
+  const [connectingVisible, setConnectingVisible] = useState(
+    localStorage.getItem(LOCAL_STORAGE) === USELOCAL.NO
+  );
+  useEffect(() => {
+    if (useLocal === USELOCAL.NO) {
+      connectingStartRef.current = Date.now();
+      setConnectingVisible(true);
+    } else {
+      setConnectingVisible(false);
+    }
+  }, [useLocal]);
+  useEffect(() => {
+    if (!greeting) return;
+    const elapsed = Date.now() - connectingStartRef.current;
+    const remaining = Math.max(0, 600 - elapsed);
+    const timer = setTimeout(() => setConnectingVisible(false), remaining);
+    return () => clearTimeout(timer);
+  }, [greeting]);
+
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
   const handleLogout = () => {
@@ -83,7 +108,14 @@ const Timer = ({
         localStorage.removeItem(LOCAL_STORAGE);
         setUseLocal(null);
         setGreeting('');
+        setDisplayName(null);
       }
+    });
+  };
+
+  const handleRelogin = () => {
+    RestApi.greet((res: IdentityResponse) => {
+      if (res.authorizeUrl) window.location.href = res.authorizeUrl;
     });
   };
 
@@ -92,11 +124,12 @@ const Timer = ({
       RestApi.greet((res: IdentityResponse) => {
         if (res.identity) {
           setGreeting(`Hello, ${res.identity.displayName}! Logged in with ${res.identity.providerName}, using cloud-based storage.`);
+          setDisplayName(res.identity.displayName);
           fetchSummaries(date)(dispatch, useApi);
         } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;
       });
     } else if (useLocal === USELOCAL.YES) {
-      setGreeting('Hello! Currently using Local Storage');
+      setGreeting('Using local storage');
       fetchSummaries(date)(dispatch, useApi);
     }
   }, [date, dispatch, useApi, useLocal]);
@@ -135,6 +168,21 @@ const Timer = ({
     setCopyingYesterday(false);
   };
 
+  const MAX_ROWS = 28;
+  const [rowCount, setRowCount] = useState(12);
+  const addRow = () => setRowCount((n) => Math.min(n + 1, MAX_ROWS));
+
+  useEffect(() => {
+    const slots = Object.keys(todaySummaries).map(Number);
+    if (slots.length === 0) {
+      setRowCount(12);
+    } else {
+      const maxSlot = Math.max(...slots);
+      setRowCount((prev) => Math.max(prev, maxSlot + 1));
+    }
+  }, [todaySummaries]);
+
+  const [showPicker, setShowPicker] = useState(false);
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summariesSuccess && !didScroll) {
@@ -153,10 +201,10 @@ const Timer = ({
   const tickRowElements = new Array<JSX.Element>();
   const focusedRowElements = new Array<JSX.Element>();
 
-  for (let slot = 0; slot < 12; slot++) {
+  for (let slot = 0; slot < rowCount; slot++) {
     if (summariesSuccess && useLocal !== null) {
       summaryElements.push(
-        <TaskRowSummary {...{ date, slot, key: slot, useApi }} />
+        <TaskRowSummary {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }} />
       );
       tickRowElements.push(
         <TaskRowTicks {...{ date, slot, key: slot, useApi }} />
@@ -165,17 +213,38 @@ const Timer = ({
     }
   }
 
-  const UseCloudStorage = (
+  const GoogleIcon = (
+    <svg width="14" height="14" viewBox="0 0 24 24" style={{flexShrink: 0}}>
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+  );
+
+  const SignInWithGoogle = (
+    <button
+      onClick={() => setUseLocal(USELOCAL.NO)}
+      data-test-id="use-cloud-storage"
+      className="tt-topbar-btn"
+    >
+      {GoogleIcon}
+      Sign in with Google
+    </button>
+  );
+
+  const SignInWithGooglePrompt = (
     <button
       onClick={() => setUseLocal(USELOCAL.NO)}
       data-test-id="use-cloud-storage"
       className="tt-btn tt-btn-primary"
     >
-      Use cloud database
+      {GoogleIcon}
+      Sign in with Google
     </button>
   );
 
-  const UseLocalStorage = (
+  const UseLocalStoragePrompt = (
     <button
       onClick={() => setUseLocal(USELOCAL.YES)}
       title="public computer users: by clicking you agree that you understand the risks"
@@ -188,48 +257,71 @@ const Timer = ({
 
   return (
     <div className="tt-page">
+      {/* ── Topbar (GitHub link + auth actions) ── */}
+      <header className="app-topbar">
+        <div className="tt-topbar-actions">
+          {useLocal === USELOCAL.YES && SignInWithGoogle}
+          {useLocal === USELOCAL.NO && displayName && (
+            <>
+              <span className="tt-topbar-identity">{displayName}</span>
+              <button
+                onClick={handleLogout}
+                data-test-id="logout-button"
+                className="tt-topbar-btn tt-topbar-btn-danger"
+              >
+                Sign out
+              </button>
+            </>
+          )}
+        </div>
+        <a
+          href="https://github.com/readysetawesome/timely-tasker"
+          className="app-topbar-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{display:'inline',marginRight:'5px',verticalAlign:'middle'}}>
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          timely-tasker
+        </a>
+      </header>
+
       {/* ── App header ── */}
       <div className="tt-header">
-        <h1 className="tt-title">Timely Tasker</h1>
-
-        <h2 className="tt-date-nav">
-          {leftNavClicker}
-          <a href={`?date=${date}`} className="tt-date-label">
-            {dateDisplay(date)}
-          </a>
-          {rightNavClicker}
-          {todayNavClicker}
-        </h2>
-
-        {greeting && (
-          <p className="tt-greeting" data-test-id="greeting">
-            {greeting}
-          </p>
-        )}
-        {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
-
-        <div className="tt-actions">
-          {useLocal === USELOCAL.YES && UseCloudStorage}
-          {useLocal === USELOCAL.NO && UseLocalStorage}
-          {useLocal !== null && (
-            <button
-              onClick={handleCopyYesterday}
-              disabled={copyingYesterday}
-              data-test-id="copy-yesterday-button"
-              className="tt-btn tt-btn-ghost"
-            >
-              {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
-            </button>
+        <div className="tt-header-center">
+          <div className="tt-date-cluster">
+            <h2 className="tt-date-nav">
+              {todayNavClicker}
+              {leftNavClicker}
+              <div className="tt-date-label-wrap">
+                <button
+                  className={`tt-date-label${todayNavClicker ? ' tt-date-label--offtoday' : ''}`}
+                  onClick={() => setShowPicker(p => !p)}
+                >
+                  {dateDisplay(date)}
+                </button>
+                {showPicker && <DatePicker date={date} onClose={() => setShowPicker(false)} />}
+              </div>
+              {rightNavClicker}
+              {useLocal !== null && (
+                <button
+                  onClick={handleCopyYesterday}
+                  disabled={copyingYesterday}
+                  data-test-id="copy-yesterday-button"
+                  className="nav-today nav-yesterday"
+                >
+                  {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+                </button>
+              )}
+            </h2>
+          </div>
+          {greeting && (
+            <p className="tt-greeting" data-test-id="greeting">
+              {greeting}
+            </p>
           )}
-          {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
-            <button
-              onClick={handleLogout}
-              data-test-id="logout-button"
-              className="tt-btn tt-btn-danger"
-            >
-              Log out
-            </button>
-          )}
+          {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
         </div>
       </div>
 
@@ -242,8 +334,21 @@ const Timer = ({
             <strong>Public computer?</strong> localStorage data stays in this browser.
           </p>
           <div className="tt-storage-actions">
-            {UseLocalStorage}
-            {UseCloudStorage}
+            {UseLocalStoragePrompt}
+            {SignInWithGooglePrompt}
+          </div>
+        </div>
+      )}
+
+      {/* ── Connecting interstitial (pre-authorized Google users) ── */}
+      {connectingVisible && (
+        <div className="tt-connecting">
+          <div className="tt-connecting-card">
+            <span className="tt-connecting-spinner" />
+            <div className="tt-connecting-body">
+              <p className="tt-connecting-title">Signing in with Google</p>
+              <p className="tt-connecting-sub">Resuming your saved authorization…</p>
+            </div>
           </div>
         </div>
       )}
@@ -256,7 +361,15 @@ const Timer = ({
           {summaryError && (
             <span className={styles.error} data-test-id="timer-error">Error setting summary text</span>
           )}
-          {summariesError && (
+          {isSessionExpired && (
+            <span className={styles.error} data-test-id="session-expired-error">
+              Session expired.{' '}
+              <button onClick={handleRelogin} className="tt-btn tt-btn-primary" data-test-id="relogin-button">
+                Re-login
+              </button>
+            </span>
+          )}
+          {summariesError && !isSessionExpired && (
             <span className={styles.error} data-test-id="timer-error">
               Error loading summaries and ticks!
             </span>

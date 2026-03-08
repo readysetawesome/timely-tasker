@@ -31,6 +31,14 @@ describe('<Timer /> no localStorage setting', () => {
     cy.get('[data-test-id=use-local-storage]').click();
     cy.get('[data-test-id=use-local-storage]').should('not.exist');
   });
+
+  it('clicking sign in with google from storage prompt begins auth flow', () => {
+    cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+    cy.get('[data-test-id=use-cloud-storage]').click();
+    cy.wait('@getIdentity');
+    cy.get("[data-test-id='greeting']").should('contain', 'Logged in with google');
+  });
 });
 
 describe('<Timer /> using localStorage, with no existing data', () => {
@@ -53,7 +61,7 @@ describe('<Timer /> using localStorage, with no existing data', () => {
   it('renders greeting text', () => {
     cy.get("[data-test-id='greeting']")
       .first()
-      .should('contain', 'Currently using Local Storage');
+      .should('contain', 'Using local storage');
   });
 
   it('creates new summary from scratch', () => {
@@ -84,6 +92,92 @@ describe('<Timer /> using localStorage, with no existing data', () => {
           ) as Summary
         ).TimerTicks?.find((t) => t.tickNumber === 33)?.distracted
       ).to.equal(0);
+    });
+  });
+});
+
+describe('<DatePicker />', () => {
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+    });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="/timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+  });
+
+  it('opens when clicking the date label', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+  });
+
+  it('closes on Escape key', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+    cy.get('body').type('{esc}');
+    cy.get('.datepicker').should('not.exist');
+  });
+
+  it('closes on click outside', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+    cy.get('body').click(0, 500);
+    cy.get('.datepicker').should('not.exist');
+  });
+
+  it('highlights today with the today class', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--today').should('exist');
+  });
+
+  it('highlights the selected date', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--selected').should('exist');
+  });
+
+  it('navigates to a selected day and closes the picker', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--selected').then(($selected) => {
+      const prevDay = $selected.prev('.datepicker-day');
+      if (prevDay.length) {
+        prevDay.click();
+        cy.get('.datepicker').should('not.exist');
+      }
+    });
+  });
+
+  it('navigates to the previous month', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((before) => {
+      cy.get('.datepicker-nav').first().click();
+      cy.get('.datepicker-month-label').invoke('text').should('not.eq', before);
+    });
+  });
+
+  it('navigates to the next month', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((before) => {
+      cy.get('.datepicker-nav').last().click();
+      cy.get('.datepicker-month-label').invoke('text').should('not.eq', before);
+    });
+  });
+
+  it('wraps from January to December on prev', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((text) => {
+      const monthNum = new Date(text).getMonth();
+      for (let i = 0; i <= monthNum; i++) {
+        cy.get('.datepicker-nav').first().click();
+      }
+      cy.get('.datepicker-month-label').should('contain', 'December');
     });
   });
 });
@@ -123,7 +217,7 @@ describe('<Timer /> using localStorage', () => {
   it('renders greeting text', () => {
     cy.get("[data-test-id='greeting']")
       .first()
-      .should('contain', 'Currently using Local Storage');
+      .should('contain', 'Using local storage');
   });
 
   it('renders loaded summary text in the <input>', () => {
@@ -140,8 +234,8 @@ describe('<Timer /> using localStorage', () => {
 
   it('renders total focused hours across all rows', () => {
     cy.get("[data-test-id='focused-hours-total']").should('contain', '0.25 hrs');
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-40"]').trigger('pointerup');
     cy.get("[data-test-id='focused-hours-total']").should('contain', '0.5 hrs');
   });
 
@@ -150,10 +244,10 @@ describe('<Timer /> using localStorage', () => {
     cy.get('[data-test-id="0-41"][data-tick-state="empty"]');
     cy.get('[data-test-id="0-42"][data-tick-state="empty"]');
 
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-42"]').trigger('mouseover');
-    cy.get('[data-test-id="0-42"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-42"]').trigger('pointerover');
+    cy.get('[data-test-id="0-42"]').trigger('pointerup');
 
     cy.get('[data-test-id="0-40"][data-tick-state="focused"]');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
@@ -162,16 +256,16 @@ describe('<Timer /> using localStorage', () => {
 
   it('drag clears ticks that are already filled', () => {
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]');
-    cy.get('[data-test-id="0-31"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-31"]').trigger('mouseup');
+    cy.get('[data-test-id="0-31"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-31"]').trigger('pointerup');
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
   });
 
   it('drag does not re-apply value to already matching ticks', () => {
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-41"]').trigger('mouseover'); // second enter on same tick
-    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-41"]').trigger('pointerover'); // second enter on same tick
+    cy.get('[data-test-id="0-40"]').trigger('pointerup');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
   });
 
@@ -225,8 +319,8 @@ describe('<Timer /> using localStorage', () => {
   it('drag hint dismisses when user first drags', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('be.visible');
-    cy.get('[data-test-id="0-50"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-50"]').trigger('mouseup');
+    cy.get('[data-test-id="0-50"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-50"]').trigger('pointerup');
     cy.get('.drag-hint').should('not.exist');
   });
 

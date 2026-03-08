@@ -133,13 +133,13 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
       ? 'focused'
       : 'empty';
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault(); // prevent text selection while dragging
     startDrag(nextTickValue);
     applyTickValue(nextTickValue);
   }, [startDrag, nextTickValue, applyTickValue]);
 
-  const handleMouseEnter = useCallback(() => {
+  const handlePointerEnter = useCallback(() => {
     if (isDraggingRef.current && dragValueRef.current !== null && dragValueRef.current !== distracted) {
       applyTickValue(dragValueRef.current);
     }
@@ -148,9 +148,9 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
   return (
     <div
       className={style}
-      onMouseDown={handleMouseDown}
-      onMouseEnter={handleMouseEnter}
-      onMouseUp={endDrag}
+      onPointerDown={handlePointerDown}
+      onPointerEnter={handlePointerEnter}
+      onPointerUp={endDrag}
       data-test-id={testIdAttr}
       data-tick-state={tickState}
     />
