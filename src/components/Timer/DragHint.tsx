@@ -30,7 +30,7 @@ const DragHint = () => {
     // auto-dismiss after 9s
     const autoTimer = setTimeout(dismiss, 9000);
     return () => clearTimeout(autoTimer);
-  }, [visible, onFirstDragRef]);
+  }, [visible, onFirstDragRef, dismiss]);
 
   if (!visible) return null;
 

@@ -143,7 +143,7 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
     if (isDraggingRef.current && dragValueRef.current !== null && dragValueRef.current !== distracted) {
       applyTickValue(dragValueRef.current);
     }
-  }, [isDraggingRef, dragValueRef, distracted, applyTickValue]);
+  }, [distracted, applyTickValue]); // refs are stable, excluded from deps
 
   return (
     <div

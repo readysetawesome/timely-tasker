@@ -11,7 +11,9 @@ const storeMaker = () =>
   configureStore({
     reducer,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }),
+      getDefaultMiddleware({
+        serializableCheck: process.env.NODE_ENV !== 'development' ? undefined : false,
+      }),
   });
 
 export default storeMaker;
