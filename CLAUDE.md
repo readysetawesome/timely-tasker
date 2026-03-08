@@ -42,6 +42,7 @@ Cloudflare Pages app for daily task/time tracking. Two storage modes behind one 
 - Tick state is asserted via `data-tick-state` attribute (`focused`, `distracted`, `empty`), not CSS class names
 - `cy.clock()` must be called **before** any navigation that causes a re-render, not just before the assertion — `todaysDateInt()` is evaluated during render
 - Timezone adjustment for clock mocks: `TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000`
+- Ticks use **Pointer Events** (`onPointerDown/Enter/Up`), not mouse events — in tests use `trigger('pointerdown')`, `trigger('pointerover')`, `trigger('pointerup')` for drag sequences. React maps `onPointerEnter` to native `pointerover` via root delegation, same as `onMouseEnter` → `mouseover`.
 
 ## Cloudflare preview deployments & OAuth
 

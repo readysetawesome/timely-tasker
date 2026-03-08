@@ -140,8 +140,8 @@ describe('<Timer /> using localStorage', () => {
 
   it('renders total focused hours across all rows', () => {
     cy.get("[data-test-id='focused-hours-total']").should('contain', '0.25 hrs');
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-40"]').trigger('pointerup');
     cy.get("[data-test-id='focused-hours-total']").should('contain', '0.5 hrs');
   });
 
@@ -150,10 +150,10 @@ describe('<Timer /> using localStorage', () => {
     cy.get('[data-test-id="0-41"][data-tick-state="empty"]');
     cy.get('[data-test-id="0-42"][data-tick-state="empty"]');
 
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-42"]').trigger('mouseover');
-    cy.get('[data-test-id="0-42"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-42"]').trigger('pointerover');
+    cy.get('[data-test-id="0-42"]').trigger('pointerup');
 
     cy.get('[data-test-id="0-40"][data-tick-state="focused"]');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
@@ -162,16 +162,16 @@ describe('<Timer /> using localStorage', () => {
 
   it('drag clears ticks that are already filled', () => {
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]');
-    cy.get('[data-test-id="0-31"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-31"]').trigger('mouseup');
+    cy.get('[data-test-id="0-31"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-31"]').trigger('pointerup');
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
   });
 
   it('drag does not re-apply value to already matching ticks', () => {
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-41"]').trigger('mouseover'); // second enter on same tick
-    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-41"]').trigger('pointerover'); // second enter on same tick
+    cy.get('[data-test-id="0-40"]').trigger('pointerup');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
   });
 
@@ -225,8 +225,8 @@ describe('<Timer /> using localStorage', () => {
   it('drag hint dismisses when user first drags', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('be.visible');
-    cy.get('[data-test-id="0-50"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-50"]').trigger('mouseup');
+    cy.get('[data-test-id="0-50"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-50"]').trigger('pointerup');
     cy.get('.drag-hint').should('not.exist');
   });
 

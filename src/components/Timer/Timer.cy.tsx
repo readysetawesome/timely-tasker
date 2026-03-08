@@ -87,9 +87,9 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].id}&tick=41&distracted=0`, { fixture: 'tick' }).as('tick41');
 
     cy.get('[data-test-id="0-40"][data-tick-state="empty"]');
-    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-41"]').trigger('mouseover');
-    cy.get('[data-test-id="0-41"]').trigger('mouseup');
+    cy.get('[data-test-id="0-40"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('pointerover');
+    cy.get('[data-test-id="0-41"]').trigger('pointerup');
 
     cy.get('[data-test-id="0-40"][data-tick-state="focused"]');
     cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
@@ -99,8 +99,8 @@ describe('<Timer />', () => {
     cy.intercept('POST', `/ticks?summary=${summaries[0].id}&tick=31&distracted=1`, { fixture: 'tickRelated' }).as('tick31distracted');
 
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]');
-    cy.get('[data-test-id="0-31"]').trigger('mousedown', { button: 0 });
-    cy.get('[data-test-id="0-31"]').trigger('mouseup');
+    cy.get('[data-test-id="0-31"]').trigger('pointerdown', { button: 0 });
+    cy.get('[data-test-id="0-31"]').trigger('pointerup');
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
   });
 

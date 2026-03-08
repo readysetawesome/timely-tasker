@@ -176,6 +176,7 @@ $focused-col-width: 80px;
   .tictac_distracted,
   .tictac_focused {
     cursor: pointer;
+    touch-action: none; // let pointer events handle all touch interaction
     width: $tictac-w;
     height: $tictac-h;
     margin: $tictac-gap;
