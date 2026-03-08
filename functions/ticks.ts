@@ -36,11 +36,13 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
     // BEGIN CREATE/UPDATE REQUEST
     const { results, success, error } = await env.DB.prepare(
       `
-      SELECT * FROM TimerTicks
-      WHERE summaryId = ? AND tickNumber = ?
+      SELECT TimerTicks.* FROM TimerTicks
+      INNER JOIN Summaries ON Summaries.id = TimerTicks.summaryId
+      WHERE TimerTicks.summaryId = ? AND TimerTicks.tickNumber = ?
+        AND Summaries.userId = ?
     `
     )
-      .bind(summary, tick)
+      .bind(summary, tick, identity.userId)
       .all<TimerTick>();
 
     if (!success) return errorResponse(`Error getting tick row. ${error}`);
@@ -71,6 +73,14 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
         timerTick = results?.[0];
       }
     } else {
+      // Verify the summary belongs to this user before inserting
+      const summaryCheck = await env.DB.prepare(
+        `SELECT id FROM Summaries WHERE id = ? AND userId = ?`
+      )
+        .bind(summary, identity.userId)
+        .first();
+      if (!summaryCheck) return errorResponse('Summary not found or access denied.');
+
       const { success, results } = await env.DB.prepare(
         `
         INSERT INTO TimerTicks (userId, tickNumber, distracted, summaryId) values (?, ?, ?, ?) RETURNING *

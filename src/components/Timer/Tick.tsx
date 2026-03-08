@@ -125,8 +125,20 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
     useApi,
   ]);
 
+  const tickState =
+    distracted === TickState.distracted
+      ? 'distracted'
+      : distracted === TickState.Focused
+      ? 'focused'
+      : 'empty';
+
   return (
-    <div className={style} onClick={updateTick} data-test-id={testIdAttr} />
+    <div
+      className={style}
+      onClick={updateTick}
+      data-test-id={testIdAttr}
+      data-tick-state={tickState}
+    />
   );
 };
 

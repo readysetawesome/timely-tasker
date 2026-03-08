@@ -25,6 +25,11 @@
   </a>
 </p>
 
+## Engineering Docs
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [AGENTS.md](./AGENTS.md)
+
 #### Project Structure:
 ```zsh
 ./cypress    # Test fixtures and boilerplate
@@ -81,6 +86,13 @@ Distracted = 1, to indicate that time was spread between tasks.
 
 ## Commands
 
+### Prerequisites
+
+- Node.js + npm
+- `wrangler` CLI
+- `sqlite3` CLI
+- A local `.dev.vars` file for development environment variables
+
 ### `npx wrangler pages dev --d1=DB --persist -- npm start`
 
 Runs the app in the development mode, with sqlite persistence enabled.\
@@ -101,4 +113,3 @@ Runs migrations in preview/staging.
 ### `sqlite3 .wrangler/state/d1/DB.sqlite3`
 
 Loads a local dev DB console (run migrations to create the db)
-

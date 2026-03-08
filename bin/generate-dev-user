@@ -1,2 +1,4 @@
-# !zsh
+#!/usr/bin/env bash
+set -euo pipefail
+
 wrangler d1 execute timely-tasker-dev --file ./seeds/devUser.sql --local

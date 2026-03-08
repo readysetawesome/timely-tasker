@@ -47,6 +47,16 @@ function App({ useDate = todaysDateInt() }: AppProps) {
     </Link>
   );
 
+  const todayNavClicker = (
+    <Link
+      data-test-id="today-nav-clicker"
+      style={{ cursor: 'pointer' }}
+      to={`/timer?date=${todaysDateInt()}`}
+    >
+      &nbsp;&nbsp;&nbsp;Today
+    </Link>
+  );
+
   return (
     <div className="App">
       <header>
@@ -55,7 +65,13 @@ function App({ useDate = todaysDateInt() }: AppProps) {
         </a>
       </header>
       <Timer
-        {...{ date, currentTime: new Date(), leftNavClicker, rightNavClicker }}
+        {...{
+          date,
+          currentTime: new Date(),
+          leftNavClicker,
+          rightNavClicker,
+          todayNavClicker,
+        }}
       />
     </div>
   );

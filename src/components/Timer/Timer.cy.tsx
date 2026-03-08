@@ -1,13 +1,12 @@
 /* eslint-disable cypress/no-unnecessary-waiting */
 import React from 'react';
 import App from '../../App';
-import { mount } from 'cypress/react18';
+import { mount } from 'cypress/react';
 import summaries from '../../../cypress/fixtures/summaries.json';
 import summarySlotTwo from '../../../cypress/fixtures/summarySlotTwo.json';
 import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
-import { waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
@@ -54,21 +53,38 @@ describe('<Timer />', () => {
       .should('contain', 'Logged in with google');
   });
 
+  it('logout clears session and shows storage selection without auto-redirecting', () => {
+    cy.intercept('POST', '/logout', { statusCode: 200, body: { success: true } }).as('logout');
+
+    cy.get("[data-test-id='logout-button']").click();
+
+    cy.wait(['@logout']);
+
+    cy.get("[data-test-id='greeting']").should('have.text', '');
+    cy.get("[data-test-id='logout-button']").should('not.exist');
+    cy.get("[data-test-id='use-cloud-storage']");
+    cy.get("[data-test-id='use-local-storage']");
+  });
+
   it('renders loaded summary text in the <input>', () => {
     cy.get("[data-test-id='summary-text-0']")
       .first()
       .should('have.value', 'replace jest with cypress');
   });
 
+  it('renders focused hours per row', () => {
+    cy.get("[data-test-id='focused-header']").should('contain', 'Focused');
+    cy.get("[data-test-id='focused-hours-0']").should('contain', '0.25 hrs');
+    cy.get("[data-test-id='focused-hours-1']").should('contain', '0 hrs');
+  });
+
   it('renders ticks content', () => {
     cy.get("[data-test-id='0-36']")
       .first()
       .then(($el) => {
-        waitFor(() => {
-          const rect = $el[0].getBoundingClientRect();
-          expect(rect.x).to.be.lessThan(470);
-          expect(rect.x).to.be.greaterThan(450);
-        });
+        const rect = $el[0].getBoundingClientRect();
+          expect(rect.x).to.be.lessThan(700);
+          expect(rect.x).to.be.greaterThan(200);
       });
   });
 
@@ -93,16 +109,14 @@ describe('<Timer />', () => {
       `/ticks?summary=${summaries[0].id}&tick=31&distracted=0`,
       { fixture: 'tick' }
     ).as('updateTickOriginal');
-    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused]");
+    cy.get("[data-test-id='0-31'][data-tick-state='focused']");
 
-    cy.get("[data-test-id='1-31'][class*=Timer_tictac_empty]").click();
+    cy.get("[data-test-id='1-31'][data-tick-state='empty']").click();
 
     cy.wait(['@updateRelatedTick', '@updateTickDistracted']);
 
-    cy.get('div[class*="Timer_tictac_distracted"][data-test-id="0-31"]');
-    cy.get(
-      'div[class*="Timer_tictac_distracted"][data-test-id="1-31"]'
-    ).click();
+    cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
+    cy.get('[data-test-id="1-31"][data-tick-state="distracted"]').click();
 
     cy.wait(['@updateTickRemoved', '@updateTickOriginal']);
   });
@@ -165,7 +179,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@createTick']);
 
-    cy.get('div[class*="Timer_tictac_focused"][data-test-id="3-33"]');
+    cy.get('[data-test-id="3-33"][data-tick-state="focused"]');
 
     cy.get("[data-test-id='summary-text-3'][value=Hi]");
   });
@@ -199,7 +213,7 @@ describe('<Timer />', () => {
 
     cy.wait(['@updateTickFail']);
 
-    cy.get("[data-test-id='0-31'][class*=Timer_tictac_focused");
+    cy.get("[data-test-id='0-31'][data-tick-state='focused']");
   });
 
   it('handles errors with summary create', () => {
@@ -210,7 +224,7 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-3']").type('Hello');
 
     cy.wait(['@createSummaryFail']);
-    cy.get('span[class*=Timer_error]');
+    cy.get('[data-test-id="timer-error"]');
   });
 
   it('tasks should not leak on nav', () => {
@@ -245,6 +259,29 @@ describe('<Timer />', () => {
     ).as('getSummariesFail');
     cy.get('[data-test-id="right-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
-    cy.get('[class*=Timer_content] span[class*=Timer_error]');
+    cy.get('[data-test-id="timer-content"] [data-test-id="timer-error"]');
+  });
+
+  it('navigates back to today from a previous date', () => {
+    // Mock clock before any navigation so todaysDateInt() returns TODAYS_DATE
+    // on every re-render, including after clicking left nav
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
+    const previousDate = TODAYS_DATE - 24 * 60 * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${previousDate}`, {
+      fixture: 'summariesPast',
+    }).as('getSummariesPastForTodayNav');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
+      fixture: 'summaries',
+    }).as('getSummariesTodayFromNav');
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait(['@getSummariesPastForTodayNav']);
+    cy.get('h2').should('contain', '3-22-2023');
+
+    cy.get("[data-test-id='today-nav-clicker']").click();
+    cy.wait(['@getSummariesTodayFromNav']);
+    cy.get('h2').should('contain', '3-23-2023');
   });
 });

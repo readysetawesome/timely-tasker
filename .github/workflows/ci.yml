@@ -1,6 +1,7 @@
 name: CI
 on:
   push:
+  pull_request:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
@@ -11,7 +12,7 @@ jobs:
       - name: Setup Node.js 18 environment
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/hydrogen'
+          node-version: 'lts/iron'
 
       - name: Install npm dependencies
         run: npm install
@@ -19,10 +20,12 @@ jobs:
       - name: Cypress run
         run: npm run ci-cypress
         env:
-          # See issue https://github.com/cypress-io/cypress/issues/25357
           ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
+          CYPRESS_COVERAGE: 'true'
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-         files: .nyc_output/out.json
+          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+

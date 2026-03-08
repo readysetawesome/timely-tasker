@@ -26,39 +26,8 @@ export const onRequest: PagesFunction<Env, never> = async ({
 
   const cookies = parseCookies(request);
 
-  if (!cookies[TASKER_COOKIE]) {
-    /*
-      generate a session cookie based on securely random string
-      nothing is stored in the db yet, this is an ephemeral session until auth completes
-      kept on the client to provie a means to XSRF bust the code exchange via 'state'
-    */
-    const mySession = crypto.randomUUID();
-    const response = await fetch(
-      'https://accounts.google.com/.well-known/openid-configuration'
-    );
-    const { authorization_endpoint } = await response.json<{
-      authorization_endpoint: string;
-    }>();
-    const url = new URL(authorization_endpoint);
-    url.search = [
-      ['client_id', env.GOOGLE_OAUTH_CLIENT],
-      ['response_type', 'code'],
-      ['scope', 'openid email'],
-      ['state', mySession],
-      ['nonce', crypto.randomUUID()],
-      ['redirect_uri', env.GOOGLE_OAUTH_REDIRECT_URI],
-    ]
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-      .join('&');
-
-    return new Response(JSON.stringify({ authorizeUrl: url }), {
-      headers: {
-        ...JsonHeader.headers,
-        'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly`,
-      },
-    });
-  } else {
-    // repond with authorized user email address from sesssion lookup
+  if (cookies[TASKER_COOKIE]) {
+    // respond with authorized user email address from session lookup
     const userQuery = env.DB.prepare(`
       SELECT * FROM  Identities, Providers, Users
       WHERE Users.id = userId
@@ -67,9 +36,44 @@ export const onRequest: PagesFunction<Env, never> = async ({
     `);
 
     const existingUser = await userQuery
-      .bind(cookies.timelyTaskerSession)
+      .bind(cookies[TASKER_COOKIE])
       .first<AppIdentity>();
 
-    return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);
+    if (existingUser) {
+      return new Response(JSON.stringify({ identity: existingUser }), JsonHeader);
+    }
+    // stale cookie — fall through to re-initiate OAuth, clearing the bad cookie below
   }
+
+  /*
+    generate a session cookie based on securely random string
+    nothing is stored in the db yet, this is an ephemeral session until auth completes
+    kept on the client to provide a means to XSRF bust the code exchange via 'state'
+  */
+  const mySession = crypto.randomUUID();
+  const redirectUri = `${new URL(request.url).origin}/callback`;
+  const response = await fetch(
+    'https://accounts.google.com/.well-known/openid-configuration'
+  );
+  const { authorization_endpoint } = await response.json<{
+    authorization_endpoint: string;
+  }>();
+  const url = new URL(authorization_endpoint);
+  url.search = [
+    ['client_id', env.GOOGLE_OAUTH_CLIENT],
+    ['response_type', 'code'],
+    ['scope', 'openid email'],
+    ['state', mySession],
+    ['nonce', crypto.randomUUID()],
+    ['redirect_uri', redirectUri],
+  ]
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+
+  return new Response(JSON.stringify({ authorizeUrl: url }), {
+    headers: {
+      ...JsonHeader.headers,
+      'Set-Cookie': `${TASKER_COOKIE}=${mySession}; HttpOnly; Secure; SameSite=Lax`,
+    },
+  });
 };
