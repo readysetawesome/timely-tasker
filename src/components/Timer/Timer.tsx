@@ -3,7 +3,7 @@ import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
-import TaskRowFocused from './TaskRowFocused';
+import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -249,6 +249,7 @@ const Timer = ({
                   Focused
                 </div>
                 {focusedRowElements}
+                <TotalFocusedRow />
               </div>
             </>
           )}

@@ -13,7 +13,7 @@ $focused-col-width: 80px;
   .content {
     position: relative;
     margin: 0 auto;
-    height: calc(#{$row-height} * 13 + 2px); // header + 12 rows
+    height: calc(#{$row-height} * 14 + 2px); // header + 12 rows + total
     overflow-x: hidden;
     border: 1px solid var(--color-surface-border);
     border-radius: 8px;
@@ -103,6 +103,20 @@ $focused-col-width: 80px;
     text-transform: uppercase;
     color: var(--color-text-muted);
     border-bottom: 1px solid var(--color-surface-border);
+  }
+
+  .focused_total {
+    height: $row-height;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-focused);
+    border-top: 1px solid var(--color-surface-border);
+    background: rgba(6, 200, 176, 0.06);
   }
 
   .focused_cell {

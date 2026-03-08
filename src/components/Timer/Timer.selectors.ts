@@ -24,6 +24,16 @@ export const getFocusedHoursForSlot = createSelector(
   }
 );
 
+export const getTotalFocusedHours = createSelector(
+  [getSummaries],
+  (summaries): number => {
+    return Object.values(summaries).reduce((total, summary) => {
+      if (!summary?.TimerTicks) return total;
+      return total + summary.TimerTicks.filter((t) => t.distracted === 0).length / 4;
+    }, 0);
+  }
+);
+
 export const getMatchingTicks = createSelector(
   [getSummaries, (state, tickNumber: number) => tickNumber],
   (summaries, tickNumber): TimerTick[] => {
