@@ -276,7 +276,7 @@ const Timer = ({
             </>
           )}
         </div>
-        {useLocal !== null && (
+        {useLocal === USELOCAL.NO && (
           <Link
             to={`/month?date=${date}`}
             className="tt-topbar-btn"
@@ -333,7 +333,7 @@ const Timer = ({
             </p>
           )}
           {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
-          {useLocal !== null && (
+          {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
           )}
         </div>

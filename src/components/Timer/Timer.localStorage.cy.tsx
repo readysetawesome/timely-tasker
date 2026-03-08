@@ -64,12 +64,12 @@ describe('<Timer /> using localStorage, with no existing data', () => {
       .should('contain', 'Using local storage');
   });
 
-  it('renders week total from localStorage (no data = 0 hrs)', () => {
-    cy.get("[data-test-id='week-total']").should('contain', 'Week: 0 hrs');
+  it('does not show week total in localStorage mode', () => {
+    cy.get("[data-test-id='week-total']").should('not.exist');
   });
 
-  it('renders month view link', () => {
-    cy.get("[data-test-id='month-view-link']").should('exist');
+  it('does not show month view link in localStorage mode', () => {
+    cy.get("[data-test-id='month-view-link']").should('not.exist');
   });
 
   it('creates new summary from scratch', () => {
@@ -101,39 +101,6 @@ describe('<Timer /> using localStorage, with no existing data', () => {
         ).TimerTicks?.find((t) => t.tickNumber === 33)?.distracted
       ).to.equal(0);
     });
-  });
-});
-
-describe('<Timer /> using localStorage, with prior-day data', () => {
-  const ONE_DAY = 86400000;
-  const PRIOR_DAY = TODAYS_DATE - ONE_DAY; // Wednesday March 22
-
-  beforeEach(() => {
-    cy.window().then((win) => {
-      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
-      // Store a summary with one focused tick on the day before TODAYS_DATE
-      const priorKey = `TimelyTasker:${PRIOR_DAY}`;
-      win.localStorage.setItem(priorKey, JSON.stringify([0]));
-      win.localStorage.setItem(
-        `${priorKey}-0`,
-        JSON.stringify({ content: 'prior task', date: PRIOR_DAY, slot: 0, TimerTicks: [{ tickNumber: 8, distracted: 0 }] })
-      );
-    });
-
-    mount(
-      <Provider store={storeMaker()}>
-        <MemoryRouter>
-          <Routes>
-            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
-          </Routes>
-        </MemoryRouter>
-      </Provider>
-    ).as('mountedComponent');
-  });
-
-  it('includes prior-day focused hours in week total', () => {
-    // Prior day has 1 focused tick (0.25 hrs); today has no Redux ticks → 0.25 hrs total
-    cy.get("[data-test-id='week-total']").should('contain', 'Week: 0.25 hrs');
   });
 });
 
