@@ -83,5 +83,21 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
     .then((response) => response.json())
     .then((data) => callback(data));
 
-const exports = { greet, logout, createTick, getSummaries, createSummary };
+const deleteTick = (tickChangeEvent: TickChangeEvent, callback) =>
+  fetch(
+    fetchPrefix +
+      `/ticks?summary=${tickChangeEvent.summary.id}&tick=${tickChangeEvent.tickNumber}`,
+    { ...fetchOptions, method: 'DELETE' }
+  )
+    .then((response) => response.json())
+    .then((data) => callback(data));
+
+const exports = {
+  greet,
+  logout,
+  createTick,
+  deleteTick,
+  getSummaries,
+  createSummary,
+};
 export default exports;
