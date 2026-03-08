@@ -172,6 +172,16 @@ const Timer = ({
   const [rowCount, setRowCount] = useState(12);
   const addRow = () => setRowCount((n) => Math.min(n + 1, MAX_ROWS));
 
+  useEffect(() => {
+    const slots = Object.keys(todaySummaries).map(Number);
+    if (slots.length === 0) {
+      setRowCount(12);
+    } else {
+      const maxSlot = Math.max(...slots);
+      setRowCount((prev) => Math.max(prev, maxSlot + 1));
+    }
+  }, [todaySummaries]);
+
   const [showPicker, setShowPicker] = useState(false);
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
