@@ -176,12 +176,12 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('navigates back to today from a previous date', () => {
+    // Mock clock at start so todaysDateInt() returns TODAYS_DATE on every re-render
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
     cy.get("[data-test-id='left-nav-clicker']").click();
     cy.get('h2').should('contain', '3-22-2023');
     cy.get("[data-test-id='summary-text-0']").should('have.value', '');
 
-    // Mock clock so todaysDateInt() returns TODAYS_DATE, not the real current date
-    cy.clock(TODAYS_DATE);
     cy.get("[data-test-id='today-nav-clicker']").click();
     cy.get('h2').should('contain', '3-23-2023');
     cy.get("[data-test-id='summary-text-0']").should(

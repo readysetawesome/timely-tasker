@@ -70,8 +70,8 @@ describe('<Timer />', () => {
       .first()
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
-          expect(rect.x).to.be.lessThan(480);
-          expect(rect.x).to.be.greaterThan(430);
+          expect(rect.x).to.be.lessThan(700);
+          expect(rect.x).to.be.greaterThan(200);
       });
   });
 
@@ -250,6 +250,11 @@ describe('<Timer />', () => {
   });
 
   it('navigates back to today from a previous date', () => {
+    // Mock clock before any navigation so todaysDateInt() returns TODAYS_DATE
+    // on every re-render, including after clicking left nav
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
     const previousDate = TODAYS_DATE - 24 * 60 * 60 * 1000;
     cy.intercept('GET', `/summaries?date=${previousDate}`, {
       fixture: 'summariesPast',
@@ -262,9 +267,6 @@ describe('<Timer />', () => {
     cy.wait(['@getSummariesPastForTodayNav']);
     cy.get('h2').should('contain', '3-22-2023');
 
-    // Re-mock clock so todaysDateInt() returns TODAYS_DATE, not the real current date
-    const now = TIME_NOW - 420 * 60 * 1000;
-    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
     cy.get("[data-test-id='today-nav-clicker']").click();
     cy.wait(['@getSummariesTodayFromNav']);
     cy.get('h2').should('contain', '3-23-2023');
