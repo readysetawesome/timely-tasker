@@ -171,30 +171,41 @@ $focused-col-width: 80px;
   }
 
   // ─── Tick states ──────────────────────────────────────────────────────────
+  // The element fills its full cell (18px × 2rem) so the entire area is
+  // tappable on touch screens. The visual pill lives in ::after, centered.
 
   .tictac_empty,
   .tictac_distracted,
   .tictac_focused {
     cursor: pointer;
-    touch-action: none; // let pointer events handle all touch interaction
-    width: $tictac-w;
-    height: $tictac-h;
-    margin: $tictac-gap;
-    border-radius: 3px;
-    transition: transform 80ms ease, opacity 80ms ease;
+    touch-action: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    &:hover { transform: scale(1.15); opacity: 0.9; }
-    &:active { transform: scale(0.95); }
+    &::after {
+      content: '';
+      display: block;
+      flex-shrink: 0;
+      width: $tictac-w;
+      height: $tictac-h;
+      border-radius: 3px;
+      transition: transform 80ms ease, opacity 80ms ease;
+    }
+
+    &:hover::after { transform: scale(1.15); opacity: 0.9; }
+    &:active::after { transform: scale(0.95); }
   }
 
-  .tictac_empty {
+  .tictac_empty::after {
     border: 1.5px solid rgba(255, 255, 255, 0.12);
     background: transparent;
-
-    &:hover { border-color: rgba(255, 255, 255, 0.28); }
   }
+  .tictac_empty:hover::after { border-color: rgba(255, 255, 255, 0.28); }
 
-  .tictac_distracted {
+  .tictac_distracted::after {
     border: 1.5px solid var(--color-distracted);
     background: repeating-linear-gradient(
       -45deg,
@@ -205,13 +216,13 @@ $focused-col-width: 80px;
     );
   }
 
-  .tictac_focused {
+  .tictac_focused::after {
     border: 1.5px solid var(--color-focused-dim);
     background: var(--color-focused);
     box-shadow: 0 0 6px var(--color-focused-glow);
   }
 
-  .tictac_clicked {
+  .tictac_clicked::after {
     animation: pulse-click 0.5s ease forwards;
   }
 }
