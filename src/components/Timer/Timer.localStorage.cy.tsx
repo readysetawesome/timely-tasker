@@ -88,6 +88,92 @@ describe('<Timer /> using localStorage, with no existing data', () => {
   });
 });
 
+describe('<DatePicker />', () => {
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+    });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="/timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+  });
+
+  it('opens when clicking the date label', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+  });
+
+  it('closes on Escape key', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+    cy.get('body').type('{esc}');
+    cy.get('.datepicker').should('not.exist');
+  });
+
+  it('closes on click outside', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker').should('be.visible');
+    cy.get('body').click(0, 500);
+    cy.get('.datepicker').should('not.exist');
+  });
+
+  it('highlights today with the today class', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--today').should('exist');
+  });
+
+  it('highlights the selected date', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--selected').should('exist');
+  });
+
+  it('navigates to a selected day and closes the picker', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-day--selected').then(($selected) => {
+      const prevDay = $selected.prev('.datepicker-day');
+      if (prevDay.length) {
+        prevDay.click();
+        cy.get('.datepicker').should('not.exist');
+      }
+    });
+  });
+
+  it('navigates to the previous month', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((before) => {
+      cy.get('.datepicker-nav').first().click();
+      cy.get('.datepicker-month-label').invoke('text').should('not.eq', before);
+    });
+  });
+
+  it('navigates to the next month', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((before) => {
+      cy.get('.datepicker-nav').last().click();
+      cy.get('.datepicker-month-label').invoke('text').should('not.eq', before);
+    });
+  });
+
+  it('wraps from January to December on prev', () => {
+    cy.get('.tt-date-label').click();
+    cy.get('.datepicker-month-label').invoke('text').then((text) => {
+      const monthNum = new Date(text).getMonth();
+      for (let i = 0; i <= monthNum; i++) {
+        cy.get('.datepicker-nav').first().click();
+      }
+      cy.get('.datepicker-month-label').should('contain', 'December');
+    });
+  });
+});
+
 describe('<Timer /> using localStorage', () => {
   beforeEach(() => {
     cy.window().then((win) => {

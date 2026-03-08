@@ -54,6 +54,15 @@ For any new branch where you need OAuth to work, register these two URIs in the 
 
 👉 [Google OAuth client config](https://console.cloud.google.com/auth/clients/520908376805-qng7l5f1sj9s0mq7brelq74lalmskdpk.apps.googleusercontent.com?project=timely-tasker)
 
+## Pull request checklist
+
+Before marking a PR ready / requesting review:
+
+1. `npm test` — all specs pass
+2. `CYPRESS_COVERAGE=true npm test` — check coverage report, fill any gaps introduced by the PR
+3. `npm run lint` — no new lint errors
+4. PR description updated to reflect final state of changes
+
 ## Toolchain
 
 - **Bundler**: Vite 6, output to `build/`
