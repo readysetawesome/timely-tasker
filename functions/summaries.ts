@@ -19,6 +19,19 @@ const FULL_JSON_OBJECT_SELECT = `
   ) as TimerTicks
 `;
 
+const SLIM_JSON_OBJECT_SELECT = `
+  Summaries.id, Summaries.content, Summaries.date, Summaries.slot, (
+    SELECT json_group_array(
+      json_object(
+        'tickNumber', tickNumber,
+        'distracted', distracted
+      )
+    )
+    FROM TimerTicks TT
+    WHERE TT.summaryId = Summaries.id
+  ) as TimerTicks
+`;
+
 const JsonHeader = {
   headers: {
     'content-type': 'application/json;charset=UTF-8',
@@ -126,7 +139,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
 
     const query = startDate && endDate
       ? env.DB.prepare(
-          `SELECT ${FULL_JSON_OBJECT_SELECT}
+          `SELECT ${SLIM_JSON_OBJECT_SELECT}
            FROM Summaries
            WHERE userId=? AND date >= ? AND date <= ?
            ORDER BY date, slot`
