@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import LocalStorageApi, { StorageApiType } from '../../LocalStorageApi';
 import RestApi from '../../RestApi';
 import { Summary } from '../../../functions/summaries';
 import styles from './MonthView.module.scss';
 
 const ONE_DAY = 86400000;
-const LOCAL_STORAGE_KEY = 'TimelyTasker:UseLocalStorage';
 
 // Same encoding as todaysDateInt: Date.UTC of local year/month/date.
 const localDateUTC = (year: number, month: number, day: number) =>
@@ -82,8 +80,12 @@ interface DayData {
   summaries: Summary[];
 }
 
+interface RangeApi {
+  getSummariesRange: (startDate: number, endDate: number) => Promise<Summary[]>;
+}
+
 interface MonthViewProps {
-  useApi?: StorageApiType;
+  useApi?: RangeApi;
 }
 
 const MonthView = ({ useApi: propApi }: MonthViewProps) => {
@@ -92,8 +94,7 @@ const MonthView = ({ useApi: propApi }: MonthViewProps) => {
   const monthStart = getMonthStart(paramDate);
   const monthEnd = getMonthEnd(paramDate);
 
-  const useLocal = localStorage.getItem(LOCAL_STORAGE_KEY);
-  const useApi = propApi ?? (useLocal === 'yes' ? LocalStorageApi : RestApi);
+  const useApi = propApi ?? RestApi;
 
   const [days, setDays] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(true);

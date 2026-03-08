@@ -82,20 +82,7 @@ const createTick = (
     resolve(callback(tick));
   });
 
-const getSummariesRange = async (
-  startDate: number,
-  endDate: number,
-  storage = localStorage
-): Promise<Summary[]> => {
-  const results: Summary[] = [];
-  for (let d = startDate; d <= endDate; d += 86400000) {
-    const day = await getSummaries(d, storage);
-    results.push(...day);
-  }
-  return results;
-};
-
-const exports = { createTick, getSummaries, getSummariesRange, createSummary };
+const exports = { createTick, getSummaries, createSummary };
 
 export type StorageApiType = typeof exports;
 

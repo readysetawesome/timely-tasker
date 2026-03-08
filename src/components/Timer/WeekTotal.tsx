@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { StorageApiType } from '../../LocalStorageApi';
+import { Summary } from '../../../functions/summaries';
 import { getTotalFocusedHours } from './Timer.selectors';
 
 const ONE_DAY = 86400000;
@@ -15,8 +15,12 @@ export const getWeekStart = (fromDate: number): number => {
   return fromDate - daysSinceSat * ONE_DAY;
 };
 
+interface RangeApi {
+  getSummariesRange: (startDate: number, endDate: number) => Promise<Summary[]>;
+}
+
 interface WeekTotalProps {
-  useApi: StorageApiType;
+  useApi: RangeApi;
   date: number;
 }
 
