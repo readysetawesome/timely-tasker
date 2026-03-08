@@ -9,8 +9,8 @@ Core behavior lives in the timer grid UI and its summary/tick state transitions.
 
 ## 2. Fast Orientation
 
-- Read [README.md](/workspaces/timely-tasker/README.md) for product context.
-- Read [ARCHITECTURE.md](/workspaces/timely-tasker/ARCHITECTURE.md) for system flow.
+- Read [README.md](./README.md) for product context.
+- Read [ARCHITECTURE.md](./ARCHITECTURE.md) for system flow.
 - Primary runtime code:
   - frontend: `src/`
   - edge API: `functions/`
@@ -71,8 +71,8 @@ Key commands:
 
 Primary regression suite is Cypress component tests:
 
-- [Timer.cy.tsx](/workspaces/timely-tasker/src/components/Timer/Timer.cy.tsx)
-- [Timer.localStorage.cy.tsx](/workspaces/timely-tasker/src/components/Timer/Timer.localStorage.cy.tsx)
+- [Timer.cy.tsx](./src/components/Timer/Timer.cy.tsx)
+- [Timer.localStorage.cy.tsx](./src/components/Timer/Timer.localStorage.cy.tsx)
 
 When changing timer behavior, update fixtures in `cypress/fixtures/` as needed.
 
@@ -92,4 +92,6 @@ Treat production migration commands as high-risk operations.
 
 - `wrangler` config files are ignored by `.gitignore` (`*.toml`), so local setup may rely on developer-provided config.
 - OAuth callback flow depends on correctly configured Google credentials in runtime env vars.
+- Session cookies use `SameSite=Lax` (not Strict) so the OAuth redirect from Google carries the state cookie back to `/callback`. Using Strict breaks the CSRF check.
+- The `redirect_uri` for OAuth is derived dynamically from `new URL(request.url).origin + '/callback'` so preview deployments (e.g. `fix-foo.timely-tasker.pages.dev`) work without hardcoding the URI. Each preview URL must be registered in the Google Cloud Console.
 - Timer behavior includes optimistic updates; failed network writes can temporarily diverge from persisted state.

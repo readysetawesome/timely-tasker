@@ -20,7 +20,7 @@ selected at runtime in `src/components/Timer/Timer.tsx`.
 - `seeds/`: seed SQL for local development.
 - `bin/`: helper scripts for D1 operations.
 - `cypress/`: component test support + fixtures.
-- `public/`: static app assets and schema report.
+- `public/`: static app assets (favicon, manifest, etc.).
 
 ## 3. Runtime Components
 
@@ -56,6 +56,7 @@ Actions in `Timer.actions.ts`:
 Selectors in `Timer.selectors.ts`:
 
 - row lookup (`getSummary`)
+- focused hours per row (`getFocusedHoursForSlot`): counts ticks with `distracted === 0` / 4
 - tick-column lookup across all rows (`getMatchingTicks`) for cross-row tick rules.
 
 ## 3.3 Storage Adapters
@@ -115,8 +116,11 @@ Shared helpers in `lib/Identity.ts`:
 
 - Development: returns fixture identity immediately (`fixtures/devUser.json`).
 - Production:
-  - no session cookie: builds Google authorize URL, sets nonce/state cookie
+  - no session cookie: builds Google authorize URL, sets nonce/state cookie, returns `{ authorizeUrl }`
+  - stale/invalid session cookie: falls through to same OAuth initiation flow (does not return `{ identity: null }`)
   - valid session cookie: returns current identity from DB join query
+- `redirect_uri` is derived dynamically: `new URL(request.url).origin + '/callback'`
+- Session cookie is `SameSite=Lax` so it survives the cross-site redirect from Google back to `/callback`
 
 ## 5.4 Auth Callback: `/callback`
 
@@ -124,10 +128,10 @@ Shared helpers in `lib/Identity.ts`:
 
 1. Validate `code` + `state`.
 2. Validate anti-CSRF state against cookie.
-3. Exchange code at Google token endpoint.
+3. Exchange code at Google token endpoint (using dynamically derived `redirect_uri`).
 4. Decode `id_token` for `sub` and `email`.
 5. Find or create `Users` + `Identities`.
-6. Insert new `UserSessions` record and set httpOnly cookie.
+6. Insert new `UserSessions` record and set `httpOnly`, `SameSite=Lax` cookie.
 7. Redirect browser to `/`.
 
 ## 5.5 Summaries API: `/summaries`
@@ -147,7 +151,8 @@ Shared helpers in `lib/Identity.ts`:
 - Behavior:
   - existing row + invalid distracted value: delete tick
   - existing row + valid value: update distracted flag
-  - missing row: insert new tick
+  - missing row: verify summary belongs to current user, then insert new tick
+- Authorization: tick lookup joins `Summaries` on `userId` to prevent IDOR
 
 ## 6. Data Layer (D1 / SQLite)
 
@@ -178,17 +183,19 @@ Provider seed behavior:
   - cloud mode behavior with intercepted API fixtures (`Timer.cy.tsx`)
   - localStorage behavior (`Timer.localStorage.cy.tsx`)
 - Coverage:
-  - NYC + `@cypress/code-coverage`
+  - `babel-plugin-istanbul` (via `@vitejs/plugin-react` babel options, enabled by `CYPRESS_COVERAGE=true` env var) + `@cypress/code-coverage` for report generation
+  - Output: `coverage/lcov.info`
 - CI:
   - GitHub Actions workflow at `.github/workflows/ci.yml`
-  - installs deps, runs `npm run ci-cypress`, uploads coverage to Codecov
+  - installs deps, runs `npm run ci-cypress` with `CYPRESS_COVERAGE=true`, uploads `coverage/lcov.info` to Codecov
 
 ## 8. Build and Toolchain
 
-- Frontend: Create React App (`react-scripts`).
+- Frontend: Vite (`vite build`), output to `build/`.
 - Language: TypeScript + JSX.
 - Styling: SCSS modules for timer grid.
 - Linting: ESLint (`npm run lint`).
+- Node version: 20 (set in `.node-version`, used by Cloudflare Pages and local tooling).
 
 ## 9. Operational Notes
 
