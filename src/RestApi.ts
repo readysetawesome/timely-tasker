@@ -67,6 +67,9 @@ const greet = (callback) =>
     .then((response) => response.json<IdentityResponse>())
     .then(callback);
 
+const logout = () =>
+  fetch(fetchPrefix + '/logout', { ...fetchOptions, method: 'POST' });
+
 const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
   fetch(
     fetchPrefix +
@@ -76,5 +79,5 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
     .then((response) => response.json())
     .then((data) => callback(data));
 
-const exports = { greet, createTick, getSummaries, createSummary };
+const exports = { greet, logout, createTick, getSummaries, createSummary };
 export default exports;
