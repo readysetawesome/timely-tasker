@@ -73,9 +73,7 @@ const createTick = (
     summary.TimerTicks = summary.TimerTicks.filter(
       (t) => t.tickNumber !== tickChangeEvent.tickNumber
     );
-
-    if (tick.distracted !== -1 && tick.distracted !== undefined)
-      summary.TimerTicks.push(tick);
+    summary.TimerTicks.push(tick);
 
     storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
 
