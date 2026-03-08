@@ -53,8 +53,6 @@ const Timer = ({
   todayNavClicker,
 }: TimerProps) => {
   const [greeting, setGreeting] = useState('');
-  const [loggedOut, setLoggedOut] = useState(false);
-  const [loginUrl, setLoginUrl] = useState('');
   const summariesRestSelectors = getRestSelectorsFor(
     'timer',
     'summariesLoading'
@@ -78,17 +76,16 @@ const Timer = ({
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
   const handleLogout = () => {
-    RestApi.logout().then(() => {
-      RestApi.greet((res: IdentityResponse) => {
-        if (res.authorizeUrl) setLoginUrl(res.authorizeUrl.toString());
-      });
-      setGreeting('');
-      setLoggedOut(true);
+    RestApi.logout().then((res) => {
+      if (res.ok) {
+        localStorage.removeItem(LOCAL_STORAGE);
+        setUseLocal(null);
+        setGreeting('');
+      }
     });
   };
 
   useEffect(() => {
-    if (loggedOut) return;
     if (useLocal === USELOCAL.NO) {
       RestApi.greet((res: IdentityResponse) => {
         if (res.identity) {
@@ -104,7 +101,7 @@ const Timer = ({
       setGreeting('Hello! Currently using Local Storage');
       fetchSummaries(date)(dispatch, useApi);
     }
-  }, [date, dispatch, useApi, useLocal, loggedOut]);
+  }, [date, dispatch, useApi, useLocal]);
 
   useEffect(() => {
     // Fetch summaries after checking requirements, starting with storage selection
@@ -188,25 +185,16 @@ const Timer = ({
           {rightNavClicker}
           {todayNavClicker}
         </h2>
-        {loggedOut ? (
-          <p>
-            You've been logged out.{' '}
-            {loginUrl && <a href={loginUrl}>Log in again</a>}
-          </p>
-        ) : (
-          <>
-            <p data-test-id="greeting">{greeting || ''}</p>
-            <p>
-              {useLocal === USELOCAL.YES ? UseCloudStorage : ''}
-              {useLocal === USELOCAL.NO ? UseLocalStorage : ''}
-              {useLocal === USELOCAL.NO && greeting && (
-                <button onClick={handleLogout} data-test-id="logout-button">
-                  Log out
-                </button>
-              )}
-            </p>
-          </>
-        )}
+        <p data-test-id="greeting">{greeting || ''}</p>
+        <p>
+          {useLocal === USELOCAL.YES ? UseCloudStorage : ''}
+          {useLocal === USELOCAL.NO ? UseLocalStorage : ''}
+          {useLocal === USELOCAL.NO && greeting && (
+            <button onClick={handleLogout} data-test-id="logout-button">
+              Log out
+            </button>
+          )}
+        </p>
       </div>
       <div className={styles.Timer}>
         <div className={styles.content} data-test-id="timer-content">

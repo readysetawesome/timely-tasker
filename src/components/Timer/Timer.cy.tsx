@@ -53,17 +53,17 @@ describe('<Timer />', () => {
       .should('contain', 'Logged in with google');
   });
 
-  it('logout clears session and shows login link without auto-redirecting', () => {
+  it('logout clears session and shows storage selection without auto-redirecting', () => {
     cy.intercept('POST', '/logout', { statusCode: 200, body: { success: true } }).as('logout');
-    cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('greetAfterLogout');
 
     cy.get("[data-test-id='logout-button']").click();
 
-    cy.wait(['@logout', '@greetAfterLogout']);
+    cy.wait(['@logout']);
 
-    cy.get("[data-test-id='greeting']").should('not.exist');
-    cy.contains('You\'ve been logged out.');
-    cy.contains('a', 'Log in again').should('have.attr', 'href', '/authorize');
+    cy.get("[data-test-id='greeting']").should('have.text', '');
+    cy.get("[data-test-id='logout-button']").should('not.exist');
+    cy.get("[data-test-id='use-cloud-storage']");
+    cy.get("[data-test-id='use-local-storage']");
   });
 
   it('renders loaded summary text in the <input>', () => {
