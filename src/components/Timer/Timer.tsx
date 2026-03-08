@@ -161,7 +161,7 @@ const Timer = ({
       onClick={() => setUseLocal(USELOCAL.NO)}
       data-test-id="use-cloud-storage"
     >
-      <strong>Use Timely-Tasker.com cloud database (reqiures login)</strong>
+      <strong>Use Timely-Tasker.com cloud database</strong>
     </button>
   );
 
@@ -189,7 +189,7 @@ const Timer = ({
         <p>
           {useLocal === USELOCAL.YES ? UseCloudStorage : ''}
           {useLocal === USELOCAL.NO ? UseLocalStorage : ''}
-          {useLocal === USELOCAL.NO && greeting && (
+          {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
             <button onClick={handleLogout} data-test-id="logout-button">
               Log out
             </button>
