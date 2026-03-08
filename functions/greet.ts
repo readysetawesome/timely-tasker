@@ -51,6 +51,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     kept on the client to provide a means to XSRF bust the code exchange via 'state'
   */
   const mySession = crypto.randomUUID();
+  const redirectUri = `${new URL(request.url).origin}/callback`;
   const response = await fetch(
     'https://accounts.google.com/.well-known/openid-configuration'
   );
@@ -64,7 +65,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
     ['scope', 'openid email'],
     ['state', mySession],
     ['nonce', crypto.randomUUID()],
-    ['redirect_uri', env.GOOGLE_OAUTH_REDIRECT_URI],
+    ['redirect_uri', redirectUri],
   ]
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');

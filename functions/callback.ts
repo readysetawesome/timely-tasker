@@ -43,7 +43,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
       code: searchParams.get('code'),
       client_id: env.GOOGLE_OAUTH_CLIENT,
       client_secret: env.GOOGLE_OAUTH_SECRET,
-      redirect_uri: env.GOOGLE_OAUTH_REDIRECT_URI,
+      redirect_uri: `${new URL(request.url).origin}/callback`,
       grant_type: 'authorization_code',
     }),
   });
