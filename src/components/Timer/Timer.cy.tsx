@@ -345,14 +345,18 @@ describe('<Timer />', () => {
     });
   });
 
-  it('arrow up on first row and arrow down on last row do nothing', () => {
+  it('arrow up on first row does nothing', () => {
     cy.get("[data-test-id='summary-text-0']").focus();
     cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowUp' });
     cy.focused().should('have.attr', 'data-test-id', 'summary-text-0');
+  });
 
+  it('arrow down on last row adds a new row and moves focus to it', () => {
+    cy.get("[data-test-id='summary-text-12']").should('not.exist');
     cy.get("[data-test-id='summary-text-11']").focus();
     cy.get("[data-test-id='summary-text-11']").trigger('keydown', { key: 'ArrowDown' });
-    cy.focused().should('have.attr', 'data-test-id', 'summary-text-11');
+    cy.get("[data-test-id='summary-text-12']").should('exist');
+    cy.focused().should('have.attr', 'data-test-id', 'summary-text-12');
   });
 
   it('navigates back to today from a previous date', () => {

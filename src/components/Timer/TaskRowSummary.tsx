@@ -11,9 +11,11 @@ export interface TaskRowSummaryProps {
   slot: number;
   date: number;
   useApi: StorageApiType;
+  isLastRow?: boolean;
+  onAddRow?: () => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
@@ -35,6 +37,14 @@ const TaskRowSummary = ({ slot, date, useApi }: TaskRowSummaryProps) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
+    if (e.key === 'ArrowDown' && isLastRow) {
+      onAddRow?.();
+      setTimeout(() => {
+        const el = document.querySelector<HTMLInputElement>(`[data-test-id="summary-text-${slot + 1}"]`);
+        if (el) { el.focus(); el.select(); }
+      }, 0);
+      return;
+    }
     const nextSlot = e.key === 'ArrowDown' ? slot + 1 : slot - 1;
     const el = document.querySelector<HTMLInputElement>(`[data-test-id="summary-text-${nextSlot}"]`);
     if (el) { el.focus(); el.select(); }

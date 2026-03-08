@@ -168,6 +168,10 @@ const Timer = ({
     setCopyingYesterday(false);
   };
 
+  const MAX_ROWS = 28;
+  const [rowCount, setRowCount] = useState(12);
+  const addRow = () => setRowCount((n) => Math.min(n + 1, MAX_ROWS));
+
   const [showPicker, setShowPicker] = useState(false);
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
@@ -187,10 +191,10 @@ const Timer = ({
   const tickRowElements = new Array<JSX.Element>();
   const focusedRowElements = new Array<JSX.Element>();
 
-  for (let slot = 0; slot < 12; slot++) {
+  for (let slot = 0; slot < rowCount; slot++) {
     if (summariesSuccess && useLocal !== null) {
       summaryElements.push(
-        <TaskRowSummary {...{ date, slot, key: slot, useApi }} />
+        <TaskRowSummary {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }} />
       );
       tickRowElements.push(
         <TaskRowTicks {...{ date, slot, key: slot, useApi }} />
