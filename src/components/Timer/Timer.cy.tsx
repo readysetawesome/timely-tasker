@@ -9,14 +9,21 @@ import { Provider } from 'react-redux';
 import storeMaker from '../../store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
-const TODAYS_DATE = 1679529600000; // at the zero h:m:s
+const TODAYS_DATE = 1679529600000; // at the zero h:m:s  (Thu March 23, 2023)
 const TIME_NOW = 1679587374481; // at 9 am
+const ONE_DAY = 86400000;
+// TODAYS_DATE is Thursday; week start (last Saturday) = 5 days prior
+const WEEK_START = TODAYS_DATE - 5 * ONE_DAY;
 
 beforeEach(() => {
   cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
   cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
     fixture: 'summaries',
   }).as('getSummaries');
+  // Intercept the rest of the week so WeekTotal resolves (Sat–Wed return empty)
+  for (let d = WEEK_START; d < TODAYS_DATE; d += ONE_DAY) {
+    cy.intercept('GET', `/summaries?date=${d}`, { body: [] });
+  }
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
@@ -76,6 +83,16 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='focused-header']").should('contain', 'Focused');
     cy.get("[data-test-id='focused-hours-0']").should('contain', '0.25 hrs');
     cy.get("[data-test-id='focused-hours-1']").should('contain', '0 hrs');
+  });
+
+  it('renders week total from api (1 focused tick today = 0.25 hrs)', () => {
+    // TODAYS_DATE has 1 focused tick (summaries fixture); the rest of the week
+    // is empty → week total = 0.25 hrs
+    cy.get("[data-test-id='week-total']").should('contain', 'Week: 0.25 hrs');
+  });
+
+  it('renders month view link', () => {
+    cy.get("[data-test-id='month-view-link']").should('exist');
   });
 
   it('renders total focused hours across all rows', () => {

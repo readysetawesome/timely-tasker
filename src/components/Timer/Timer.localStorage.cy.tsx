@@ -64,6 +64,14 @@ describe('<Timer /> using localStorage, with no existing data', () => {
       .should('contain', 'Using local storage');
   });
 
+  it('renders week total from localStorage (no data = 0 hrs)', () => {
+    cy.get("[data-test-id='week-total']").should('contain', 'Week: 0 hrs');
+  });
+
+  it('renders month view link', () => {
+    cy.get("[data-test-id='month-view-link']").should('exist');
+  });
+
   it('creates new summary from scratch', () => {
     cy.get('[data-test-id=summary-text-0]').type('Hi');
     cy.wait(900); // we have to wait for debounce to fire before checking data
