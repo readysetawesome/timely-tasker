@@ -197,46 +197,51 @@ const Timer = ({
     <div className="tt-page">
       {/* ── App header ── */}
       <div className="tt-header">
-        <h1 className="tt-title">Timely Tasker</h1>
+        <div className="tt-header-start">
+          <h1 className="tt-title">Timely Tasker</h1>
+        </div>
 
-        <h2 className="tt-date-nav">
-          {leftNavClicker}
-          <a href={`?date=${date}`} className="tt-date-label">
-            {dateDisplay(date)}
-          </a>
-          {rightNavClicker}
-          {todayNavClicker}
-        </h2>
-
-        {greeting && (
-          <p className="tt-greeting" data-test-id="greeting">
-            {greeting}
-          </p>
-        )}
-        {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
-
-        <div className="tt-actions">
-          {useLocal === USELOCAL.YES && UseCloudStorage}
-          {useLocal === USELOCAL.NO && UseLocalStorage}
-          {useLocal !== null && (
-            <button
-              onClick={handleCopyYesterday}
-              disabled={copyingYesterday}
-              data-test-id="copy-yesterday-button"
-              className="tt-btn tt-btn-ghost"
-            >
-              {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
-            </button>
+        <div className="tt-header-center">
+          <h2 className="tt-date-nav">
+            {leftNavClicker}
+            <a href={`?date=${date}`} className="tt-date-label">
+              {dateDisplay(date)}
+            </a>
+            {rightNavClicker}
+            {todayNavClicker}
+          </h2>
+          {greeting && (
+            <p className="tt-greeting" data-test-id="greeting">
+              {greeting}
+            </p>
           )}
-          {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
-            <button
-              onClick={handleLogout}
-              data-test-id="logout-button"
-              className="tt-btn tt-btn-danger"
-            >
-              Log out
-            </button>
-          )}
+          {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
+        </div>
+
+        <div className="tt-header-end">
+          <div className="tt-actions">
+            {useLocal === USELOCAL.YES && UseCloudStorage}
+            {useLocal === USELOCAL.NO && UseLocalStorage}
+            {useLocal !== null && (
+              <button
+                onClick={handleCopyYesterday}
+                disabled={copyingYesterday}
+                data-test-id="copy-yesterday-button"
+                className="tt-btn tt-btn-ghost"
+              >
+                {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+              </button>
+            )}
+            {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
+              <button
+                onClick={handleLogout}
+                data-test-id="logout-button"
+                className="tt-btn tt-btn-danger"
+              >
+                Log out
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
