@@ -1,2 +1,4 @@
-# !zsh
-wrangler --config=wrangler.prod.toml  d1 migrations apply timely-tasker-prod
+#!/usr/bin/env bash
+set -euo pipefail
+
+wrangler --config=wrangler.prod.toml d1 migrations apply timely-tasker-prod

@@ -8,6 +8,8 @@ button {
 }
 
 .Timer {
+  $focused-column-width: 9%;
+
   .error {
     color: darkred;
   }
@@ -18,7 +20,7 @@ button {
     }
     @media all and (min-width: 800px) {
       /* CSS rules here for screens above 750px */
-      width: 50em;
+      width: 80%;
     }
 
     height: 30em;
@@ -42,10 +44,19 @@ button {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
-      flex: 1 0 69%;
       margin-left: 30%;
+      margin-right: calc(#{$focused-column-width} + 2%);
       overflow-x: auto;
       background-color: #eee;
+    }
+
+    .focused_column {
+      border-radius: 3px;
+      position: absolute;
+      top: 0;
+      right: 1%;
+      width: $focused-column-width;
+      background-color: #ddd;
     }
   }
 
@@ -64,6 +75,15 @@ button {
     height: $row-item-height;
     display: grid;
     grid-template-columns: 100%;
+  }
+
+  .focused_header,
+  .focused_cell {
+    height: $row-item-height;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    white-space: nowrap;
   }
 
   .tictac_header_row {

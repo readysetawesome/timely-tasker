@@ -59,6 +59,12 @@ describe('<Timer />', () => {
       .should('have.value', 'replace jest with cypress');
   });
 
+  it('renders focused hours per row', () => {
+    cy.get("[data-test-id='focused-header']").should('contain', 'Focused');
+    cy.get("[data-test-id='focused-hours-0']").should('contain', '0.25 hrs');
+    cy.get("[data-test-id='focused-hours-1']").should('contain', '0 hrs');
+  });
+
   it('renders ticks content', () => {
     cy.get("[data-test-id='0-36']")
       .first()
@@ -241,5 +247,23 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="right-nav-clicker"]').click();
     cy.wait(['@getSummariesFail']);
     cy.get('[data-test-id="timer-content"] [data-test-id="timer-error"]');
+  });
+
+  it('navigates back to today from a previous date', () => {
+    const previousDate = TODAYS_DATE - 24 * 60 * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${previousDate}`, {
+      fixture: 'summariesPast',
+    }).as('getSummariesPastForTodayNav');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, {
+      fixture: 'summaries',
+    }).as('getSummariesTodayFromNav');
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait(['@getSummariesPastForTodayNav']);
+    cy.get('h2').should('contain', '3-22-2023');
+
+    cy.get("[data-test-id='today-nav-clicker']").click();
+    cy.wait(['@getSummariesTodayFromNav']);
+    cy.get('h2').should('contain', '3-23-2023');
   });
 });

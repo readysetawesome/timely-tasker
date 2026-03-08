@@ -1,0 +1,29 @@
+{
+  "dockerFile": "Dockerfile",
+  "overrideCommand": false,
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "postCreateCommand": "npm ci",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "forwardPorts": [5678],
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "streetsidesoftware.code-spell-checker",
+        "sbdchd.squawk",
+        "ms-ossdata.vscode-pgsql",
+        "openai.chatgpt"
+      ]
+    }
+  },
+  "mounts": [
+    "source=codex-home,target=/root/.codex,type=volume",
+    "source=vscode-extensions,target=/root/.vscode-server/extensions,type=volume",
+    "source=vscode-extensions-cache,target=/root/.vscode-server/extensionsCache,type=volume",
+    "source=vscode-global-storage,target=/root/.vscode-server/data/User/globalStorage,type=volume",
+    "source=vscode-machine,target=/root/.vscode-server/data/Machine,type=volume"
+  ]
+}
