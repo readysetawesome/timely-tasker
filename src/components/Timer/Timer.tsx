@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
@@ -75,6 +75,28 @@ const Timer = ({
       localStorage.setItem(LOCAL_STORAGE, useLocal);
     }
   }, [useLocal]);
+
+  // Connecting interstitial: show while greet is pending, minimum 600ms so it
+  // doesn't flash invisibly for pre-authorized users.
+  const connectingStartRef = useRef<number>(0);
+  const [connectingVisible, setConnectingVisible] = useState(
+    localStorage.getItem(LOCAL_STORAGE) === USELOCAL.NO
+  );
+  useEffect(() => {
+    if (useLocal === USELOCAL.NO) {
+      connectingStartRef.current = Date.now();
+      setConnectingVisible(true);
+    } else {
+      setConnectingVisible(false);
+    }
+  }, [useLocal]);
+  useEffect(() => {
+    if (!greeting) return;
+    const elapsed = Date.now() - connectingStartRef.current;
+    const remaining = Math.max(0, 600 - elapsed);
+    const timer = setTimeout(() => setConnectingVisible(false), remaining);
+    return () => clearTimeout(timer);
+  }, [greeting]);
 
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
@@ -263,7 +285,7 @@ const Timer = ({
       )}
 
       {/* ── Connecting interstitial (pre-authorized Google users) ── */}
-      {useLocal === USELOCAL.NO && !greeting && (
+      {connectingVisible && (
         <div className="tt-connecting">
           <div className="tt-connecting-card">
             <span className="tt-connecting-spinner" />
