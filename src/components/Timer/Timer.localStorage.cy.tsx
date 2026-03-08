@@ -109,6 +109,7 @@ describe('<Timer /> using localStorage', () => {
         <MemoryRouter>
           <Routes>
             <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="/timer" element={<App useDate={TODAYS_DATE} />} />
           </Routes>
         </MemoryRouter>
       </Provider>
@@ -174,6 +175,21 @@ describe('<Timer /> using localStorage', () => {
     cy.get("[data-test-id='focused-hours-0']").should('contain', '0 hrs');
   });
 
+  it('navigates back to today from a previous date', () => {
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.get('h2').should('contain', '3-22-2023');
+    cy.get("[data-test-id='summary-text-0']").should('have.value', '');
+
+    // Mock clock so todaysDateInt() returns TODAYS_DATE, not the real current date
+    cy.clock(TODAYS_DATE);
+    cy.get("[data-test-id='today-nav-clicker']").click();
+    cy.get('h2').should('contain', '3-23-2023');
+    cy.get("[data-test-id='summary-text-0']").should(
+      'have.value',
+      'replace jest with cypress'
+    );
+  });
+
   it('switches cloud storage when clicked', () => {
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
     cy.on('url:changed', (newUrl) => {
@@ -181,18 +197,5 @@ describe('<Timer /> using localStorage', () => {
     });
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getAuthInfo');
-  });
-
-  it('navigates back to today from a previous date', () => {
-    cy.get("[data-test-id='left-nav-clicker']").click();
-    cy.get('h2').should('contain', '3-22-2023');
-    cy.get("[data-test-id='summary-text-0']").should('have.value', '');
-
-    cy.get("[data-test-id='today-nav-clicker']").click();
-    cy.get('h2').should('contain', '3-23-2023');
-    cy.get("[data-test-id='summary-text-0']").should(
-      'have.value',
-      'replace jest with cypress'
-    );
   });
 });
