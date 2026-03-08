@@ -73,16 +73,35 @@ const createTick = (
     summary.TimerTicks = summary.TimerTicks.filter(
       (t) => t.tickNumber !== tickChangeEvent.tickNumber
     );
-
-    if (tick.distracted !== -1 && tick.distracted !== undefined)
-      summary.TimerTicks.push(tick);
+    summary.TimerTicks.push(tick);
 
     storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
 
     resolve(callback(tick));
   });
 
-const exports = { createTick, getSummaries, createSummary };
+const deleteTick = (
+  tickChangeEvent: TickChangeEvent,
+  callback,
+  storage = localStorage
+) =>
+  new Promise<void>((resolve) => {
+    const summariesKey =
+      localStoragePrefix + tickChangeEvent.summary.date.toString();
+    const summaryKey = `${summariesKey}-${tickChangeEvent.slot}`;
+    const summary = JSON.parse(storage.getItem(summaryKey) ?? 'null');
+    /* istanbul ignore next */
+    if (summary === null) return resolve(callback(undefined));
+
+    summary.TimerTicks = summary.TimerTicks.filter(
+      (t) => t.tickNumber !== tickChangeEvent.tickNumber
+    );
+
+    storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
+    resolve(callback(synthesizeTick(tickChangeEvent)));
+  });
+
+const exports = { createTick, deleteTick, getSummaries, createSummary };
 
 export type StorageApiType = typeof exports;
 

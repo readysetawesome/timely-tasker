@@ -13,6 +13,7 @@ import { Summary } from '../../../functions/summaries';
 import { TimerTick } from './TaskRowTicks';
 import { Dispatch } from '@reduxjs/toolkit';
 import { StorageApiType } from '../../LocalStorageApi';
+import { TickState } from './Tick';
 
 export const fetchSummaries =
   (useDate: number) => async (dispatch: Dispatch, useApi: StorageApiType) => {
@@ -65,18 +66,20 @@ export const tickClicked =
       );
 
       // dubious of second dispatch, but it's going to add the record ID, so leave it for now
-      await useApi
-        .createTick(tickChangeEvent, (tick: TimerTick) =>
-          dispatch(tickUpdated({ tick, tickChangeEvent }))
-        )
-        .catch(() => {
-          tickChangeEvent.distracted = tickChangeEvent.previously;
-          dispatch(
-            tickUpdated({
-              tick: synthesizeTick(tickChangeEvent),
-              tickChangeEvent,
-            })
-          );
-        });
+      const apiCall =
+        tickChangeEvent.distracted === TickState.Deleted
+          ? useApi.deleteTick
+          : useApi.createTick;
+      await apiCall(tickChangeEvent, (tick: TimerTick) =>
+        dispatch(tickUpdated({ tick, tickChangeEvent }))
+      ).catch(() => {
+        tickChangeEvent.distracted = tickChangeEvent.previously;
+        dispatch(
+          tickUpdated({
+            tick: synthesizeTick(tickChangeEvent),
+            tickChangeEvent,
+          })
+        );
+      });
     }
   };

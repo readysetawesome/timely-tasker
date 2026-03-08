@@ -32,8 +32,40 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
     return errorResponse('Parameter error, positive integers required "tick".');
   }
 
-  if (request.method === 'POST') {
+  if (request.method === 'DELETE') {
+    // BEGIN DELETE REQUEST
+    const { results, success, error } = await env.DB.prepare(
+      `
+      SELECT TimerTicks.* FROM TimerTicks
+      INNER JOIN Summaries ON Summaries.id = TimerTicks.summaryId
+      WHERE TimerTicks.summaryId = ? AND TimerTicks.tickNumber = ?
+        AND Summaries.userId = ?
+    `
+    )
+      .bind(summary, tick, identity.userId)
+      .all<TimerTick>();
+
+    if (!success) return errorResponse(`Error getting tick row. ${error}`);
+    const timerTick: TimerTick | undefined = results?.[0];
+    if (timerTick) {
+      const { success, error } = await env.DB.prepare(
+        `DELETE FROM TimerTicks WHERE id = ?`
+      )
+        .bind(timerTick.id)
+        .run();
+      if (!success) return errorResponse(`Error deleting tick. ${error}`);
+    }
+
+    return new Response(JSON.stringify(timerTick ?? null, null, 2), JsonHeader);
+    // END DELETE REQUEST
+  } else if (request.method === 'POST') {
     // BEGIN CREATE/UPDATE REQUEST
+    if (distracted !== 0 && distracted !== 1) {
+      return errorResponse(
+        'Parameter error, distracted must be 0 or 1 for POST.'
+      );
+    }
+
     const { results, success, error } = await env.DB.prepare(
       `
       SELECT TimerTicks.* FROM TimerTicks
@@ -48,30 +80,18 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
     if (!success) return errorResponse(`Error getting tick row. ${error}`);
     let timerTick: TimerTick | undefined = results?.[0];
     if (timerTick) {
-      if (distracted !== 0 && distracted !== 1) {
-        // there should be no tick, delete it
-        const { success, error } = await env.DB.prepare(
-          `
-          DELETE FROM TimerTicks WHERE id = ?
+      const { success, results } = await env.DB.prepare(
         `
-        )
-          .bind(timerTick.id)
-          .run();
-        if (!success) return errorResponse(`Error deleting tick. ${error}`);
-      } else {
-        const { success, results } = await env.DB.prepare(
-          `
-          UPDATE TimerTicks
-          SET distracted = ?
-          WHERE id = ? RETURNING *
-        `
-        )
-          .bind(distracted, timerTick.id)
-          .all<TimerTick>();
+        UPDATE TimerTicks
+        SET distracted = ?
+        WHERE id = ? RETURNING *
+      `
+      )
+        .bind(distracted, timerTick.id)
+        .all<TimerTick>();
 
-        if (!success) return errorResponse(`Error updating tick. ${error}`);
-        timerTick = results?.[0];
-      }
+      if (!success) return errorResponse(`Error updating tick. ${error}`);
+      timerTick = results?.[0];
     } else {
       // Verify the summary belongs to this user before inserting
       const summaryCheck = await env.DB.prepare(
@@ -79,7 +99,8 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
       )
         .bind(summary, identity.userId)
         .first();
-      if (!summaryCheck) return errorResponse('Summary not found or access denied.');
+      if (!summaryCheck)
+        return errorResponse('Summary not found or access denied.');
 
       const { success, results } = await env.DB.prepare(
         `

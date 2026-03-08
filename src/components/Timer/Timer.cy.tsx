@@ -126,8 +126,8 @@ describe('<Timer />', () => {
       { fixture: 'tickDistracted' }
     ).as('updateTickDistracted');
     cy.intercept(
-      'POST',
-      `/ticks?summary=${summaries[1].id}&tick=31&distracted=-1`,
+      'DELETE',
+      `/ticks?summary=${summaries[1].id}&tick=31`,
       { fixture: 'tickRemoved' }
     ).as('updateTickRemoved');
     cy.intercept(

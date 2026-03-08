@@ -355,6 +355,22 @@ describe('<Timer /> using localStorage', () => {
     );
   });
 
+  it('deletes a tick from localStorage when cycled back to empty', () => {
+    cy.get('[data-test-id="0-31"][data-tick-state="focused"]').click();
+    cy.get('[data-test-id="0-31"][data-tick-state="distracted"]').click();
+    cy.get('[data-test-id="0-31"][data-tick-state="empty"]');
+
+    cy.wrap(null).then(() =>
+      cy.wrap(Api.getSummaries(TODAYS_DATE)).then((summaries) =>
+        expect(
+          (summaries as Summary[])
+            .find((s) => s.slot === 0)
+            ?.TimerTicks.find((t) => t.tickNumber === 31)
+        ).to.be.undefined
+      )
+    );
+  });
+
   it('updates focused hours when a focused tick is changed', () => {
     cy.get("[data-test-id='focused-hours-0']").should('contain', '0.25 hrs');
     cy.get("[data-test-id='0-31']").click();
