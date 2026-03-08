@@ -108,4 +108,14 @@ describe('<MonthView /> using REST API', () => {
       cy.contains('replace jest with cypress');
     });
   });
+
+  it('shows session-expired error when api returns invalid session', () => {
+    // RestApi.getSummaries throws 'session_expired' for this response shape
+    cy.intercept('GET', `/summaries?date=${MARCH_2023_DATE}`, {
+      body: { error: 'invalid user session' },
+    }).as('sessionExpired');
+    mountMonthView(MARCH_2023_DATE, RestApi);
+    cy.wait('@sessionExpired');
+    cy.get("[data-test-id='month-session-error']").should('be.visible');
+  });
 });
