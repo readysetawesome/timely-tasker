@@ -9,6 +9,7 @@ $focused-col-width: 80px;
 
 .Timer {
   $left-col-width: 220px;
+  user-select: none;
 
   .content {
     position: relative;

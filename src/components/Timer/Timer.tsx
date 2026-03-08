@@ -4,6 +4,8 @@ import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
 import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
+import { DragProvider } from './DragContext';
+import DragHint from './DragHint';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -247,6 +249,8 @@ const Timer = ({
       )}
 
       {/* ── Main grid ── */}
+      <DragProvider>
+      <DragHint />
       <div className={styles.Timer}>
         <div className={styles.content} data-test-id="timer-content">
           {summaryError && (
@@ -280,6 +284,7 @@ const Timer = ({
           )}
         </div>
       </div>
+      </DragProvider>
     </div>
   );
 };

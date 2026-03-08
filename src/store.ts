@@ -7,6 +7,11 @@ const reducer = combineReducers({
   timer,
 });
 
-const storeMaker = () => configureStore({ reducer });
+const storeMaker = () =>
+  configureStore({
+    reducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({ serializableCheck: false }),
+  });
 
 export default storeMaker;
