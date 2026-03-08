@@ -63,8 +63,8 @@ html, body {
 .app-topbar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 8px 20px;
+  justify-content: space-between;
+  padding: 6px 16px;
   border-bottom: 1px solid var(--color-surface-border);
   background: var(--color-surface-raised);
 }
@@ -78,6 +78,53 @@ html, body {
   transition: color 150ms ease;
 
   &:hover { color: var(--color-text-secondary); }
+}
+
+.tt-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tt-topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  white-space: nowrap;
+  background: var(--color-surface-overlay);
+  border-color: var(--color-surface-border);
+  color: var(--color-text-muted);
+
+  &:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text-secondary);
+  }
+}
+
+.tt-topbar-identity {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.tt-topbar-btn-danger {
+  border-color: rgba(248, 113, 113, 0.2);
+  color: rgba(248, 113, 113, 0.6);
+
+  &:hover {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #f87171;
+  }
 }
 
 /* ─── Page layout ─────────────────────────────────────────────────────────── */
@@ -97,7 +144,8 @@ html, body {
   margin-bottom: 16px;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 50;
+  overflow: visible;
   background: var(--color-surface-base);
 }
 
@@ -108,12 +156,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
-  overflow: hidden;
 }
-
-.tt-header-end { flex: 0 0 auto; }
 
 .tt-title {
   font-family: var(--font-mono);
@@ -148,9 +193,16 @@ html, body {
   text-decoration: none;
   letter-spacing: 0.04em;
   padding: 2px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
   transition: color 150ms ease;
 
   &:hover { color: var(--color-focused); }
+}
+
+.tt-date-label--offtoday {
+  color: var(--color-text-secondary);
 }
 
 .nav-arrow {
@@ -184,18 +236,42 @@ html, body {
   text-decoration: none;
   border: 1px solid var(--color-accent-dim);
   transition: background 150ms ease;
+  animation: nav-today-in 0.2s ease forwards;
 
   &:hover { background: rgba(91, 141, 238, 0.12); }
 }
 
+@keyframes nav-today-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 .tt-greeting {
-  font-size: 0.66rem;
-  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--color-text-secondary);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 20px;
+  padding: 2px 10px 2px 8px;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-focused);
+    box-shadow: 0 0 6px var(--color-focused-glow);
+    flex-shrink: 0;
+  }
 }
 
 .tt-actions {
@@ -204,7 +280,7 @@ html, body {
   gap: 6px;
 }
 
-/* Mobile: date nav row first, then actions row; title hidden to save space */
+/* Mobile: date nav row first; title hidden to save space */
 @media (max-width: 640px) {
   .tt-header {
     height: auto;
@@ -218,24 +294,23 @@ html, body {
 
   .tt-header-center {
     flex: 0 0 100%;
-    order: 1;
-  }
-
-  .tt-header-end {
-    flex: 0 0 100%;
-    order: 2;
   }
 
   .tt-greeting { display: none; }
 
-  .tt-actions {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
   .tt-btn {
     padding: 5px 10px;
     font-size: 0.74rem;
+  }
+
+  .app-topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px;
+  }
+
+  .tt-topbar-actions {
+    flex-wrap: wrap;
   }
 }
 
@@ -255,6 +330,11 @@ html, body {
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
   white-space: nowrap;
+}
+
+.tt-btn-sm {
+  padding: 3px 10px;
+  font-size: 0.75rem;
 }
 
 .tt-btn-primary {
@@ -287,6 +367,22 @@ html, body {
   &:hover {
     background: rgba(248, 113, 113, 0.1);
     border-color: #f87171;
+  }
+}
+
+.nav-yesterday {
+  color: var(--color-text-secondary);
+  border-color: var(--color-surface-border);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-surface-overlay);
+    color: var(--color-text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 }
 
@@ -419,6 +515,122 @@ html, body {
   40%       { transform: rotate(12deg); }
   60%       { transform: rotate(-10deg); }
   80%       { transform: rotate(6deg); }
+}
+
+/* ─── Date label wrapper (positions the picker) ─────────────────────────── */
+
+.tt-date-label-wrap {
+  position: relative;
+}
+
+/* ─── Date picker ────────────────────────────────────────────────────────── */
+
+.datepicker {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-surface-border);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: datepicker-in 0.15s ease forwards;
+  width: 224px;
+}
+
+@keyframes datepicker-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.datepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.datepicker-month-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  letter-spacing: 0.04em;
+}
+
+.datepicker-nav {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 150ms ease, color 150ms ease;
+
+  &:hover {
+    background: var(--color-surface-overlay);
+    color: var(--color-text-primary);
+  }
+}
+
+.datepicker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.datepicker-dow {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 2px 0 4px;
+  letter-spacing: 0.04em;
+}
+
+.datepicker-day {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 100ms ease, color 100ms ease, border-color 100ms ease;
+
+  &:hover {
+    background: var(--color-surface-overlay);
+    color: var(--color-text-primary);
+  }
+}
+
+.datepicker-day--today {
+  color: var(--color-focused);
+  border-color: var(--color-focused-dim);
+  box-shadow: 0 0 8px var(--color-focused-glow);
+}
+
+.datepicker-day--selected {
+  background: rgba(91, 141, 238, 0.15);
+  border-color: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+.datepicker-day--today.datepicker-day--selected {
+  background: rgba(6, 200, 176, 0.12);
+  border-color: var(--color-focused-dim);
+  color: var(--color-focused);
 }
 
 /* ─── Storage prompt ─────────────────────────────────────────────────────── */

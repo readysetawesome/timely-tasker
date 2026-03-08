@@ -53,7 +53,7 @@ describe('<Timer /> using localStorage, with no existing data', () => {
   it('renders greeting text', () => {
     cy.get("[data-test-id='greeting']")
       .first()
-      .should('contain', 'Currently using Local Storage');
+      .should('contain', 'Using local storage');
   });
 
   it('creates new summary from scratch', () => {
@@ -123,7 +123,7 @@ describe('<Timer /> using localStorage', () => {
   it('renders greeting text', () => {
     cy.get("[data-test-id='greeting']")
       .first()
-      .should('contain', 'Currently using Local Storage');
+      .should('contain', 'Using local storage');
   });
 
   it('renders loaded summary text in the <input>', () => {

@@ -36,7 +36,8 @@ const TaskRowSummary = ({ slot, date, useApi }: TaskRowSummaryProps) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     e.preventDefault();
     const nextSlot = e.key === 'ArrowDown' ? slot + 1 : slot - 1;
-    document.querySelector<HTMLInputElement>(`[data-test-id="summary-text-${nextSlot}"]`)?.focus();
+    const el = document.querySelector<HTMLInputElement>(`[data-test-id="summary-text-${nextSlot}"]`);
+    if (el) { el.focus(); el.select(); }
   };
 
   return (

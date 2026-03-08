@@ -323,16 +323,26 @@ describe('<Timer />', () => {
     cy.wait(['@greetRelogin']);
   });
 
-  it('arrow down moves focus to the next summary input', () => {
+  it('arrow down moves focus to the next summary input and selects all', () => {
     cy.get("[data-test-id='summary-text-0']").focus();
     cy.get("[data-test-id='summary-text-0']").trigger('keydown', { key: 'ArrowDown' });
     cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.focused().then(($el) => {
+      const el = $el[0] as HTMLInputElement;
+      expect(el.selectionStart).to.equal(0);
+      expect(el.selectionEnd).to.equal(el.value.length);
+    });
   });
 
-  it('arrow up moves focus to the previous summary input', () => {
+  it('arrow up moves focus to the previous summary input and selects all', () => {
     cy.get("[data-test-id='summary-text-2']").focus();
     cy.get("[data-test-id='summary-text-2']").trigger('keydown', { key: 'ArrowUp' });
     cy.focused().should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.focused().then(($el) => {
+      const el = $el[0] as HTMLInputElement;
+      expect(el.selectionStart).to.equal(0);
+      expect(el.selectionEnd).to.equal(el.value.length);
+    });
   });
 
   it('arrow up on first row and arrow down on last row do nothing', () => {
