@@ -4,6 +4,7 @@ import styles from './Timer.module.scss';
 
 import { TimerTick } from './TaskRowTicks';
 import { useDispatch, useSelector } from 'react-redux';
+import { useDrag } from './DragContext';
 import {
   getLoadingDate,
   getMatchingTicks,
@@ -40,6 +41,7 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
 
   const date = useSelector(getLoadingDate);
   const dispatch = useDispatch();
+  const { isDraggingRef, dragValueRef, startDrag, endDrag } = useDrag();
   const timerTick =
     summary?.TimerTicks.find(
       (value: TimerTick) => value.tickNumber === tickNumber
@@ -65,23 +67,23 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
       ? styles.tictac_focused
       : styles.tictac_empty;
 
-  const updateTick = useCallback(() => {
+  const applyTickValue = useCallback((valueToApply: TickState) => {
     tickClicked({
       summary:
         summary || ({ date, slot, content: '', TimerTicks: [] } as Summary),
       slot,
       tickNumber,
       distracted:
-        nextTickValue === TickState.Deleted
+        valueToApply === TickState.Deleted
           ? TickState.Deleted
           : matchingColumnTicks.length > 0
           ? TickState.distracted
-          : nextTickValue,
+          : valueToApply,
       previously: distracted,
     } as TickChangeEvent)(dispatch, useApi);
 
     // evaluate last tick standing rule and apply
-    if (nextTickValue === TickState.Deleted) {
+    if (valueToApply === TickState.Deleted) {
       if (
         matchingColumnTicks.length === 1 &&
         matchingColumnTicks[0].distracted === TickState.distracted
@@ -97,7 +99,6 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
       // evaluate distracted column rule
       matchingColumnTicks.forEach((t) => {
         if (t.distracted === TickState.Focused) {
-          // some other tick in this column, mark it distracted
           tickClicked({
             summary: t.summary,
             slot: t.summary?.slot,
@@ -117,13 +118,13 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
     dispatch,
     distracted,
     matchingColumnTicks,
-    nextTickValue,
     slot,
     summary,
     testIdAttr,
     tickNumber,
     useApi,
   ]);
+
 
   const tickState =
     distracted === TickState.distracted
@@ -132,10 +133,24 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
       ? 'focused'
       : 'empty';
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault(); // prevent text selection while dragging
+    startDrag(nextTickValue);
+    applyTickValue(nextTickValue);
+  }, [startDrag, nextTickValue, applyTickValue]);
+
+  const handleMouseEnter = useCallback(() => {
+    if (isDraggingRef.current && dragValueRef.current !== null && dragValueRef.current !== distracted) {
+      applyTickValue(dragValueRef.current);
+    }
+  }, [distracted, applyTickValue]); // refs are stable, excluded from deps
+
   return (
     <div
       className={style}
-      onClick={updateTick}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={handleMouseEnter}
+      onMouseUp={endDrag}
       data-test-id={testIdAttr}
       data-tick-state={tickState}
     />

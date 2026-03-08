@@ -3,12 +3,14 @@ import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
 import TaskRowSummary from './TaskRowSummary';
-import TaskRowFocused from './TaskRowFocused';
+import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
+import { DragProvider } from './DragContext';
+import DragHint from './DragHint';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate } from './Timer.selectors';
-import { fetchSummaries } from './Timer.actions';
+import { getLoadingDate, getSummaries } from './Timer.selectors';
+import { fetchSummaries, setSummary } from './Timer.actions';
 
 export const dateDisplay = (date) => {
   date = new Date(date);
@@ -89,11 +91,7 @@ const Timer = ({
     if (useLocal === USELOCAL.NO) {
       RestApi.greet((res: IdentityResponse) => {
         if (res.identity) {
-          setGreeting(`
-            Hello, ${res.identity.displayName}!
-            Logged in with ${res.identity.providerName},
-            using cloud-based storage from our domain.
-          `);
+          setGreeting(`Hello, ${res.identity.displayName}! Logged in with ${res.identity.providerName}, using cloud-based storage.`);
           fetchSummaries(date)(dispatch, useApi);
         } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;
       });
@@ -104,10 +102,7 @@ const Timer = ({
   }, [date, dispatch, useApi, useLocal]);
 
   useEffect(() => {
-    // Fetch summaries after checking requirements, starting with storage selection
     if (useLocal === null) return;
-
-    // Don't do anything until a greeting is set, it means identity exists in db
     if (useLocal === USELOCAL.NO && greeting === '') return;
 
     if (loadingDate !== date && !summariesLoading && !summariesError) {
@@ -125,7 +120,21 @@ const Timer = ({
     useLocal,
   ]);
 
-  // Once the summaries have loaded, scroll horiz to bring current hour into view
+  const todaySummaries = useSelector(getSummaries);
+
+  const [copyingYesterday, setCopyingYesterday] = useState(false);
+  const handleCopyYesterday = async () => {
+    setCopyingYesterday(true);
+    const ONE_DAY = 86400000;
+    const yesterdaySummaries = await useApi.getSummaries(date - ONE_DAY);
+    for (const ys of yesterdaySummaries) {
+      if (ys.content && !todaySummaries[ys.slot]?.content) {
+        await setSummary({ slot: ys.slot, date, content: ys.content, TimerTicks: [] })(dispatch, useApi);
+      }
+    }
+    setCopyingYesterday(false);
+  };
+
   const [didScroll, setDidScroll] = useState(false);
   useEffect(() => {
     if (summariesSuccess && !didScroll) {
@@ -160,8 +169,9 @@ const Timer = ({
     <button
       onClick={() => setUseLocal(USELOCAL.NO)}
       data-test-id="use-cloud-storage"
+      className="tt-btn tt-btn-primary"
     >
-      <strong>Use Timely-Tasker.com cloud database</strong>
+      Use cloud database
     </button>
   );
 
@@ -170,65 +180,92 @@ const Timer = ({
       onClick={() => setUseLocal(USELOCAL.YES)}
       title="public computer users: by clicking you agree that you understand the risks"
       data-test-id="use-local-storage"
+      className="tt-btn tt-btn-ghost"
     >
-      <strong>Use browser localStorage (experimental)</strong>
+      Use browser localStorage
     </button>
   );
 
   return (
-    <>
-      <div>
-        <h1>The Timely Tasker</h1>
-        <h2>
+    <div className="tt-page">
+      {/* ── App header ── */}
+      <div className="tt-header">
+        <h1 className="tt-title">Timely Tasker</h1>
+
+        <h2 className="tt-date-nav">
           {leftNavClicker}
-          <a href={`?date=${date}`}>Work Date: {dateDisplay(date)}</a>
+          <a href={`?date=${date}`} className="tt-date-label">
+            {dateDisplay(date)}
+          </a>
           {rightNavClicker}
           {todayNavClicker}
         </h2>
-        <p data-test-id="greeting">{greeting || ''}</p>
-        <p>
-          {useLocal === USELOCAL.YES ? UseCloudStorage : ''}
-          {useLocal === USELOCAL.NO ? UseLocalStorage : ''}
+
+        {greeting && (
+          <p className="tt-greeting" data-test-id="greeting">
+            {greeting}
+          </p>
+        )}
+        {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
+
+        <div className="tt-actions">
+          {useLocal === USELOCAL.YES && UseCloudStorage}
+          {useLocal === USELOCAL.NO && UseLocalStorage}
+          {useLocal !== null && (
+            <button
+              onClick={handleCopyYesterday}
+              disabled={copyingYesterday}
+              data-test-id="copy-yesterday-button"
+              className="tt-btn tt-btn-ghost"
+            >
+              {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+            </button>
+          )}
           {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
-            <button onClick={handleLogout} data-test-id="logout-button">
+            <button
+              onClick={handleLogout}
+              data-test-id="logout-button"
+              className="tt-btn tt-btn-danger"
+            >
               Log out
             </button>
           )}
-        </p>
+        </div>
       </div>
+
+      {/* ── Storage selection (first visit) ── */}
+      {useLocal === null && (
+        <div className="tt-storage-prompt">
+          <p className="tt-storage-prompt-heading">Choose where to store your data</p>
+          <p className="tt-storage-prompt-sub">We share nothing. No partnerships, no monetization.</p>
+          <p className="tt-storage-prompt-sub">
+            <strong>Public computer?</strong> localStorage data stays in this browser.
+          </p>
+          <div className="tt-storage-actions">
+            {UseLocalStorage}
+            {UseCloudStorage}
+          </div>
+        </div>
+      )}
+
+      {/* ── Main grid ── */}
+      <DragProvider>
+      <DragHint />
       <div className={styles.Timer}>
         <div className={styles.content} data-test-id="timer-content">
           {summaryError && (
-            <span className={styles.error} data-test-id="timer-error">Error setting Summary text</span>
-          )}
-          {useLocal !== null ? (
-            <></>
-          ) : (
-            <>
-              <h4>
-                This app stores a small amount of data including your task
-                summary text and tick marks by date/time/task. Choose a Storage
-                option below.
-              </h4>
-              <p>We share nothing! We don't make money or have partnerships.</p>
-              <p>
-                <strong>Public computer users:</strong> by choosing localStorage
-                you agree that you understand the risks.
-              </p>
-              <p>{UseLocalStorage}</p>
-              <p>{UseCloudStorage}</p>
-            </>
+            <span className={styles.error} data-test-id="timer-error">Error setting summary text</span>
           )}
           {summariesError && (
             <span className={styles.error} data-test-id="timer-error">
-              Error loading Summary text and ticks!
+              Error loading summaries and ticks!
             </span>
           )}
           {!summariesError && useLocal !== null && (
             <>
               <div className={styles.left_column}>
-                <div key={'headerspacer'} className={styles.summary_header}>
-                  Task Summary
+                <div key="headerspacer" className={styles.summary_header}>
+                  Task
                 </div>
                 {summaryElements}
               </div>
@@ -241,12 +278,14 @@ const Timer = ({
                   Focused
                 </div>
                 {focusedRowElements}
+                <TotalFocusedRow />
               </div>
             </>
           )}
         </div>
       </div>
-    </>
+      </DragProvider>
+    </div>
   );
 };
 
