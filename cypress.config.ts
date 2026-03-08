@@ -6,10 +6,12 @@ module.exports = defineConfig({
   chromeWebSecurity: false,
   component: {
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
-    experimentalCoverage: true,
     devServer: {
       framework: 'react',
       bundler: 'vite',
+    },
+    setupNodeEvents(on) {
+      require('@cypress/code-coverage/task')(on, {});
     },
   },
 });

@@ -18,12 +18,10 @@ jobs:
         run: npm install
 
       - name: Cypress run
-        run: npm run ci-cypress -- --browser chrome
+        run: npm run ci-cypress
         env:
           ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
-
-      - name: List coverage files
-        run: find . -name "lcov.info" -o -name "coverage-final.json" | head -20
+          CYPRESS_COVERAGE: 'true'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
