@@ -41,7 +41,7 @@ export const DragProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <DragContext.Provider value={{ isDraggingRef, dragValueRef, startDrag, endDrag, onFirstDragRef }}>
-      <div onPointerUp={endDrag} onPointerLeave={endDrag}>
+      <div onPointerUp={endDrag} onPointerLeave={endDrag} onPointerCancel={endDrag}>
         {children}
       </div>
     </DragContext.Provider>

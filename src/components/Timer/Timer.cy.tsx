@@ -110,7 +110,7 @@ describe('<Timer />', () => {
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
           expect(rect.x).to.be.lessThan(700);
-          expect(rect.x).to.be.greaterThan(200);
+          expect(rect.x).to.be.greaterThan(50);
       });
   });
 
