@@ -23,8 +23,12 @@ jobs:
           # See issue https://github.com/cypress-io/cypress/issues/25357
           ELECTRON_EXTRA_LAUNCH_ARGS: '--disable-gpu'
 
+      - name: List coverage files
+        run: find . -name "lcov.info" -o -name "coverage-final.json" | head -20
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          directory: ./coverage
+          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
 
