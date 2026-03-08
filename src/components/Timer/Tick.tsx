@@ -125,9 +125,6 @@ const Tick = ({ tickNumber, slot, useApi }: TickProps) => {
     useApi,
   ]);
 
-  const updateTick = useCallback(() => {
-    applyTickValue(nextTickValue);
-  }, [applyTickValue, nextTickValue]);
 
   const tickState =
     distracted === TickState.distracted

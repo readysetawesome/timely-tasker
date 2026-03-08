@@ -138,6 +138,98 @@ describe('<Timer /> using localStorage', () => {
     cy.get("[data-test-id='focused-hours-1']").should('contain', '0 hrs');
   });
 
+  it('renders total focused hours across all rows', () => {
+    cy.get("[data-test-id='focused-hours-total']").should('contain', '0.25 hrs');
+    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
+    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get("[data-test-id='focused-hours-total']").should('contain', '0.5 hrs');
+  });
+
+  it('drag fills multiple ticks and ends on mouseup', () => {
+    cy.get('[data-test-id="0-40"][data-tick-state="empty"]');
+    cy.get('[data-test-id="0-41"][data-tick-state="empty"]');
+    cy.get('[data-test-id="0-42"][data-tick-state="empty"]');
+
+    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('mouseover');
+    cy.get('[data-test-id="0-42"]').trigger('mouseover');
+    cy.get('[data-test-id="0-42"]').trigger('mouseup');
+
+    cy.get('[data-test-id="0-40"][data-tick-state="focused"]');
+    cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
+    cy.get('[data-test-id="0-42"][data-tick-state="focused"]');
+  });
+
+  it('drag clears ticks that are already filled', () => {
+    cy.get('[data-test-id="0-31"][data-tick-state="focused"]');
+    cy.get('[data-test-id="0-31"]').trigger('mousedown', { button: 0 });
+    cy.get('[data-test-id="0-31"]').trigger('mouseup');
+    cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
+  });
+
+  it('drag does not re-apply value to already matching ticks', () => {
+    cy.get('[data-test-id="0-40"]').trigger('mousedown', { button: 0 });
+    cy.get('[data-test-id="0-41"]').trigger('mouseover');
+    cy.get('[data-test-id="0-41"]').trigger('mouseover'); // second enter on same tick
+    cy.get('[data-test-id="0-40"]').trigger('mouseup');
+    cy.get('[data-test-id="0-41"][data-tick-state="focused"]');
+  });
+
+  it('copy yesterday copies task names into empty slots', () => {
+    const YESTERDAY = TODAYS_DATE - 86400000;
+    const yesterdaySummary = {
+      id: 99, content: 'my yesterday task', date: YESTERDAY, slot: 3, TimerTicks: [],
+    };
+    cy.window().then((win) => {
+      win.localStorage.setItem(
+        `${localStoragePrefix}${YESTERDAY}-3`,
+        JSON.stringify(yesterdaySummary)
+      );
+      win.localStorage.setItem(
+        `${localStoragePrefix}${YESTERDAY}`,
+        JSON.stringify([3])
+      );
+    });
+
+    cy.get('[data-test-id="copy-yesterday-button"]').click();
+    cy.get('[data-test-id="summary-text-3"]').should('have.value', 'my yesterday task');
+  });
+
+  it('copy yesterday does not overwrite existing content', () => {
+    const YESTERDAY = TODAYS_DATE - 86400000;
+    const yesterdaySummary = {
+      id: 99, content: 'do not copy this', date: YESTERDAY, slot: 0, TimerTicks: [],
+    };
+    cy.window().then((win) => {
+      win.localStorage.setItem(
+        `${localStoragePrefix}${YESTERDAY}-0`,
+        JSON.stringify(yesterdaySummary)
+      );
+      win.localStorage.setItem(
+        `${localStoragePrefix}${YESTERDAY}`,
+        JSON.stringify([0])
+      );
+    });
+
+    cy.get('[data-test-id="copy-yesterday-button"]').click();
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
+  });
+
+  it('shows drag hint on first visit and dismisses on X click', () => {
+    cy.wait(1000);
+    cy.get('.drag-hint').should('be.visible');
+    cy.get('.drag-hint-close').click();
+    cy.get('.drag-hint').should('not.exist');
+  });
+
+  it('drag hint dismisses when user first drags', () => {
+    cy.wait(1000);
+    cy.get('.drag-hint').should('be.visible');
+    cy.get('[data-test-id="0-50"]').trigger('mousedown', { button: 0 });
+    cy.get('[data-test-id="0-50"]').trigger('mouseup');
+    cy.get('.drag-hint').should('not.exist');
+  });
+
   it('updates summary text typed in the <input>', () => {
     cy.get("[data-test-id='summary-text-0']").type(',ok');
     cy.wait(900); // There is 800ms debounce so we have to do this, ew
@@ -197,5 +289,39 @@ describe('<Timer /> using localStorage', () => {
     });
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getAuthInfo');
+  });
+});
+
+describe('<Timer /> drag hint already dismissed', () => {
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+      win.localStorage.setItem('TimelyTasker:DragHintDismissed', 'yes');
+      summaries.forEach((s) =>
+        win.localStorage.setItem(
+          `${localStoragePrefix + TODAYS_DATE}-${s.slot}`,
+          JSON.stringify(s)
+        )
+      );
+      win.localStorage.setItem(
+        localStoragePrefix + TODAYS_DATE,
+        JSON.stringify(summaries.map((s) => s.slot))
+      );
+    });
+
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+  });
+
+  it('does not show drag hint when already dismissed', () => {
+    cy.wait(1000);
+    cy.get('.drag-hint').should('not.exist');
   });
 });

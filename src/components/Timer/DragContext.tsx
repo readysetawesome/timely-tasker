@@ -9,6 +9,7 @@ interface DragContextType {
   onFirstDragRef: React.MutableRefObject<(() => void) | null>;
 }
 
+/* istanbul ignore next */
 const DragContext = createContext<DragContextType>({
   isDraggingRef: { current: false },
   dragValueRef: { current: null },

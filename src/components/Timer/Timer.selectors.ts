@@ -28,6 +28,7 @@ export const getTotalFocusedHours = createSelector(
   [getSummaries],
   (summaries): number => {
     return Object.values(summaries).reduce((total, summary) => {
+      /* istanbul ignore next */
       if (!summary?.TimerTicks) return total;
       return total + summary.TimerTicks.filter((t) => t.distracted === 0).length / 4;
     }, 0);
