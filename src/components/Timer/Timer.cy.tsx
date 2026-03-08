@@ -53,6 +53,19 @@ describe('<Timer />', () => {
       .should('contain', 'Logged in with google');
   });
 
+  it('logout clears session and shows login link without auto-redirecting', () => {
+    cy.intercept('POST', '/logout', { statusCode: 200, body: { success: true } }).as('logout');
+    cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('greetAfterLogout');
+
+    cy.get("[data-test-id='logout-button']").click();
+
+    cy.wait(['@logout', '@greetAfterLogout']);
+
+    cy.get("[data-test-id='greeting']").should('not.exist');
+    cy.contains('You\'ve been logged out.');
+    cy.contains('a', 'Log in again').should('have.attr', 'href', '/authorize');
+  });
+
   it('renders loaded summary text in the <input>', () => {
     cy.get("[data-test-id='summary-text-0']")
       .first()
