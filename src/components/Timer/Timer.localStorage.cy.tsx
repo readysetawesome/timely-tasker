@@ -31,6 +31,14 @@ describe('<Timer /> no localStorage setting', () => {
     cy.get('[data-test-id=use-local-storage]').click();
     cy.get('[data-test-id=use-local-storage]').should('not.exist');
   });
+
+  it('clicking sign in with google from storage prompt begins auth flow', () => {
+    cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+    cy.get('[data-test-id=use-cloud-storage]').click();
+    cy.wait('@getIdentity');
+    cy.get("[data-test-id='greeting']").should('contain', 'Logged in with google');
+  });
 });
 
 describe('<Timer /> using localStorage, with no existing data', () => {
