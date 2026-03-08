@@ -202,14 +202,26 @@ const Timer = ({
         </div>
 
         <div className="tt-header-center">
-          <h2 className="tt-date-nav">
-            {leftNavClicker}
-            <a href={`?date=${date}`} className="tt-date-label">
-              {dateDisplay(date)}
-            </a>
-            {rightNavClicker}
-            {todayNavClicker}
-          </h2>
+          <div className="tt-date-cluster">
+            <h2 className="tt-date-nav">
+              {leftNavClicker}
+              <a href={`?date=${date}`} className="tt-date-label">
+                {dateDisplay(date)}
+              </a>
+              {rightNavClicker}
+              {todayNavClicker}
+            </h2>
+            {useLocal !== null && (
+              <button
+                onClick={handleCopyYesterday}
+                disabled={copyingYesterday}
+                data-test-id="copy-yesterday-button"
+                className="tt-btn tt-btn-ghost"
+              >
+                {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+              </button>
+            )}
+          </div>
           {greeting && (
             <p className="tt-greeting" data-test-id="greeting">
               {greeting}
@@ -222,16 +234,6 @@ const Timer = ({
           <div className="tt-actions">
             {useLocal === USELOCAL.YES && UseCloudStorage}
             {useLocal === USELOCAL.NO && UseLocalStorage}
-            {useLocal !== null && (
-              <button
-                onClick={handleCopyYesterday}
-                disabled={copyingYesterday}
-                data-test-id="copy-yesterday-button"
-                className="tt-btn tt-btn-ghost"
-              >
-                {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
-              </button>
-            )}
             {(useLocal === USELOCAL.NO && greeting || useLocal === USELOCAL.YES) && (
               <button
                 onClick={handleLogout}
@@ -256,6 +258,19 @@ const Timer = ({
           <div className="tt-storage-actions">
             {UseLocalStorage}
             {UseCloudStorage}
+          </div>
+        </div>
+      )}
+
+      {/* ── Connecting interstitial (pre-authorized Google users) ── */}
+      {useLocal === USELOCAL.NO && !greeting && (
+        <div className="tt-connecting">
+          <div className="tt-connecting-card">
+            <span className="tt-connecting-spinner" />
+            <div className="tt-connecting-body">
+              <p className="tt-connecting-title">Signing in with Google</p>
+              <p className="tt-connecting-sub">Resuming your saved authorization…</p>
+            </div>
           </div>
         </div>
       )}
