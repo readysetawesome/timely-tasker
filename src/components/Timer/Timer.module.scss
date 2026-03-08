@@ -19,6 +19,7 @@ $tictac-gap: 2px;
     // Single scroll container for both axes — enables sticky header row
     // and sticky left/right columns simultaneously
     display: flex;
+    align-items: flex-start;
     overflow: auto;
     max-height: calc(100svh - 130px);
     position: relative;
