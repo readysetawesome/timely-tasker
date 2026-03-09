@@ -1,4 +1,5 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
@@ -7,6 +8,7 @@ import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
 import { DragProvider } from './DragContext';
 import DatePicker from './DatePicker';
 import DragHint from './DragHint';
+import WeekTotal from './WeekTotal';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -274,6 +276,15 @@ const Timer = ({
             </>
           )}
         </div>
+        {useLocal === USELOCAL.NO && (
+          <Link
+            to={`/month?date=${date}`}
+            className="tt-topbar-btn"
+            data-test-id="month-view-link"
+          >
+            Month
+          </Link>
+        )}
         <a
           href="https://github.com/readysetawesome/timely-tasker"
           className="app-topbar-link"
@@ -322,6 +333,9 @@ const Timer = ({
             </p>
           )}
           {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
+          {useLocal === USELOCAL.NO && (
+            <WeekTotal useApi={useApi} date={date} />
+          )}
         </div>
       </div>
 
