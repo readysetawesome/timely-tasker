@@ -393,6 +393,13 @@ describe('<Timer /> using localStorage', () => {
     });
   });
 
+  it('daily goal saves via blur when clicking away', () => {
+    cy.get('[data-test-id="daily-goal-set-btn"]').click();
+    cy.get('[data-test-id="daily-goal-input"]').clear().type('5');
+    cy.get('[data-test-id="daily-goal-input"]').blur();
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '5h');
+  });
+
   it('copy summary button is enabled when focused ticks exist', () => {
     cy.get('[data-test-id="copy-summary-button"]').should('not.be.disabled');
   });
