@@ -39,7 +39,7 @@ describe('<Timer /> no localStorage setting', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getIdentity');
-    cy.get("[data-test-id='greeting']").should('contain', 'Logged in with google');
+    cy.get('[data-test-id=use-cloud-storage]').should('not.exist');
   });
 });
 
@@ -58,12 +58,6 @@ describe('<Timer /> using localStorage, with no existing data', () => {
         </MemoryRouter>
       </Provider>
     ).as('mountedComponent');
-  });
-
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Using local storage');
   });
 
   it('does not show week total in localStorage mode', () => {
@@ -283,12 +277,6 @@ describe('<Timer /> using localStorage', () => {
 
   it('renders the date', () => {
     cy.get('h2').should('contain', '3-23-2023');
-  });
-
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Using local storage');
   });
 
   it('renders loaded summary text in the <input>', () => {

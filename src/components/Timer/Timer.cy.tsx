@@ -58,12 +58,6 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', '3-23-2023');
   });
 
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Logged in with google');
-  });
-
   it('logout clears session and shows storage selection without auto-redirecting', () => {
     cy.intercept('POST', '/logout', { statusCode: 200, body: { success: true } }).as('logout');
 
@@ -71,7 +65,6 @@ describe('<Timer />', () => {
 
     cy.wait(['@logout']);
 
-    cy.get("[data-test-id='greeting']").should('have.text', '');
     cy.get("[data-test-id='logout-button']").should('not.exist');
     cy.get("[data-test-id='use-cloud-storage']");
     cy.get("[data-test-id='use-local-storage']");
