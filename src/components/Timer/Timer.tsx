@@ -11,6 +11,7 @@ import DatePicker from './DatePicker';
 import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
+import DailyGoal from './DailyGoal';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -59,7 +60,6 @@ const Timer = ({
   rightNavClicker,
   todayNavClicker,
 }: TimerProps) => {
-  const [greeting, setGreeting] = useState('');
   const [displayName, setDisplayName] = useState<string | null>(null);
   const summariesRestSelectors = getRestSelectorsFor(
     'timer',
@@ -97,12 +97,12 @@ const Timer = ({
     }
   }, [useLocal]);
   useEffect(() => {
-    if (!greeting) return;
+    if (!displayName) return;
     const elapsed = Date.now() - connectingStartRef.current;
     const remaining = Math.max(0, 600 - elapsed);
     const timer = setTimeout(() => setConnectingVisible(false), remaining);
     return () => clearTimeout(timer);
-  }, [greeting]);
+  }, [displayName]);
 
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
@@ -111,7 +111,6 @@ const Timer = ({
       if (res.ok) {
         localStorage.removeItem(LOCAL_STORAGE);
         setUseLocal(null);
-        setGreeting('');
         setDisplayName(null);
       }
     });
@@ -127,20 +126,18 @@ const Timer = ({
     if (useLocal === USELOCAL.NO) {
       RestApi.greet((res: IdentityResponse) => {
         if (res.identity) {
-          setGreeting(`Hello, ${res.identity.displayName}! Logged in with ${res.identity.providerName}, using cloud-based storage.`);
           setDisplayName(res.identity.displayName);
           fetchSummaries(date)(dispatch, useApi);
         } else if (res.authorizeUrl) window.location.href = res.authorizeUrl;
       });
     } else if (useLocal === USELOCAL.YES) {
-      setGreeting('Using local storage');
       fetchSummaries(date)(dispatch, useApi);
     }
   }, [date, dispatch, useApi, useLocal]);
 
   useEffect(() => {
     if (useLocal === null) return;
-    if (useLocal === USELOCAL.NO && greeting === '') return;
+    if (useLocal === USELOCAL.NO && !displayName) return;
 
     if (loadingDate !== date && !summariesLoading && !summariesError) {
       fetchSummaries(date)(dispatch, useApi);
@@ -152,7 +149,7 @@ const Timer = ({
     loadingDate,
     summariesError,
     dispatch,
-    greeting,
+    displayName,
     useApi,
     useLocal,
   ]);
@@ -390,14 +387,11 @@ const Timer = ({
               )}
             </h2>
           </div>
-          {greeting && (
-            <p className="tt-greeting" data-test-id="greeting">
-              {greeting}
-            </p>
-          )}
-          {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
           {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
+          )}
+          {useLocal !== null && (
+            <DailyGoal useApi={useApi} />
           )}
           {useLocal !== null && (
             <div className="tt-tick-legend">

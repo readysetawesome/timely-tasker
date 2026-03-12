@@ -26,6 +26,8 @@ beforeEach(() => {
     `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`,
     { body: [] }
   ).as('getWeekSummaries');
+  cy.intercept('GET', '/preferences', { body: {} }).as('getPreferences');
+  cy.intercept('POST', '/preferences', (req) => { req.reply({ body: req.body }); }).as('setPreference');
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
@@ -56,12 +58,6 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', '3-23-2023');
   });
 
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Logged in with google');
-  });
-
   it('logout clears session and shows storage selection without auto-redirecting', () => {
     cy.intercept('POST', '/logout', { statusCode: 200, body: { success: true } }).as('logout');
 
@@ -69,7 +65,6 @@ describe('<Timer />', () => {
 
     cy.wait(['@logout']);
 
-    cy.get("[data-test-id='greeting']").should('have.text', '');
     cy.get("[data-test-id='logout-button']").should('not.exist');
     cy.get("[data-test-id='use-cloud-storage']");
     cy.get("[data-test-id='use-local-storage']");
@@ -499,5 +494,50 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-0']").focus();
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
     cy.get('h2').should('contain', '3-23-2023');
+  });
+
+  it('daily goal shows "Set daily goal" when no goal is stored', () => {
+    cy.get('[data-test-id="daily-goal-set-btn"]').should('exist');
+  });
+
+  it('daily goal renders progress bar and total when goal is set in preferences', () => {
+    cy.intercept('GET', '/preferences', { body: { dailyGoalHours: 6 } }).as('getPreferencesWithGoal');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries2');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummaries2', '@getPreferencesWithGoal']);
+    cy.get('[data-test-id="daily-goal-bar"]').should('exist');
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '6h');
+  });
+
+  it('daily goal can be edited and saves via POST /preferences', () => {
+    cy.intercept('GET', '/preferences', { body: { dailyGoalHours: 6 } }).as('getPreferencesWithGoal2');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries3');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummaries3', '@getPreferencesWithGoal2']);
+    cy.get('[data-test-id="daily-goal-target"]').click();
+    cy.get('[data-test-id="daily-goal-input"]').clear().type('8');
+    cy.get('[data-test-id="daily-goal-input"]').type('{enter}');
+    cy.wait('@setPreference').its('request.body').should('deep.equal', { dailyGoalHours: 8 });
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '8h');
   });
 });

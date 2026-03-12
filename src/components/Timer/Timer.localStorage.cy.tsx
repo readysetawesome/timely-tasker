@@ -16,6 +16,7 @@ const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 
 describe('<Timer /> no localStorage setting', () => {
   beforeEach(() => {
+    cy.intercept('GET', '/preferences', { body: {} });
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -38,7 +39,7 @@ describe('<Timer /> no localStorage setting', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getIdentity');
-    cy.get("[data-test-id='greeting']").should('contain', 'Logged in with google');
+    cy.get('[data-test-id=use-cloud-storage]').should('not.exist');
   });
 });
 
@@ -57,12 +58,6 @@ describe('<Timer /> using localStorage, with no existing data', () => {
         </MemoryRouter>
       </Provider>
     ).as('mountedComponent');
-  });
-
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Using local storage');
   });
 
   it('does not show week total in localStorage mode', () => {
@@ -284,12 +279,6 @@ describe('<Timer /> using localStorage', () => {
     cy.get('h2').should('contain', '3-23-2023');
   });
 
-  it('renders greeting text', () => {
-    cy.get("[data-test-id='greeting']")
-      .first()
-      .should('contain', 'Using local storage');
-  });
-
   it('renders loaded summary text in the <input>', () => {
     cy.get("[data-test-id='summary-text-0']")
       .first()
@@ -379,6 +368,26 @@ describe('<Timer /> using localStorage', () => {
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
   });
 
+  it('daily goal stores and reads goal from localStorage', () => {
+    cy.get('[data-test-id="daily-goal-set-btn"]').click();
+    cy.get('[data-test-id="daily-goal-input"]').clear().type('4');
+    cy.get('[data-test-id="daily-goal-input"]').type('{enter}');
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '4h');
+    cy.getAllLocalStorage().then((result) => {
+      const prefs = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:Preferences'] as string
+      );
+      expect(prefs.dailyGoalHours).to.equal(4);
+    });
+  });
+
+  it('daily goal saves via blur when clicking away', () => {
+    cy.get('[data-test-id="daily-goal-set-btn"]').click();
+    cy.get('[data-test-id="daily-goal-input"]').clear().type('5');
+    cy.get('[data-test-id="daily-goal-input"]').blur();
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '5h');
+  });
+
   it('copy summary button is enabled when focused ticks exist', () => {
     cy.get('[data-test-id="copy-summary-button"]').should('not.be.disabled');
   });
@@ -448,6 +457,7 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('switches cloud storage when clicked', () => {
+    cy.intercept('GET', '/preferences', { body: {} });
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
     cy.on('url:changed', (newUrl) => {
       expect(newUrl).to.equal(Cypress.config('baseUrl') + '/authorize');

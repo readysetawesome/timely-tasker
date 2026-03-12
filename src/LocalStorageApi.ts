@@ -1,8 +1,10 @@
 import { Summary } from '../functions/summaries';
+import { UserPreferences } from '../functions/preferences';
 import { synthesizeTick } from './components/Timer/Timer.actions';
 import { TickChangeEvent } from './components/Timer/Timer.slice';
 
 export const localStoragePrefix = 'TimelyTasker:';
+const PREFERENCES_KEY = localStoragePrefix + 'Preferences';
 
 const safeTickSerializer = (key, value) => {
   // prevent duplication in serializations below, due to the tick.summary ref
@@ -82,7 +84,27 @@ const createTick = (
     resolve(callback(tick));
   });
 
-const exports = { createTick, getSummaries, createSummary };
+const getPreferences = (storage = localStorage): Promise<UserPreferences> =>
+  new Promise((resolve) => {
+    const raw = storage.getItem(PREFERENCES_KEY);
+    resolve(raw ? JSON.parse(raw) : {});
+  });
+
+const setPreference = <K extends keyof UserPreferences>(
+  key: K,
+  value: UserPreferences[K],
+  storage = localStorage
+): Promise<UserPreferences> =>
+  new Promise((resolve) => {
+    const existing: UserPreferences = JSON.parse(
+      storage.getItem(PREFERENCES_KEY) ?? '{}'
+    );
+    const updated = { ...existing, [key]: value };
+    storage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+    resolve(updated);
+  });
+
+const exports = { createTick, getSummaries, createSummary, getPreferences, setPreference };
 
 export type StorageApiType = typeof exports;
 

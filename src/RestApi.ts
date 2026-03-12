@@ -1,5 +1,6 @@
 import { RequestInitCfProperties } from '@cloudflare/workers-types';
 import { Summary } from '../functions/summaries';
+import { UserPreferences } from '../functions/preferences';
 import { IdentityResponse } from '../lib/Identity';
 import { TickChangeEvent } from './components/Timer/Timer.slice';
 
@@ -95,5 +96,29 @@ const createTick = (tickChangeEvent: TickChangeEvent, callback) =>
     .then((response) => response.json())
     .then((data) => callback(data));
 
-const exports = { greet, logout, createTick, getSummaries, getSummariesRange, createSummary };
+const getPreferences = (): Promise<UserPreferences> =>
+  fetch(fetchPrefix + '/preferences', fetchOptions)
+    .then((response) => response.json<UserPreferences>());
+
+const setPreference = <K extends keyof UserPreferences>(
+  key: K,
+  value: UserPreferences[K]
+): Promise<UserPreferences> =>
+  fetch(fetchPrefix + '/preferences', {
+    ...fetchOptions,
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ [key]: value }),
+  }).then((response) => response.json<UserPreferences>());
+
+const exports = {
+  greet,
+  logout,
+  createTick,
+  getSummaries,
+  getSummariesRange,
+  createSummary,
+  getPreferences,
+  setPreference,
+};
 export default exports;

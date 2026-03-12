@@ -9,6 +9,8 @@ npm test          # Run Cypress component tests (primary regression suite)
 npm run lint      # ESLint across src/ and functions/
 npm start         # Vite dev server (port 3000, no Cloudflare functions)
 npx wrangler pages dev --d1=DB --persist -- npm start  # Full local stack with D1
+npm run migrate:preview   # Apply pending migrations to timely-tasker-dev (preview)
+npm run migrate:prod      # Apply pending migrations to timely-tasker-prod (production)
 ```
 
 ## What this app is
@@ -34,6 +36,7 @@ Cloudflare Pages app for daily task/time tracking. Two storage modes behind one 
 - Both storage modes must keep working — every behavior change needs coverage in both `Timer.cy.tsx` (cloud/REST) and `Timer.localStorage.cy.tsx`
 - Tick state encoding is `-1` (empty/deleted), `0` (focused), `1` (distracted) — changing this requires coordinated frontend + backend + fixture updates
 - Schema changes go in a new numbered migration; never rewrite existing migration history
+- Migrations must be additive only (new tables/columns) — no dropping or renaming existing columns. CI runs migrations before Cloudflare Pages finishes deploying, so destructive changes would break the running app mid-deploy
 - Session cookies are `SameSite=Lax` — do not change to Strict (breaks OAuth cross-site redirect)
 - `redirect_uri` for OAuth is derived dynamically from `request.url` origin — do not hardcode
 

@@ -25,7 +25,9 @@
     "build": "vite build",
     "test": "cypress run --component",
     "ci-cypress": "cypress run --component --config screenshotOnRunFailure=false,video=false",
-    "lint": "eslint --ext .js,.ts ./src ./functions"
+    "lint": "eslint --ext .js,.ts ./src ./functions",
+    "migrate:preview": "wrangler d1 migrations apply DB --env preview --remote",
+    "migrate:prod": "wrangler d1 migrations apply DB --remote"
   },
   "browserslist": {
     "production": [
@@ -52,6 +54,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
-    "vite": "^6.1.7"
+    "vite": "^6.1.7",
+    "wrangler": "^4.72.0"
   }
 }
