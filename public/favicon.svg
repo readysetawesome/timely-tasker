@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- App icon: mini tick-grid representing a tracked day -->
+  <!-- Matches app palette: surface-raised bg, focused teal, distracted amber, border for empty -->
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="20" fill="#181c27"/>
+
+  <!-- Subtle inner glow ring -->
+  <rect width="100" height="100" rx="20" fill="none" stroke="#06c8b0" stroke-width="1.5" opacity="0.15"/>
+
+  <!--
+    Grid: 3 cols × 4 rows
+    Cols: x=7,37,67  width=26
+    Rows: y=8,30,52,74  height=18
+    Gaps: 4px
+  -->
+
+  <!-- Row 0: focused focused focused -->
+  <rect x="7"  y="8"  width="26" height="18" rx="4" fill="#06c8b0" opacity="0.95"/>
+  <rect x="37" y="8"  width="26" height="18" rx="4" fill="#06c8b0" opacity="0.95"/>
+  <rect x="67" y="8"  width="26" height="18" rx="4" fill="#06c8b0" opacity="0.95"/>
+
+  <!-- Row 1: focused focused distracted -->
+  <rect x="7"  y="30" width="26" height="18" rx="4" fill="#06c8b0" opacity="0.9"/>
+  <rect x="37" y="30" width="26" height="18" rx="4" fill="#06c8b0" opacity="0.9"/>
+  <rect x="67" y="30" width="26" height="18" rx="4" fill="#f59e0b" opacity="0.9"/>
+
+  <!-- Row 2: focused distracted focused -->
+  <rect x="7"  y="52" width="26" height="18" rx="4" fill="#06c8b0" opacity="0.85"/>
+  <rect x="37" y="52" width="26" height="18" rx="4" fill="#f59e0b" opacity="0.85"/>
+  <rect x="67" y="52" width="26" height="18" rx="4" fill="#06c8b0" opacity="0.85"/>
+
+  <!-- Row 3: focused (current), empty, empty -->
+  <rect x="7"  y="74" width="26" height="18" rx="4" fill="#06c8b0" opacity="0.8"/>
+  <!-- Current-hour pulse ring -->
+  <rect x="7"  y="74" width="26" height="18" rx="4" fill="none" stroke="#06c8b0" stroke-width="2" opacity="0.5"/>
+  <!-- Empty slots -->
+  <rect x="37" y="74" width="26" height="18" rx="4" fill="none" stroke="#2a3045" stroke-width="1.5"/>
+  <rect x="67" y="74" width="26" height="18" rx="4" fill="none" stroke="#2a3045" stroke-width="1.5"/>
+</svg>

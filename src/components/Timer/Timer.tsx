@@ -1,5 +1,6 @@
 import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { todaysDateInt } from '../../App';
 import { IdentityResponse } from '../../../lib/Identity';
 import styles from './Timer.module.scss';
 import TaskRowTicks from './TaskRowTicks';
@@ -185,19 +186,41 @@ const Timer = ({
   }, [todaySummaries]);
 
   const [showPicker, setShowPicker] = useState(false);
-  const [didScroll, setDidScroll] = useState(false);
+  const isToday = date === todaysDateInt();
+  const [scrolledDate, setScrolledDate] = useState<number | null>(null);
   useEffect(() => {
-    if (summariesSuccess && !didScroll) {
-      const targettickNumber = currentTime.getHours() * 4 - 4;
-      const targetTick = document.querySelector(
-        `[data-test-id='0-${targettickNumber >= 0 ? targettickNumber : 0}']`
+    if (!summariesSuccess || date === scrolledDate) return;
+    if (loadingDate !== date) return;
+    let tickNum: number;
+    let center = false;
+    if (isToday) {
+      tickNum = Math.max(0, currentTime.getHours() * 4 - 4);
+    } else {
+      const allTickNums = Object.values(todaySummaries).flatMap((s) =>
+        s.TimerTicks.filter((t) => t.distracted !== -1).map((t) => t.tickNumber)
       );
-      if (targetTick) {
-        targetTick.scrollIntoView({ block: 'nearest', inline: 'start' });
+      if (allTickNums.length === 0) {
+        tickNum = 32; // 8am default for blank past days
+      } else {
+        const first = Math.min(...allTickNums);
+        const last = Math.max(...allTickNums);
+        tickNum = Math.floor((first + last) / 2);
+        center = true;
       }
-      setDidScroll(true);
     }
-  }, [currentTime, summariesSuccess, didScroll]);
+    const contentEl = document.querySelector('[data-test-id="timer-content"]') as HTMLElement;
+    const targetTick = document.querySelector(`[data-test-id='0-${tickNum}']`) as HTMLElement;
+    if (contentEl && targetTick) {
+      const leftColEl = document.querySelector('[data-test-id="timer-left-column"]') as HTMLElement;
+      const leftColWidth = leftColEl?.offsetWidth ?? 0;
+      const tickRect = targetTick.getBoundingClientRect();
+      const containerRect = contentEl.getBoundingClientRect();
+      const visibleWidth = contentEl.clientWidth - leftColWidth;
+      const offset = center ? visibleWidth / 2 : 0;
+      contentEl.scrollLeft = contentEl.scrollLeft + tickRect.left - containerRect.left - leftColWidth - offset;
+      setScrolledDate(date);
+    }
+  }, [currentTime, isToday, summariesSuccess, date, scrolledDate, todaySummaries, loadingDate]);
 
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
@@ -336,6 +359,22 @@ const Timer = ({
           {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
           )}
+          {useLocal !== null && (
+            <div className="tt-tick-legend">
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--focused" />
+                focused
+              </span>
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--distracted" />
+                distracted
+              </span>
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--empty" />
+                empty
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -390,7 +429,7 @@ const Timer = ({
           )}
           {!summariesError && useLocal !== null && (
             <>
-              <div className={styles.left_column}>
+              <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
                   Task
                 </div>

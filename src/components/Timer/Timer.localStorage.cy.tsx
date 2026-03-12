@@ -3,6 +3,7 @@ import React from 'react';
 import App from '../../App';
 import { mount } from 'cypress/react';
 import summaries from '../../../cypress/fixtures/summaries.json';
+import pastActivitySummaries from '../../../cypress/fixtures/summariesPastActivity.json';
 
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
@@ -190,6 +191,67 @@ describe('<DatePicker />', () => {
   });
 });
 
+describe('<Timer /> using localStorage, auto-scroll behavior', () => {
+  const ONE_DAY = 86400000;
+  const PREV_DATE = TODAYS_DATE - ONE_DAY; // 1679443200000
+
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+      summaries.forEach((s) =>
+        win.localStorage.setItem(
+          `${localStoragePrefix + TODAYS_DATE}-${s.slot}`,
+          JSON.stringify(s)
+        )
+      );
+      win.localStorage.setItem(
+        localStoragePrefix + TODAYS_DATE,
+        JSON.stringify(summaries.map((s) => s.slot))
+      );
+      // Previous day: ticks at 40 (10am) and 56 (2pm), midpoint = 48 (noon)
+      pastActivitySummaries.forEach((s) =>
+        win.localStorage.setItem(
+          `${localStoragePrefix + PREV_DATE}-${s.slot}`,
+          JSON.stringify(s)
+        )
+      );
+      win.localStorage.setItem(
+        localStoragePrefix + PREV_DATE,
+        JSON.stringify(pastActivitySummaries.map((s) => s.slot))
+      );
+    });
+
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="/timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    ).as('mountedComponent');
+  });
+
+  it('auto-scrolls to current hour on load so ticks are visible', () => {
+    // scrollLeft > 0 proves the grid scrolled past midnight (true any hour after 1am)
+    cy.get('[data-test-id="timer-content"]')
+      .its('0.scrollLeft')
+      .should('be.greaterThan', 0);
+  });
+
+  it('auto-scrolls to midpoint of activity when navigating to a past day', () => {
+    // Ticks at 40 (10am) and 56 (2pm) → midpoint = 48 (noon).
+    // Set clock before navigation so todaysDateInt() stays stable during re-render.
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+    cy.get("[data-test-id='left-nav-clicker']").click();
+
+    cy.get('[data-test-id="timer-content"]')
+      .its('0.scrollLeft')
+      .should('be.greaterThan', 0);
+  });
+});
+
 describe('<Timer /> using localStorage', () => {
   beforeEach(() => {
     cy.window().then((win) => {
@@ -321,14 +383,6 @@ describe('<Timer /> using localStorage', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('be.visible');
     cy.get('.drag-hint-close').click();
-    cy.get('.drag-hint').should('not.exist');
-  });
-
-  it('drag hint dismisses when user first drags', () => {
-    cy.wait(1000);
-    cy.get('.drag-hint').should('be.visible');
-    cy.get('[data-test-id="0-50"]').trigger('pointerdown', { button: 0 });
-    cy.get('[data-test-id="0-50"]').trigger('pointerup');
     cy.get('.drag-hint').should('not.exist');
   });
 

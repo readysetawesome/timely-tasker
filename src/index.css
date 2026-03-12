@@ -19,6 +19,7 @@
   --color-focused-glow: rgba(6, 200, 176, 0.25);
   --color-distracted: #f59e0b;
   --color-distracted-dim: #b87a08;
+  --color-distracted-glow: rgba(245, 158, 11, 0.25);
 
   --color-accent: #5b8dee;
   --color-accent-dim: #3d6acc;
@@ -460,6 +461,49 @@ html, body {
 
 @keyframes tt-spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Tick legend ─────────────────────────────────────────────────────────── */
+
+.tt-tick-legend {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.tt-tick-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tt-tick-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tt-tick-swatch--focused {
+  background: var(--color-focused);
+  box-shadow: 0 0 4px var(--color-focused-glow);
+  border: 1px solid var(--color-focused-dim);
+}
+
+.tt-tick-swatch--distracted {
+  background: var(--color-distracted);
+  box-shadow: 0 0 4px var(--color-distracted-glow);
+  border: 1px solid var(--color-distracted-dim);
+}
+
+.tt-tick-swatch--empty {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* ─── Drag hint ──────────────────────────────────────────────────────────── */
