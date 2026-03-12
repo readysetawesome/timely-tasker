@@ -357,6 +357,22 @@ const Timer = ({
           {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
           )}
+          {useLocal !== null && (
+            <div className="tt-tick-legend">
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--focused" />
+                focused
+              </span>
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--distracted" />
+                distracted
+              </span>
+              <span className="tt-tick-legend-item">
+                <span className="tt-tick-swatch tt-tick-swatch--empty" />
+                empty
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

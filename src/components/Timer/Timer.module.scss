@@ -221,14 +221,9 @@ $tictac-gap: 2px;
   .tictac_empty:hover::after { border-color: rgba(255, 255, 255, 0.28); }
 
   .tictac_distracted::after {
-    border: 1.5px solid var(--color-distracted);
-    background: repeating-linear-gradient(
-      -45deg,
-      rgba(245, 158, 11, 0.35),
-      rgba(245, 158, 11, 0.35) 2px,
-      transparent 2px,
-      transparent 5px
-    );
+    border: 1.5px solid var(--color-distracted-dim);
+    background: var(--color-distracted);
+    box-shadow: 0 0 6px var(--color-distracted-glow);
   }
 
   .tictac_focused::after {
