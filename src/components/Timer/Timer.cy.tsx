@@ -403,6 +403,22 @@ describe('<Timer />', () => {
   });
 
   it('copy summary button copies formatted text to clipboard', () => {
+    // Navigate to yesterday with 2 focused-tick tasks so sort comparator executes
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, {
+      body: [
+        { ...summaries[0], date: TODAYS_DATE - ONE_DAY, TimerTicks: [
+          { id: 1, userId: 1, date: TODAYS_DATE - ONE_DAY, tickNumber: 31, distracted: 0, summaryId: 75 },
+          { id: 2, userId: 1, date: TODAYS_DATE - ONE_DAY, tickNumber: 32, distracted: 0, summaryId: 75 },
+          { id: 3, userId: 1, date: TODAYS_DATE - ONE_DAY, tickNumber: 33, distracted: 0, summaryId: 75 },
+        ]},
+        { ...summaries[1], content: 'other task', date: TODAYS_DATE - ONE_DAY, TimerTicks: [
+          { id: 4, userId: 1, date: TODAYS_DATE - ONE_DAY, tickNumber: 40, distracted: 0, summaryId: 76 },
+        ]},
+      ],
+    }).as('getSummaries2');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+    cy.get('[data-test-id="left-nav-clicker"]').click();
+    cy.wait('@getSummaries2');
     cy.window().then((win) => {
       cy.stub(win.navigator.clipboard, 'writeText').resolves().as('clipboardWrite');
     });
@@ -410,7 +426,7 @@ describe('<Timer />', () => {
     cy.get('@clipboardWrite').should('have.been.calledOnce');
     cy.get('@clipboardWrite').should(
       'have.been.calledWith',
-      'replace jest with cypress: 0.25h focused\nTotal: 0.25h focused'
+      'replace jest with cypress: 0.75h focused\nother task: 0.25h focused\nTotal: 1h focused'
     );
     cy.get('[data-test-id="copy-summary-button"]').should('contain', 'Copied!');
   });
