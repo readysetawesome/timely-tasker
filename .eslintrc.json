@@ -18,8 +18,8 @@
     "sourceType": "module",
     "project": "tsconfig.json"
   },
-  "plugins": ["@typescript-eslint", "jest", "react", "react-hooks", "prettier", "cypress"],
-  "ignorePatterns": ["src/index.js", "src/reportWebVitals.js"],
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "prettier", "cypress"],
+  "ignorePatterns": ["src/index.js"],
   "rules": {
     "no-empty-function": "off",
     "@typescript-eslint/no-empty-function": "off",
