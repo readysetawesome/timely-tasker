@@ -9,6 +9,7 @@ import TaskRowFocused, { TotalFocusedRow } from './TaskRowFocused';
 import { DragProvider } from './DragContext';
 import DatePicker from './DatePicker';
 import DragHint from './DragHint';
+import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
@@ -403,6 +404,7 @@ const Timer = ({
       )}
 
       {/* ── Main grid ── */}
+      <InstallHint />
       <DragProvider>
       <DragHint />
       <div className={styles.Timer}>

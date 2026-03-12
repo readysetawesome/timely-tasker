@@ -3,6 +3,12 @@
   "name": "Timely Tasker - efficient, unobtrusive time tracking",
   "icons": [
     {
+      "src": "logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
