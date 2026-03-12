@@ -34,7 +34,7 @@ $tictac-gap: 2px;
     .left_column {
       position: sticky;
       left: 0;
-      z-index: 2;
+      z-index: 4;
       flex-shrink: 0;
       width: var(--left-col);
       background: var(--color-surface-raised);
@@ -77,7 +77,7 @@ $tictac-gap: 2px;
     position: sticky;
     top: 0;
     z-index: 3;
-    padding: 0 12px;
+    padding: 0 8px 0 12px;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 500;
@@ -86,6 +86,34 @@ $tictac-gap: 2px;
     color: var(--color-text-muted);
     background: var(--color-surface-raised);
     border-bottom: 1px solid var(--color-surface-border);
+    justify-content: space-between;
+  }
+
+  .copy_yesterday_btn {
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    padding: 1px 5px;
+    border-radius: 3px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+    text-transform: none;
+    line-height: 1.6;
+
+    &:hover:not(:disabled) {
+      color: var(--color-focused);
+      border-color: var(--color-focused-dim);
+      background: rgba(6, 200, 176, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
   }
 
   .summary_cell {
