@@ -11,7 +11,7 @@ const IPHONE_SAFARI_UA =
 const LINUX_CHROME_UA =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-const stubEnv = (ua: string, standalone = false) => {
+const stubEnv = (ua: string, standalone = false, extraSetup?: (win: Window & typeof globalThis) => void) => {
   cy.window().then((win) => {
     Object.defineProperty(win.navigator, 'userAgent', {
       get() { return ua; },
@@ -26,6 +26,8 @@ const stubEnv = (ua: string, standalone = false) => {
       writable: true,
       configurable: true,
     });
+    extraSetup?.(win);
+    mount(<InstallHint />);
   });
 };
 
@@ -37,7 +39,6 @@ describe('<InstallHint />', () => {
 
   it('shows Add to Dock hint on Mac Safari after delay', () => {
     stubEnv(MAC_SAFARI_UA);
-    mount(<InstallHint />);
     cy.tick(1500);
     cy.get('.install-hint').should('be.visible').and('contain', 'Add to Dock');
     cy.get('.install-hint').should('contain', 'File');
@@ -45,7 +46,6 @@ describe('<InstallHint />', () => {
 
   it('dismisses on X click and saves localStorage flag', () => {
     stubEnv(MAC_SAFARI_UA);
-    mount(<InstallHint />);
     cy.tick(1500);
     cy.get('.install-hint-close').click();
     cy.tick(500);
@@ -61,28 +61,24 @@ describe('<InstallHint />', () => {
       win.localStorage.setItem('TimelyTasker:InstallHintDismissed', 'yes');
     });
     stubEnv(MAC_SAFARI_UA);
-    mount(<InstallHint />);
     cy.tick(2000);
     cy.get('.install-hint').should('not.exist');
   });
 
   it('shows open-in-Safari prompt with copy link button on Mac non-Safari', () => {
     stubEnv(MAC_CHROME_UA);
-    mount(<InstallHint />);
     cy.tick(1500);
     cy.get('.install-hint').should('be.visible').and('contain', 'Safari');
     cy.get('.install-hint-copy').should('contain', 'copy link');
   });
 
   it('copy link button writes URL to clipboard and shows confirmation', () => {
-    stubEnv(MAC_CHROME_UA);
-    cy.window().then((win) => {
+    stubEnv(MAC_CHROME_UA, false, (win) => {
       Object.defineProperty(win.navigator, 'clipboard', {
         value: { writeText: cy.stub().as('writeText').resolves() },
         configurable: true,
       });
     });
-    mount(<InstallHint />);
     cy.tick(1500);
     cy.get('.install-hint-copy').click();
     cy.get('.install-hint-copy').should('contain', '✓ copied');
@@ -93,7 +89,6 @@ describe('<InstallHint />', () => {
 
   it('shows Add to Home Screen hint with share icon on iPhone Safari', () => {
     stubEnv(IPHONE_SAFARI_UA);
-    mount(<InstallHint />);
     cy.tick(1500);
     cy.get('.install-hint').should('be.visible').and('contain', 'Add to Home Screen');
     cy.get('.install-hint-share-svg').should('exist');
@@ -101,14 +96,12 @@ describe('<InstallHint />', () => {
 
   it('does not show when running in standalone (already installed)', () => {
     stubEnv(MAC_SAFARI_UA, true);
-    mount(<InstallHint />);
     cy.tick(2000);
     cy.get('.install-hint').should('not.exist');
   });
 
   it('does not show on non-Apple desktop platforms', () => {
     stubEnv(LINUX_CHROME_UA);
-    mount(<InstallHint />);
     cy.tick(2000);
     cy.get('.install-hint').should('not.exist');
   });
