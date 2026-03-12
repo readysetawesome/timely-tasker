@@ -438,6 +438,11 @@ describe('<Timer /> using localStorage', () => {
     );
   });
 
+  it('ArrowLeft key navigates to the previous day in localStorage mode', () => {
+    cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
+    cy.get('h2').should('contain', '3-22-2023');
+  });
+
   it('switches cloud storage when clicked', () => {
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
     cy.on('url:changed', (newUrl) => {

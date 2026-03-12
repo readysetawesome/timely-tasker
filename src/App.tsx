@@ -1,6 +1,5 @@
-import React from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import './App.css';
+import React, { useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import Timer from './components/Timer/Timer';
 
@@ -26,6 +25,19 @@ export interface AppProps {
 function App({ useDate = todaysDateInt() }: AppProps) {
   const [searchParams] = useSearchParams();
   const date = parseInt(searchParams.get('date') ?? useDate.toString());
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'ArrowLeft') navigate(`/timer?date=${date - ONE_DAY_MILLIS}`);
+      if (e.key === 'ArrowRight') navigate(`/timer?date=${date + ONE_DAY_MILLIS}`);
+      if (e.key === 't') navigate(`/timer?date=${todaysDateInt()}`);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [date, navigate]);
 
   const leftNavClicker = (
     <Link

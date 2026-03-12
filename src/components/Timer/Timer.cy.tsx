@@ -424,4 +424,43 @@ describe('<Timer />', () => {
     cy.wait(['@getSummariesTodayFromNav']);
     cy.get('h2').should('contain', '3-23-2023');
   });
+
+  it('ArrowLeft key navigates to the previous day', () => {
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, { body: [] }).as('prevDaySummaries');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+    cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
+    cy.wait('@prevDaySummaries');
+    cy.get('h2').should('contain', '3-22-2023');
+  });
+
+  it('ArrowRight key navigates to the next day', () => {
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE + ONE_DAY}`, { body: [] }).as('nextDaySummaries');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+    cy.get('body').trigger('keydown', { key: 'ArrowRight', bubbles: true });
+    cy.wait('@nextDaySummaries');
+    cy.get('h2').should('contain', '3-24-2023');
+  });
+
+  it('t key navigates to today when on a different day', () => {
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, { body: [] }).as('prevDay');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('todaySummaries');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+
+    cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
+    cy.wait('@prevDay');
+    cy.get('h2').should('contain', '3-22-2023');
+
+    cy.get('body').trigger('keydown', { key: 't', bubbles: true });
+    cy.wait('@todaySummaries');
+    cy.get('h2').should('contain', '3-23-2023');
+  });
+
+  it('keyboard shortcuts do not fire when a summary input is focused', () => {
+    cy.get("[data-test-id='summary-text-0']").focus();
+    cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
+    cy.get('h2').should('contain', '3-23-2023');
+  });
 });
