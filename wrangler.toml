@@ -1,0 +1,23 @@
+name = "timely-tasker"
+pages_build_output_dir = "build"
+
+# Upgrade from Build Image v1 (deprecated Sep 2026) to v2
+# Build Image v2 uses Node 20 LTS by default (matching .node-version)
+build_image_version = 2
+
+# Workers compatibility date for D1 and Pages Functions
+compatibility_date = "2025-01-01"
+
+[build]
+command = "npm run build"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "timely-tasker-prod"
+database_id = "aa7d5c29-1614-4e2c-bfd5-d32730808cac"
+
+[env.preview]
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "timely-tasker-dev"
+database_id = "f6f204f2-aa00-4c10-a3ed-84cc98537a3d"
