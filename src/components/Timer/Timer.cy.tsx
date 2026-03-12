@@ -122,13 +122,16 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
   });
 
-  it('renders ticks content', () => {
+  it('auto-scrolls to current hour on load so ticks are visible', () => {
+    // TIME_NOW = 9am → targettickNumber = 9*4-4 = 32 (8am). Tick 36 (9am) is 4 ticks right of the target.
+    // After scroll: tick 32 is positioned just past the sticky left column; tick 36 should be
+    // well past the left column but not yet at the far right.
     cy.get("[data-test-id='0-36']")
       .first()
       .then(($el) => {
         const rect = $el[0].getBoundingClientRect();
-          expect(rect.x).to.be.lessThan(700);
-          expect(rect.x).to.be.greaterThan(50);
+          expect(rect.x).to.be.lessThan(600);
+          expect(rect.x).to.be.greaterThan(200);
       });
   });
 
@@ -375,6 +378,31 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='summary-text-11']").trigger('keydown', { key: 'ArrowDown' });
     cy.get("[data-test-id='summary-text-12']").should('exist');
     cy.focused().should('have.attr', 'data-test-id', 'summary-text-12');
+  });
+
+  it('auto-scrolls to midpoint of activity window when navigating to a past day', () => {
+    // Ticks at 40 (10am) and 56 (2pm) → midpoint = 48 (noon). Tick 0-48 should be well past
+    // the sticky left column; tick 0-40 (10am) should be just before it.
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
+    const previousDate = TODAYS_DATE - ONE_DAY;
+    cy.intercept('GET', `/summaries?date=${previousDate}`, {
+      fixture: 'summariesPastActivity',
+    }).as('getSummariesPastActivity');
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait(['@getSummariesPastActivity']);
+
+    // Midpoint tick = floor((40+56)/2) = 48. Tick 0-40 (10am, first tick) should be to the LEFT
+    // of tick 0-48 (noon, scroll target), so 40 should be visible but behind the scroll target.
+    cy.get("[data-test-id='0-48']")
+      .first()
+      .then(($el) => {
+        const rect = $el[0].getBoundingClientRect();
+        expect(rect.x).to.be.lessThan(600);
+        expect(rect.x).to.be.greaterThan(200);
+      });
   });
 
   it('navigates back to today from a previous date', () => {
