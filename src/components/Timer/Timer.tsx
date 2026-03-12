@@ -380,16 +380,6 @@ const Timer = ({
               {rightNavClicker}
               {useLocal !== null && (
                 <button
-                  onClick={handleCopyYesterday}
-                  disabled={copyingYesterday}
-                  data-test-id="copy-yesterday-button"
-                  className="nav-today nav-yesterday"
-                >
-                  {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
-                </button>
-              )}
-              {useLocal !== null && (
-                <button
                   onClick={handleCopySummary}
                   disabled={noFocusedTicks}
                   data-test-id="copy-summary-button"
@@ -478,7 +468,16 @@ const Timer = ({
             <>
               <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
-                  Task
+                  <span>Task</span>
+                  <button
+                    onClick={handleCopyYesterday}
+                    disabled={copyingYesterday}
+                    data-test-id="copy-yesterday-button"
+                    className={styles.copy_yesterday_btn}
+                    title="Copy yesterday's task names into empty slots"
+                  >
+                    {copyingYesterday ? '…' : '↑ yest.'}
+                  </button>
                 </div>
                 {summaryElements}
               </div>
