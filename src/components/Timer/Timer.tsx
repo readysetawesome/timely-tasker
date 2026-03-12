@@ -369,10 +369,6 @@ const Timer = ({
                 <span className="tt-tick-swatch tt-tick-swatch--distracted" />
                 distracted
               </span>
-              <span className="tt-tick-legend-item">
-                <span className="tt-tick-swatch tt-tick-swatch--empty" />
-                empty
-              </span>
             </div>
           )}
         </div>
