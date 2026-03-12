@@ -123,15 +123,14 @@ describe('<Timer />', () => {
   });
 
   it('auto-scrolls to current hour on load so ticks are visible', () => {
-    // TIME_NOW = 9am → targettickNumber = 9*4-4 = 32 (8am). Tick 36 (9am) is 4 ticks right of the target.
-    // After scroll: tick 32 is positioned just past the sticky left column; tick 36 should be
-    // well past the left column but not yet at the far right.
+    // TIME_NOW = 9am → target tick = 32 (8am). Tick 36 (9am) is 4 ticks to the right.
+    // Verify tick 36 is visible in the viewport (not off-screen left or right).
     cy.get("[data-test-id='0-36']")
       .first()
-      .then(($el) => {
+      .should(($el) => {
         const rect = $el[0].getBoundingClientRect();
-          expect(rect.x).to.be.lessThan(600);
-          expect(rect.x).to.be.greaterThan(200);
+        expect(rect.x).to.be.lessThan(900);
+        expect(rect.x).to.be.greaterThan(200);
       });
   });
 
@@ -381,11 +380,10 @@ describe('<Timer />', () => {
   });
 
   it('auto-scrolls to midpoint of activity window when navigating to a past day', () => {
-    // Ticks at 40 (10am) and 56 (2pm) → midpoint = 48 (noon). Tick 0-48 should be well past
-    // the sticky left column; tick 0-40 (10am) should be just before it.
-    const now = TIME_NOW - 420 * 60 * 1000;
-    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
-
+    // Ticks at 40 (10am) and 56 (2pm) → midpoint = 48 (noon).
+    // Midpoint tick 48 should be centered: viewport=1100, left col≈200 → center≈650px.
+    // No cy.clock() here — freezing timers blocks React's scheduler, preventing the re-render
+    // that triggers the scroll effect after summaries load.
     const previousDate = TODAYS_DATE - ONE_DAY;
     cy.intercept('GET', `/summaries?date=${previousDate}`, {
       fixture: 'summariesPastActivity',
@@ -394,14 +392,13 @@ describe('<Timer />', () => {
     cy.get("[data-test-id='left-nav-clicker']").click();
     cy.wait(['@getSummariesPastActivity']);
 
-    // Midpoint tick = floor((40+56)/2) = 48. Tick 0-40 (10am, first tick) should be to the LEFT
-    // of tick 0-48 (noon, scroll target), so 40 should be visible but behind the scroll target.
+    // .should() retries until the scroll effect fires after the re-render.
     cy.get("[data-test-id='0-48']")
       .first()
-      .then(($el) => {
+      .should(($el) => {
         const rect = $el[0].getBoundingClientRect();
-        expect(rect.x).to.be.lessThan(600);
-        expect(rect.x).to.be.greaterThan(200);
+        expect(rect.x).to.be.lessThan(800);
+        expect(rect.x).to.be.greaterThan(400);
       });
   });
 

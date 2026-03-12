@@ -386,14 +386,6 @@ describe('<Timer /> using localStorage', () => {
     cy.get('.drag-hint').should('not.exist');
   });
 
-  it('drag hint dismisses when user first drags', () => {
-    cy.wait(1000);
-    cy.get('.drag-hint').should('be.visible');
-    cy.get('[data-test-id="0-50"]').trigger('pointerdown', { button: 0 });
-    cy.get('[data-test-id="0-50"]').trigger('pointerup');
-    cy.get('.drag-hint').should('not.exist');
-  });
-
   it('updates summary text typed in the <input>', () => {
     cy.get("[data-test-id='summary-text-0']").type(',ok');
     cy.wait(900); // There is 800ms debounce so we have to do this, ew

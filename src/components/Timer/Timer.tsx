@@ -190,6 +190,7 @@ const Timer = ({
   const [scrolledDate, setScrolledDate] = useState<number | null>(null);
   useEffect(() => {
     if (!summariesSuccess || date === scrolledDate) return;
+    if (loadingDate !== date) return;
     let tickNum: number;
     if (isToday) {
       tickNum = Math.max(0, currentTime.getHours() * 4 - 4);
@@ -212,10 +213,12 @@ const Timer = ({
       const leftColWidth = leftColEl?.offsetWidth ?? 0;
       const tickRect = targetTick.getBoundingClientRect();
       const containerRect = contentEl.getBoundingClientRect();
-      contentEl.scrollLeft = contentEl.scrollLeft + tickRect.left - containerRect.left - leftColWidth;
+      const visibleWidth = contentEl.clientWidth - leftColWidth;
+      const offset = isToday ? 0 : visibleWidth / 2;
+      contentEl.scrollLeft = contentEl.scrollLeft + tickRect.left - containerRect.left - leftColWidth - offset;
       setScrolledDate(date);
     }
-  }, [currentTime, isToday, summariesSuccess, date, scrolledDate, todaySummaries]);
+  }, [currentTime, isToday, summariesSuccess, date, scrolledDate, todaySummaries, loadingDate]);
 
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
