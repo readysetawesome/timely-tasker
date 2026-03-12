@@ -34,17 +34,16 @@ const stubEnv = (ua: string, standalone = false, extraSetup?: (win: Window & typ
 describe('<InstallHint />', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
-    cy.clock();
   });
 
-  it.skip('shows Add to Dock hint on Mac Safari after delay', () => {
+  it('shows Add to Dock hint on Mac Safari after delay', () => {
     stubEnv(MAC_SAFARI_UA);
-    cy.tick(1500);
-    cy.get('.install-hint').should('be.visible').and('contain', 'Add to Dock');
+    cy.get('.install-hint', { timeout: 3000 }).should('be.visible').and('contain', 'Add to Dock');
     cy.get('.install-hint').should('contain', 'File');
   });
 
   it('dismisses on X click and saves localStorage flag', () => {
+    cy.clock();
     stubEnv(MAC_SAFARI_UA);
     cy.tick(1500);
     cy.get('.install-hint-close').click();
@@ -57,6 +56,7 @@ describe('<InstallHint />', () => {
   });
 
   it('does not show when already dismissed', () => {
+    cy.clock();
     cy.window().then((win) => {
       win.localStorage.setItem('TimelyTasker:InstallHintDismissed', 'yes');
     });
@@ -66,6 +66,7 @@ describe('<InstallHint />', () => {
   });
 
   it('shows open-in-Safari prompt with copy link button on Mac non-Safari', () => {
+    cy.clock();
     stubEnv(MAC_CHROME_UA);
     cy.tick(1500);
     cy.get('.install-hint').should('be.visible').and('contain', 'Safari');
@@ -73,6 +74,7 @@ describe('<InstallHint />', () => {
   });
 
   it('copy link button writes URL to clipboard and shows confirmation', () => {
+    cy.clock();
     stubEnv(MAC_CHROME_UA, false, (win) => {
       Object.defineProperty(win.navigator, 'clipboard', {
         value: { writeText: cy.stub().as('writeText').resolves() },
@@ -88,6 +90,7 @@ describe('<InstallHint />', () => {
   });
 
   it('shows Add to Home Screen hint with share icon on iPhone Safari', () => {
+    cy.clock();
     stubEnv(IPHONE_SAFARI_UA);
     cy.tick(1500);
     cy.get('.install-hint').should('be.visible').and('contain', 'Add to Home Screen');
@@ -95,12 +98,14 @@ describe('<InstallHint />', () => {
   });
 
   it('does not show when running in standalone (already installed)', () => {
+    cy.clock();
     stubEnv(MAC_SAFARI_UA, true);
     cy.tick(2000);
     cy.get('.install-hint').should('not.exist');
   });
 
   it('does not show on non-Apple desktop platforms', () => {
+    cy.clock();
     stubEnv(LINUX_CHROME_UA);
     cy.tick(2000);
     cy.get('.install-hint').should('not.exist');
