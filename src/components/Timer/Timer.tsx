@@ -186,6 +186,19 @@ const Timer = ({
     }
   }, [todaySummaries]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (document.activeElement as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const contentEl = document.querySelector('[data-test-id="timer-content"]') as HTMLElement;
+      if (!contentEl) return;
+      if (e.key === '[') contentEl.scrollLeft -= contentEl.clientWidth * 0.8;
+      if (e.key === ']') contentEl.scrollLeft += contentEl.clientWidth * 0.8;
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const [showPicker, setShowPicker] = useState(false);
   const isToday = date === todaysDateInt();
   const [scrolledDate, setScrolledDate] = useState<number | null>(null);
