@@ -16,6 +16,7 @@ const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 
 describe('<Timer /> no localStorage setting', () => {
   beforeEach(() => {
+    cy.intercept('GET', '/preferences', { body: {} });
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -379,6 +380,19 @@ describe('<Timer /> using localStorage', () => {
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
   });
 
+  it('daily goal stores and reads goal from localStorage', () => {
+    cy.get('[data-test-id="daily-goal-set-btn"]').click();
+    cy.get('[data-test-id="daily-goal-input"]').clear().type('4');
+    cy.get('[data-test-id="daily-goal-input"]').type('{enter}');
+    cy.get('[data-test-id="daily-goal-target"]').should('contain', '4h');
+    cy.getAllLocalStorage().then((result) => {
+      const prefs = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:Preferences'] as string
+      );
+      expect(prefs.dailyGoalHours).to.equal(4);
+    });
+  });
+
   it('shows drag hint on first visit and dismisses on X click', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('be.visible');
@@ -444,6 +458,7 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('switches cloud storage when clicked', () => {
+    cy.intercept('GET', '/preferences', { body: {} });
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
     cy.on('url:changed', (newUrl) => {
       expect(newUrl).to.equal(Cypress.config('baseUrl') + '/authorize');

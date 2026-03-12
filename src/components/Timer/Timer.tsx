@@ -11,6 +11,7 @@ import DatePicker from './DatePicker';
 import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
+import DailyGoal from './DailyGoal';
 import RestApi, { getRestSelectorsFor } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -372,6 +373,9 @@ const Timer = ({
           {!greeting && <p data-test-id="greeting" style={{display:'none'}} />}
           {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
+          )}
+          {useLocal !== null && (
+            <DailyGoal useApi={useApi} />
           )}
           {useLocal !== null && (
             <div className="tt-tick-legend">

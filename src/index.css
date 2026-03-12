@@ -463,6 +463,77 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
+/* ─── Daily goal ──────────────────────────────────────────────────────────── */
+
+.tt-daily-goal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.tt-daily-goal-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tt-daily-goal-set {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px dashed var(--color-text-muted);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.tt-daily-goal-set:hover { opacity: 1; }
+
+.tt-daily-goal-target {
+  background: none;
+  border: none;
+  color: var(--color-focused);
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline dotted;
+}
+
+.tt-daily-goal-input {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-focused);
+  border-radius: 3px;
+  color: var(--color-focused);
+  font-size: inherit;
+  padding: 0 3px;
+  width: 3ch;
+  text-align: center;
+}
+
+.tt-daily-goal-bar {
+  width: 160px;
+  height: 4px;
+  background: var(--color-surface-3, rgba(255,255,255,0.08));
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tt-daily-goal-fill {
+  height: 100%;
+  background: var(--color-focused);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.tt-daily-goal-fill--met {
+  background: var(--color-focused);
+  box-shadow: 0 0 6px var(--color-focused-glow);
+}
+
 /* ─── Tick legend ─────────────────────────────────────────────────────────── */
 
 .tt-tick-legend {
