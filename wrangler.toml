@@ -1,15 +1,11 @@
 name = "timely-tasker"
 pages_build_output_dir = "build"
 
-# Upgrade from Build Image v1 (deprecated Sep 2026) to v2
-# Build Image v2 uses Node 20 LTS by default (matching .node-version)
-build_image_version = 2
-
 # Workers compatibility date for D1 and Pages Functions
 compatibility_date = "2025-01-01"
 
-[build]
-command = "npm run build"
+# Note: build_image_version and [build] command are configured in the
+# Cloudflare Pages dashboard — wrangler CLI rejects them for Pages projects.
 
 [[d1_databases]]
 binding = "DB"
