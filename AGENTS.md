@@ -76,6 +76,31 @@ Primary regression suite is Cypress component tests:
 
 When changing timer behavior, update fixtures in `cypress/fixtures/` as needed.
 
+### Coverage requirement
+
+**100% line coverage of all new/changed source files is required before opening a PR.**
+Codecov enforces a patch coverage target (~99.67%) and will fail the PR check if new lines are missed.
+
+Before pushing:
+```bash
+CYPRESS_COVERAGE=true npm test
+```
+
+Then verify no misses in new files:
+```bash
+node -e "
+const fs = require('fs');
+const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
+lcov.split('SF:').slice(1).forEach(f => {
+  const name = f.split('\n')[0];
+  const misses = f.split('\n').filter(l => /DA:\d+,0/.test(l));
+  if (misses.length) console.log(name, misses.length, 'misses');
+});
+"
+```
+
+Every new component needs its own `ComponentName.cy.tsx` spec covering all branches.
+
 ## 7. Deployment and Data Ops
 
 - Preview/local migrations:
