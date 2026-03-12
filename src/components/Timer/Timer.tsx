@@ -191,20 +191,22 @@ const Timer = ({
   useEffect(() => {
     if (!summariesSuccess || date === scrolledDate) return;
     if (loadingDate !== date) return;
-    const allTickNums = Object.values(todaySummaries).flatMap((s) =>
-      s.TimerTicks.filter((t) => t.distracted !== -1).map((t) => t.tickNumber)
-    );
     let tickNum: number;
     let center = false;
-    if (isToday && allTickNums.length > 0) {
+    if (isToday) {
       tickNum = Math.max(0, currentTime.getHours() * 4 - 4);
-    } else if (allTickNums.length > 0) {
-      const first = Math.min(...allTickNums);
-      const last = Math.max(...allTickNums);
-      tickNum = Math.floor((first + last) / 2);
-      center = true;
     } else {
-      tickNum = 32; // 8am default for any blank day
+      const allTickNums = Object.values(todaySummaries).flatMap((s) =>
+        s.TimerTicks.filter((t) => t.distracted !== -1).map((t) => t.tickNumber)
+      );
+      if (allTickNums.length === 0) {
+        tickNum = 32; // 8am default for blank past days
+      } else {
+        const first = Math.min(...allTickNums);
+        const last = Math.max(...allTickNums);
+        tickNum = Math.floor((first + last) / 2);
+        center = true;
+      }
     }
     const contentEl = document.querySelector('[data-test-id="timer-content"]') as HTMLElement;
     const targetTick = document.querySelector(`[data-test-id='0-${tickNum}']`) as HTMLElement;
