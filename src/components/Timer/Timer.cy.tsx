@@ -402,6 +402,27 @@ describe('<Timer />', () => {
       });
   });
 
+  it('copy summary button copies formatted text to clipboard', () => {
+    cy.window().then((win) => {
+      cy.stub(win.navigator.clipboard, 'writeText').resolves().as('clipboardWrite');
+    });
+    cy.get('[data-test-id="copy-summary-button"]').click();
+    cy.get('@clipboardWrite').should('have.been.calledOnce');
+    cy.get('@clipboardWrite').should(
+      'have.been.calledWith',
+      'replace jest with cypress: 0.25h focused\nTotal: 0.25h focused'
+    );
+    cy.get('[data-test-id="copy-summary-button"]').should('contain', 'Copied!');
+  });
+
+  it('copy summary button is disabled when no focused ticks exist', () => {
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, { body: [] }).as('blankDay');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+    cy.get('[data-test-id="left-nav-clicker"]').click();
+    cy.wait('@blankDay');
+    cy.get('[data-test-id="copy-summary-button"]').should('be.disabled');
+  });
+
   it('navigates back to today from a previous date', () => {
     // Mock clock before any navigation so todaysDateInt() returns TODAYS_DATE
     // on every re-render, including after clicking left nav
