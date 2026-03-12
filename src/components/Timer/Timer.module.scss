@@ -34,7 +34,7 @@ $tictac-gap: 2px;
     .left_column {
       position: sticky;
       left: 0;
-      z-index: 2;
+      z-index: 4;
       flex-shrink: 0;
       width: var(--left-col);
       background: var(--color-surface-raised);
