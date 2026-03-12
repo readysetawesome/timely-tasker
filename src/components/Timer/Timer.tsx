@@ -159,6 +159,32 @@ const Timer = ({
 
   const todaySummaries = useSelector(getSummaries);
 
+  const [copiedSummary, setCopiedSummary] = useState(false);
+  const handleCopySummary = () => {
+    const rows = Object.values(todaySummaries)
+      .map(s => ({
+        label: s.content,
+        hrs: s.TimerTicks.filter(t => t.distracted === 0).length / 4,
+      }))
+      .filter(r => r.label && r.hrs > 0)
+      .sort((a, b) => b.hrs - a.hrs);
+
+    const totalHrs = Object.values(todaySummaries)
+      .flatMap(s => s.TimerTicks)
+      .filter(t => t.distracted === 0).length / 4;
+
+    const text = [
+      ...rows.map(r => `${r.label}: ${r.hrs}h focused`),
+      `Total: ${totalHrs}h focused`,
+    ].join('\n');
+
+    navigator.clipboard.writeText(text);
+    setCopiedSummary(true);
+    setTimeout(() => setCopiedSummary(false), 2000);
+  };
+  const noFocusedTicks = Object.values(todaySummaries)
+    .every(s => s.TimerTicks.filter(t => t.distracted === 0).length === 0);
+
   const [copyingYesterday, setCopyingYesterday] = useState(false);
   const handleCopyYesterday = async () => {
     setCopyingYesterday(true);
@@ -354,12 +380,12 @@ const Timer = ({
               {rightNavClicker}
               {useLocal !== null && (
                 <button
-                  onClick={handleCopyYesterday}
-                  disabled={copyingYesterday}
-                  data-test-id="copy-yesterday-button"
+                  onClick={handleCopySummary}
+                  disabled={noFocusedTicks}
+                  data-test-id="copy-summary-button"
                   className="nav-today nav-yesterday"
                 >
-                  {copyingYesterday ? 'Copying…' : 'Copy yesterday'}
+                  {copiedSummary ? 'Copied!' : 'Copy summary'}
                 </button>
               )}
             </h2>
@@ -442,7 +468,16 @@ const Timer = ({
             <>
               <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
-                  Task
+                  <span>Task</span>
+                  <button
+                    onClick={handleCopyYesterday}
+                    disabled={copyingYesterday}
+                    data-test-id="copy-yesterday-button"
+                    className={styles.copy_yesterday_btn}
+                    title="Copy yesterday's task names into empty slots"
+                  >
+                    {copyingYesterday ? '…' : '↑ yest.'}
+                  </button>
                 </div>
                 {summaryElements}
               </div>

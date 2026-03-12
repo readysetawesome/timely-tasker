@@ -379,6 +379,10 @@ describe('<Timer /> using localStorage', () => {
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
   });
 
+  it('copy summary button is enabled when focused ticks exist', () => {
+    cy.get('[data-test-id="copy-summary-button"]').should('not.be.disabled');
+  });
+
   it('shows drag hint on first visit and dismisses on X click', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('be.visible');
