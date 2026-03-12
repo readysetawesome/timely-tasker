@@ -199,7 +199,7 @@ const Timer = ({
         s.TimerTicks.filter((t) => t.distracted !== -1).map((t) => t.tickNumber)
       );
       if (allTickNums.length === 0) {
-        tickNum = 0;
+        tickNum = 32; // default to 8am for empty past days
       } else {
         const first = Math.min(...allTickNums);
         const last = Math.max(...allTickNums);
