@@ -636,6 +636,44 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
   });
 
+  it('newly pinned task auto-populates into today even when today already has content', () => {
+    // Today already has 2 slots filled from previous auto-populate
+    const existingSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+      { id: 11, slot: 1, date: TODAYS_DATE, content: 'Email / comms', TimerTicks: [] },
+    ];
+    // pinnedTasks starts with 2 pins matching today's content
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedExisting');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: existingSummaries }).as('getSummariesExisting');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    // A third pin is added (simulates pinning from a past day)
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 3, text: 'Deep focus', position: 2 } }).as('pinNew');
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 20 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createNewPinSummary');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesExisting']);
+    // Today is not empty so no auto-populate fires. Now simulate adding a new pin
+    // (from any day — here we use row 2 which is empty and has no text-match in existing pins)
+    cy.get('[data-test-id="summary-text-2"]').type('Deep focus');
+    cy.get('[data-test-id="pin-btn-2"]').click();
+    cy.wait('@pinNew');
+    // The new pin's text is not yet in today's grid, so it should be auto-populated into slot 2
+    cy.wait('@createNewPinSummary').its('request.url').should('include', 'text=Deep%20focus');
+  });
+
   it('pin button is interactive on past days — can pin/unpin any row with content', () => {
     const YESTERDAY = TODAYS_DATE - ONE_DAY;
     const yesterdaySummaries = [

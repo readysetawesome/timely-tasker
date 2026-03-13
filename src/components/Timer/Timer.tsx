@@ -115,7 +115,7 @@ const Timer = ({
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
   const [pinnedTasks, setPinnedTasksState] = useState<PinnedTask[]>([]);
-  const autoPopulatedDates = useRef<Set<number>>(new Set());
+  const autoPopulatedPins = useRef<Set<string>>(new Set());
 
   // Fetch pinned tasks once authenticated (cloud only)
   useEffect(() => {
@@ -211,22 +211,32 @@ const Timer = ({
 
   const todaySummaries = useSelector(getSummaries);
 
-  // Auto-populate pinned tasks on today when it's empty (cloud only)
+  // Auto-populate pinned tasks on today/tomorrow (cloud only).
+  // The ref guards against re-populating the same pin after the store updates.
   useEffect(() => {
     if (useLocal !== USELOCAL.NO) return;
     if (!isToday && !isTomorrow) return;
     if (!summariesSuccess || loadingDate !== date) return;
-    if (Object.keys(todaySummaries).length > 0) return;
     if (pinnedTasks.length === 0) return;
-    if (autoPopulatedDates.current.has(date)) return;
 
-    autoPopulatedDates.current.add(date);
-    const populate = async () => {
-      for (const [idx, pt] of pinnedTasks.entries()) {
-        await setSummary({ slot: idx, date, content: pt.text, TimerTicks: [] })(dispatch, useApi);
-      }
-    };
-    populate();
+    const existingTexts = new Set(
+      Object.values(todaySummaries).map((s) => s.content?.trim()).filter(Boolean)
+    );
+    const pinsToAdd = pinnedTasks.filter((pt) => {
+      const key = `${date}:${pt.id}`;
+      return !existingTexts.has(pt.text.trim()) && !autoPopulatedPins.current.has(key);
+    });
+    if (pinsToAdd.length === 0) return;
+
+    const occupied = new Set(Object.keys(todaySummaries).map(Number));
+    let nextSlot = 0;
+    for (const pt of pinsToAdd) {
+      autoPopulatedPins.current.add(`${date}:${pt.id}`);
+      while (occupied.has(nextSlot)) nextSlot++;
+      setSummary({ slot: nextSlot, date, content: pt.text, TimerTicks: [] })(dispatch, useApi);
+      occupied.add(nextSlot);
+      nextSlot++;
+    }
   }, [isToday, isTomorrow, summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
 
   const [copiedSummary, setCopiedSummary] = useState(false);
