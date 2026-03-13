@@ -16,12 +16,13 @@ export interface TaskRowSummaryProps {
   onAddRow?: () => void;
   pinnedTasks?: PinnedTask[];
   isToday?: boolean;
+  isTomorrow?: boolean;
   onPin?: (text: string) => void;
   onUnpin?: (id: number) => void;
   onUpdatePin?: (id: number, newText: string) => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, onPin, onUnpin, onUpdatePin }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
@@ -43,7 +44,7 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
           id: summary?.id,
         } as Summary)(dispatch, useApi);
       }
-      if (isToday && activePinIdRef.current !== null && newText && newText.trim()) {
+      if ((isToday || isTomorrow) && activePinIdRef.current !== null && newText && newText.trim()) {
         onUpdatePinRef.current?.(activePinIdRef.current, newText);
       }
     }, 800);
@@ -69,10 +70,10 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
   const pinnedTask = pinnedTasks?.find((p) => p.text === currentText);
   const isPinned = !!pinnedTask;
 
-  // Show pin button when: text has content AND in cloud mode AND (pinned match OR viewing today)
-  const showPinButton = !!pinnedTasks && currentText.trim().length > 0 && (isPinned || !!isToday);
-  // Clicking only does something on today; on other days the button is a read-only indicator
-  const isInteractive = !!isToday;
+  // Show pin button when: text has content AND in cloud mode AND (pinned match OR viewing today/tomorrow)
+  const showPinButton = !!pinnedTasks && currentText.trim().length > 0 && (isPinned || !!isToday || !!isTomorrow);
+  // Clicking only does something on today/tomorrow; on other days the button is a read-only indicator
+  const isInteractive = !!isToday || !!isTomorrow;
 
   const handleFocus = () => {
     activePinIdRef.current = pinnedTask?.id ?? null;

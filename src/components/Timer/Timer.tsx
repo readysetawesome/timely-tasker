@@ -81,6 +81,7 @@ const Timer = ({
   // This prevents cy.clock().restore() from invalidating the value mid-test.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const isToday = useMemo(() => date === todaysDateInt(), [date]);
+  const isTomorrow = useMemo(() => date === todaysDateInt() + 86400000, [date]);
 
   const [useLocal, setUseLocal] = useState(localStorage.getItem(LOCAL_STORAGE));
   useEffect(() => {
@@ -202,7 +203,7 @@ const Timer = ({
   // Auto-populate pinned tasks on today when it's empty (cloud only)
   useEffect(() => {
     if (useLocal !== USELOCAL.NO) return;
-    if (!isToday) return;
+    if (!isToday && !isTomorrow) return;
     if (!summariesSuccess || loadingDate !== date) return;
     if (Object.keys(todaySummaries).length > 0) return;
     if (pinnedTasks.length === 0) return;
@@ -215,7 +216,7 @@ const Timer = ({
       }
     };
     populate();
-  }, [isToday, summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
+  }, [isToday, isTomorrow, summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
 
   const [copiedSummary, setCopiedSummary] = useState(false);
   const handleCopySummary = () => {
@@ -331,9 +332,10 @@ const Timer = ({
           {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }}
           pinnedTasks={isCloudMode ? pinnedTasks : undefined}
           isToday={isToday}
+          isTomorrow={isTomorrow}
           onPin={isCloudMode ? handlePin : undefined}
           onUnpin={isCloudMode ? handleUnpin : undefined}
-          onUpdatePin={isCloudMode && isToday ? handleUpdatePin : undefined}
+          onUpdatePin={isCloudMode && (isToday || isTomorrow) ? handleUpdatePin : undefined}
         />
       );
       tickRowElements.push(

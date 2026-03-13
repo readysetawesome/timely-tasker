@@ -127,9 +127,6 @@ $tictac-gap: 2px;
 
     &:last-child { border-bottom: none; }
 
-    &:not(:hover) .pin_btn:not(.pin_btn_active) {
-      opacity: 0;
-    }
   }
 
   .focused_header,
