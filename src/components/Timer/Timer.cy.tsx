@@ -966,30 +966,32 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="summary-text-5"]').should('have.value', 'Friday task');
   });
 
-  it('reorder buttons appear on today, persist slot swap via PATCH, and restore on move-up', () => {
+  it('drag handles appear on today, persist slot swap via drag-and-drop, and restore on reverse drag', () => {
     // Slot 0 = "replace jest with cypress" (id=75), slot 1 = "other stuff" (id=76)
     cy.intercept('PATCH', '/summaries', (req) => {
       const { orderedIds } = req.body;
-      // Return summaries with new slot assignments matching orderedIds order
       const byId = new Map(summaries.map(s => [s.id, s]));
       req.reply({ body: orderedIds.map((id: number, slot: number) => ({ ...byId.get(id), slot })) });
     }).as('reorderSummaries');
 
-    cy.get('[data-test-id="move-up-0"]').should('be.disabled');
-    cy.get('[data-test-id="move-down-0"]').should('not.be.disabled');
-    cy.get('[data-test-id="move-down-0"]').click();
+    cy.get('[data-test-id="drag-handle-0"]').should('exist');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-1"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragend');
     cy.wait('@reorderSummaries').its('request.body').should('deep.equal', { date: TODAYS_DATE, orderedIds: [76, 75] });
     // Slot values swapped: slot 0 now has "other stuff", slot 1 has "replace jest with cypress"
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'other stuff');
     cy.get('[data-test-id="summary-text-1"]').should('have.value', 'replace jest with cypress');
-    // Move up restores original order
-    cy.get('[data-test-id="move-up-1"]').click();
+    // Drag slot 1 back to slot 0 to restore original order
+    cy.get('[data-test-id="drag-handle-1"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-0"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-1"]').trigger('dragend');
     cy.wait('@reorderSummaries').its('request.body').should('deep.equal', { date: TODAYS_DATE, orderedIds: [75, 76] });
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
     cy.get('[data-test-id="summary-text-1"]').should('have.value', 'other stuff');
   });
 
-  it('reorder buttons do not appear on past days', () => {
+  it('drag handles do not appear on past days', () => {
     const YESTERDAY = TODAYS_DATE - ONE_DAY;
     cy.intercept('GET', `/summaries?date=${YESTERDAY}`, {
       body: [{ id: 99, slot: 0, date: YESTERDAY, content: 'Past task', TimerTicks: [] }],
@@ -1005,7 +1007,6 @@ describe('<Timer />', () => {
       </Provider>
     );
     cy.wait(['@getIdentity', '@getYesterdayForReorder']);
-    cy.get('[data-test-id="move-down-0"]').should('not.exist');
-    cy.get('[data-test-id="move-up-0"]').should('not.exist');
+    cy.get('[data-test-id="drag-handle-0"]').should('not.exist');
   });
 });

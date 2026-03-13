@@ -308,18 +308,27 @@ const Timer = ({
     }
   }, [todaySummaries]);
 
-  const handleMoveRow = async (slot: number, dir: -1 | 1) => {
+  const draggedSlotRef = useRef<number | null>(null);
+
+  const handleDragStart = (slot: number) => {
+    draggedSlotRef.current = slot;
+  };
+
+  const handleDrop = async (targetSlot: number) => {
+    const fromSlot = draggedSlotRef.current;
+    draggedSlotRef.current = null;
+    if (fromSlot === null || fromSlot === targetSlot) return;
+
     const sorted = Object.values(todaySummaries).sort((a, b) => a.slot - b.slot);
-    const idx = sorted.findIndex(s => s.slot === slot);
-    const swapIdx = idx + dir;
-    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const fromIdx = sorted.findIndex(s => s.slot === fromSlot);
+    const toIdx = sorted.findIndex(s => s.slot === targetSlot);
+    if (fromIdx === -1 || toIdx === -1) return;
 
     const reordered = [...sorted];
-    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+    const [item] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, item);
 
-    // Optimistic: assign new slot values based on position in reordered list
     dispatch(summariesReordered(reordered.map((s, i) => ({ ...s, slot: i }))));
-
     const orderedIds = reordered.map(s => s.id!);
     const updated = await useApi.reorderSummaries(date, orderedIds);
     dispatch(summariesReordered(updated));
@@ -403,8 +412,10 @@ const Timer = ({
           onPin={isCloudMode ? handlePin : undefined}
           onUnpin={isCloudMode ? handleUnpin : undefined}
           onUpdatePin={isCloudMode && (isToday || isTomorrow) ? handleUpdatePin : undefined}
-          onMoveUp={canReorder && summaryIdx > 0 ? () => handleMoveRow(slot, -1) : undefined}
-          onMoveDown={canReorder && summaryIdx < sortedSummarySlots.length - 1 ? () => handleMoveRow(slot, 1) : undefined}
+          onDragStart={canReorder ? () => handleDragStart(slot) : undefined}
+          onDragOver={() => undefined}
+          onDrop={() => handleDrop(slot)}
+          onDragEnd={() => { draggedSlotRef.current = null; }}
         />
       );
       tickRowElements.push(

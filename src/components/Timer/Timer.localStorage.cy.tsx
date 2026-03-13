@@ -470,11 +470,12 @@ describe('<Timer /> using localStorage', () => {
     cy.get('h2').should('contain', '3-22-2023');
   });
 
-  it('reorder buttons persist slot swap in localStorage', () => {
+  it('drag-and-drop persists slot swap in localStorage', () => {
     // Slot 0 = "replace jest with cypress" (id=75), slot 1 = "other stuff" (id=76)
-    cy.get('[data-test-id="move-up-0"]').should('be.disabled');
-    cy.get('[data-test-id="move-down-0"]').should('not.be.disabled');
-    cy.get('[data-test-id="move-down-0"]').click();
+    cy.get('[data-test-id="drag-handle-0"]').should('exist');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-1"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragend');
     // Slot values swapped: slot 0 now has "other stuff", slot 1 has "replace jest with cypress"
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'other stuff');
     cy.get('[data-test-id="summary-text-1"]').should('have.value', 'replace jest with cypress');

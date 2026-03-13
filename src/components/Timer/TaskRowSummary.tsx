@@ -20,11 +20,13 @@ export interface TaskRowSummaryProps {
   onPin?: (text: string) => void;
   onUnpin?: (id: number) => void;
   onUpdatePin?: (id: number, newText: string) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
+  onDragStart?: () => void;
+  onDragOver?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin, onMoveUp, onMoveDown }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin, onDragStart, onDragOver, onDrop, onDragEnd }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const [unpinPrompt, setUnpinPrompt] = useState<{ text: string; pinId: number } | null>(null);
   const summary = useSelector((state) => getSummary(state, slot));
@@ -109,12 +111,21 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
   }
 
   return (
-    <div className={styles.summary_cell}>
-      {(onMoveUp !== undefined || onMoveDown !== undefined) && (
-        <div className={styles.row_arrows}>
-          <button onClick={onMoveUp} disabled={!onMoveUp} className={styles.row_arrow} title="Move row up" data-test-id={`move-up-${slot}`}>▲</button>
-          <button onClick={onMoveDown} disabled={!onMoveDown} className={styles.row_arrow} title="Move row down" data-test-id={`move-down-${slot}`}>▼</button>
-        </div>
+    <div
+      className={styles.summary_cell}
+      data-test-id={`summary-cell-${slot}`}
+      onDragOver={onDragOver ? (e) => { e.preventDefault(); onDragOver(); } : undefined}
+      onDrop={onDrop ? (e) => { e.preventDefault(); onDrop(); } : undefined}
+    >
+      {onDragStart && (
+        <div
+          className={styles.drag_handle}
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          data-test-id={`drag-handle-${slot}`}
+          title="Drag to reorder"
+        >⠿</div>
       )}
       <input
         className={styles.summary_input_container}

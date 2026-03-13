@@ -272,27 +272,19 @@ $tictac-gap: 2px;
   }
 }
 
-// ─── Row reorder arrows ────────────────────────────────────────────────────
+// ─── Row drag handle ───────────────────────────────────────────────────────
 
-.row_arrows {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0 2px 0 4px;
+.drag_handle {
   flex-shrink: 0;
-}
-
-.row_arrow {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.45rem;
-  line-height: 1;
+  padding: 0 4px;
   color: var(--color-text-muted);
-  padding: 1px 2px;
-  border-radius: 2px;
-  &:hover:not(:disabled) { color: var(--color-focused); background: rgba(6, 200, 176, 0.1); }
-  &:disabled { opacity: 0.15; cursor: default; }
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: grab;
+  opacity: 0.35;
+  user-select: none;
+  &:hover { opacity: 0.75; color: var(--color-focused); }
+  &:active { cursor: grabbing; }
 }
 
 // ─── Pin button ───────────────────────────────────────────────────────────
