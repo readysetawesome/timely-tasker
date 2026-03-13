@@ -908,4 +908,95 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="summary-text-0"]').trigger('mousedown');
     cy.get('[data-test-id="pins-panel"]').should('not.exist');
   });
+
+  it('shows "↓ yest." on non-Monday (Thursday in default test setup)', () => {
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
+  });
+
+  it('shows "↓ fri." on Monday and switches to "↓ yest." when work weekends toggled on', () => {
+    const MONDAY = TODAYS_DATE - 3 * ONE_DAY; // March 23 (Thu) - 3 = March 20 (Mon)
+    const MONDAY_CLOCK = MONDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${MONDAY}`, { body: [] }).as('getMondaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${MONDAY - ONE_DAY}`, { body: [] });
+    cy.clock(MONDAY_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={MONDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getMondaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ fri.');
+    cy.get('[data-test-id="work-weekends-toggle"] input').click();
+    cy.wait('@setPreference').its('request.body').should('deep.equal', { worksWeekends: true });
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
+  });
+
+  it('on Monday copies from Friday (not Sunday) when worksWeekends is false', () => {
+    const MONDAY = TODAYS_DATE - 3 * ONE_DAY;
+    const FRIDAY = MONDAY - 3 * ONE_DAY;
+    const MONDAY_CLOCK = MONDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    const fridaySummaries = [{ id: 200, slot: 5, date: FRIDAY, content: 'Friday task', TimerTicks: [] }];
+    cy.intercept('GET', `/summaries?date=${MONDAY}`, { body: [] }).as('getMondaySummaries');
+    cy.intercept('GET', `/summaries?date=${FRIDAY}`, { body: fridaySummaries }).as('getFridaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${MONDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: MONDAY, content: text, TimerTicks: [] } });
+    }).as('createSummary');
+    cy.clock(MONDAY_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={MONDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getMondaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').click();
+    cy.wait('@getFridaySummaries');
+    cy.wait('@createSummary');
+    cy.get('[data-test-id="summary-text-5"]').should('have.value', 'Friday task');
+  });
+
+  it('reorder buttons appear on today and move rows within the grid', () => {
+    // Slot 0 = "replace jest with cypress", slot 1 = "other stuff"
+    cy.get('[data-test-id="move-up-0"]').should('be.disabled');
+    cy.get('[data-test-id="move-down-0"]').should('not.be.disabled');
+    cy.get('[data-test-id="move-down-0"]').click();
+    // After moving slot 0 down, slot 1 appears first in the DOM
+    cy.get('[data-test-id^="summary-text-"]').eq(0).should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.get('[data-test-id^="summary-text-"]').eq(1).should('have.attr', 'data-test-id', 'summary-text-0');
+    // Move up restores original order
+    cy.get('[data-test-id="move-up-0"]').click();
+    cy.get('[data-test-id^="summary-text-"]').eq(0).should('have.attr', 'data-test-id', 'summary-text-0');
+    cy.get('[data-test-id^="summary-text-"]').eq(1).should('have.attr', 'data-test-id', 'summary-text-1');
+  });
+
+  it('reorder buttons do not appear on past days', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, {
+      body: [{ id: 99, slot: 0, date: YESTERDAY, content: 'Past task', TimerTicks: [] }],
+    }).as('getYesterdayForReorder');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdayForReorder']);
+    cy.get('[data-test-id="move-down-0"]').should('not.exist');
+    cy.get('[data-test-id="move-up-0"]').should('not.exist');
+  });
 });

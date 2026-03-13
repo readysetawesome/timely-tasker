@@ -20,9 +20,11 @@ export interface TaskRowSummaryProps {
   onPin?: (text: string) => void;
   onUnpin?: (id: number) => void;
   onUpdatePin?: (id: number, newText: string) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin, onMoveUp, onMoveDown }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const [unpinPrompt, setUnpinPrompt] = useState<{ text: string; pinId: number } | null>(null);
   const summary = useSelector((state) => getSummary(state, slot));
@@ -108,6 +110,12 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
 
   return (
     <div className={styles.summary_cell}>
+      {(onMoveUp !== undefined || onMoveDown !== undefined) && (
+        <div className={styles.row_arrows}>
+          <button onClick={onMoveUp} disabled={!onMoveUp} className={styles.row_arrow} title="Move row up" data-test-id={`move-up-${slot}`}>▲</button>
+          <button onClick={onMoveDown} disabled={!onMoveDown} className={styles.row_arrow} title="Move row down" data-test-id={`move-down-${slot}`}>▼</button>
+        </div>
+      )}
       <input
         className={styles.summary_input_container}
         type="text"

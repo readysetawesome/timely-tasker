@@ -470,6 +470,27 @@ describe('<Timer /> using localStorage', () => {
     cy.get('h2').should('contain', '3-22-2023');
   });
 
+  it('reorder buttons appear in localStorage mode and move rows', () => {
+    // In localStorage mode reorder is available on any viewed day (isCloudMode=false)
+    cy.get('[data-test-id="move-up-0"]').should('be.disabled');
+    cy.get('[data-test-id="move-down-0"]').should('not.be.disabled');
+    cy.get('[data-test-id="move-down-0"]').click();
+    cy.get('[data-test-id^="summary-text-"]').eq(0).should('have.attr', 'data-test-id', 'summary-text-1');
+    cy.get('[data-test-id^="summary-text-"]').eq(1).should('have.attr', 'data-test-id', 'summary-text-0');
+  });
+
+  it('work weekends toggle is unchecked by default and saves to localStorage', () => {
+    cy.get('[data-test-id="work-weekends-toggle"] input').should('not.be.checked');
+    cy.get('[data-test-id="work-weekends-toggle"] input').click();
+    cy.get('[data-test-id="work-weekends-toggle"] input').should('be.checked');
+    cy.getAllLocalStorage().then((result) => {
+      const prefs = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:Preferences'] as string
+      );
+      expect(prefs.worksWeekends).to.equal(true);
+    });
+  });
+
   it('switches cloud storage when clicked', () => {
     cy.intercept('GET', '/preferences', { body: {} });
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
@@ -480,6 +501,7 @@ describe('<Timer /> using localStorage', () => {
     cy.wait('@getAuthInfo');
   });
 });
+
 
 describe('<Timer /> drag hint already dismissed', () => {
   beforeEach(() => {

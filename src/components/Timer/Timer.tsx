@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { todaysDateInt } from '../../App';
 import { IdentityResponse } from '../../../lib/Identity';
@@ -265,12 +265,27 @@ const Timer = ({
   const noFocusedTicks = Object.values(todaySummaries)
     .every(s => s.TimerTicks.filter(t => t.distracted === 0).length === 0);
 
+  const ONE_DAY = 86400000;
+
+  const [worksWeekends, setWorksWeekends] = useState(false);
+  useEffect(() => {
+    if (useLocal === null) return;
+    if (useLocal === USELOCAL.NO && !displayName) return;
+    useApi.getPreferences().then((prefs) => {
+      if (prefs.worksWeekends != null) setWorksWeekends(prefs.worksWeekends);
+    });
+  }, [useApi, useLocal, displayName]);
+
+  const isMonday = new Date(date).getUTCDay() === 1;
+  const skipWeekend = !worksWeekends && isMonday;
+  const prevWorkdayDate = skipWeekend ? date - 3 * ONE_DAY : date - ONE_DAY;
+  const copyYesterdayLabel = skipWeekend ? 'fri.' : 'yest.';
+
   const [copyingYesterday, setCopyingYesterday] = useState(false);
   const handleCopyYesterday = async () => {
     setCopyingYesterday(true);
-    const ONE_DAY = 86400000;
-    const yesterdaySummaries = await useApi.getSummaries(date - ONE_DAY);
-    for (const ys of yesterdaySummaries) {
+    const prevSummaries = await useApi.getSummaries(prevWorkdayDate);
+    for (const ys of prevSummaries) {
       if (ys.content && !todaySummaries[ys.slot]?.content) {
         await setSummary({ slot: ys.slot, date, content: ys.content, TimerTicks: [] })(dispatch, useApi);
       }
@@ -291,6 +306,34 @@ const Timer = ({
       setRowCount((prev) => Math.max(prev, maxSlot + 1));
     }
   }, [todaySummaries]);
+
+  // displayOrder: user-set ordering for today. Stores {date, slots} so it auto-resets
+  // on navigation. displaySlots is derived synchronously (no useEffect) to avoid a
+  // render-cycle gap that would break the ArrowDown→addRow→focus-new-row sequence.
+  const [displayOrder, setDisplayOrder] = useState<{ date: number; slots: number[] } | null>(null);
+  const displaySlots = useMemo(() => {
+    const base = displayOrder?.date === date ? displayOrder.slots : [];
+    const valid = base.filter(s => s < rowCount);
+    const validSet = new Set(valid);
+    const missing: number[] = [];
+    for (let i = 0; i < rowCount; i++) {
+      if (!validSet.has(i)) missing.push(i);
+    }
+    return [...valid, ...missing];
+  }, [displayOrder, date, rowCount]);
+
+  const handleMoveRow = useCallback((slot: number, dir: -1 | 1) => {
+    setDisplayOrder(prev => {
+      const current = prev?.date === date ? prev.slots : Array.from({ length: rowCount }, (_, i) => i);
+      const idx = current.indexOf(slot);
+      const newIdx = idx + dir;
+      if (idx < 0 || newIdx < 0 || newIdx >= current.length) return prev;
+      const next = [...current];
+      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+      return { date, slots: next };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, rowCount]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -346,23 +389,31 @@ const Timer = ({
   const tickRowElements = new Array<JSX.Element>();
   const focusedRowElements = new Array<JSX.Element>();
 
-  for (let slot = 0; slot < rowCount; slot++) {
+  for (let displayIdx = 0; displayIdx < displaySlots.length; displayIdx++) {
+    const slot = displaySlots[displayIdx];
     if (summariesSuccess && useLocal !== null) {
       summaryElements.push(
         <TaskRowSummary
-          {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }}
+          key={slot}
+          date={date}
+          slot={slot}
+          useApi={useApi}
+          isLastRow={displayIdx === displaySlots.length - 1}
+          onAddRow={addRow}
           pinnedTasks={isCloudMode ? pinnedTasks : undefined}
           isToday={isToday}
           isTomorrow={isTomorrow}
           onPin={isCloudMode ? handlePin : undefined}
           onUnpin={isCloudMode ? handleUnpin : undefined}
           onUpdatePin={isCloudMode && (isToday || isTomorrow) ? handleUpdatePin : undefined}
+          onMoveUp={(!isCloudMode || isToday) && displayIdx > 0 ? () => handleMoveRow(slot, -1) : undefined}
+          onMoveDown={(!isCloudMode || isToday) && displayIdx < displaySlots.length - 1 ? () => handleMoveRow(slot, 1) : undefined}
         />
       );
       tickRowElements.push(
-        <TaskRowTicks {...{ date, slot, key: slot, useApi }} />
+        <TaskRowTicks key={slot} date={date} slot={slot} useApi={useApi} />
       );
-      focusedRowElements.push(<TaskRowFocused {...{ slot, key: slot }} />);
+      focusedRowElements.push(<TaskRowFocused key={slot} slot={slot} />);
     }
   }
 
@@ -485,6 +536,20 @@ const Timer = ({
             <DailyGoal useApi={useApi} />
           )}
           {useLocal !== null && (
+            <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
+              <input
+                type="checkbox"
+                checked={worksWeekends}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setWorksWeekends(val);
+                  useApi.setPreference('worksWeekends', val);
+                }}
+              />
+              I work weekends
+            </label>
+          )}
+          {useLocal !== null && (
             <div className="tt-tick-legend">
               <span className="tt-tick-legend-item">
                 <span className="tt-tick-swatch tt-tick-swatch--focused" />
@@ -583,7 +648,7 @@ const Timer = ({
                         className={styles.copy_yesterday_btn}
                         title="Copy yesterday's task names into empty slots"
                       >
-                        {copyingYesterday ? '…' : '↓ yest.'}
+                        {copyingYesterday ? '…' : `↓ ${copyYesterdayLabel}`}
                       </button>
                     )}
                   </div>
