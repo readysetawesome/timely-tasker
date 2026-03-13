@@ -29,11 +29,15 @@ export const onRequest: PagesFunction<Env, never> = async ({
     const id = searchParams.get('id');
     if (!id) return errorResponse('id is required');
 
-    await env.DB.prepare(
-      `DELETE FROM PinnedTasks WHERE id = ? AND userId = ?`
-    )
-      .bind(id, identity.userId)
-      .run();
+    await env.DB.batch([
+      env.DB.prepare(`DELETE FROM PinnedTasks WHERE id = ? AND userId = ?`)
+        .bind(id, identity.userId),
+      env.DB.prepare(`UPDATE PinnedTasks SET position = (
+          SELECT COUNT(*) FROM PinnedTasks p2
+          WHERE p2.userId = PinnedTasks.userId AND p2.position < PinnedTasks.position
+        ) WHERE userId = ?`)
+        .bind(identity.userId),
+    ]);
 
     return new Response(JSON.stringify({ success: true }), JsonHeader);
   }
@@ -56,11 +60,17 @@ export const onRequest: PagesFunction<Env, never> = async ({
     const { orderedIds } = await request.json<{ orderedIds: number[] }>();
     if (!Array.isArray(orderedIds)) return errorResponse('orderedIds array is required');
 
-    const stmts = orderedIds.map((id, position) =>
+    // Two-pass to avoid unique constraint conflicts during reorder:
+    // first move all to negative temporaries, then to final positions.
+    const tempStmts = orderedIds.map((id, i) =>
+      env.DB.prepare('UPDATE PinnedTasks SET position = ? WHERE id = ? AND userId = ?')
+        .bind(-(i + 1), id, identity.userId)
+    );
+    const finalStmts = orderedIds.map((id, position) =>
       env.DB.prepare('UPDATE PinnedTasks SET position = ? WHERE id = ? AND userId = ?')
         .bind(position, id, identity.userId)
     );
-    await env.DB.batch(stmts);
+    await env.DB.batch([...tempStmts, ...finalStmts]);
 
     const { results } = await env.DB.prepare(
       `SELECT id, text, position FROM PinnedTasks WHERE userId = ? ORDER BY position, id`
@@ -76,9 +86,11 @@ export const onRequest: PagesFunction<Env, never> = async ({
     if (!text) return errorResponse('text is required');
 
     const result = await env.DB.prepare(
-      `INSERT INTO PinnedTasks (userId, text, position) VALUES (?, ?, ?) RETURNING id, text, position`
+      `INSERT INTO PinnedTasks (userId, text, position)
+       VALUES (?, ?, COALESCE(?, (SELECT COUNT(*) FROM PinnedTasks WHERE userId = ?)))
+       RETURNING id, text, position`
     )
-      .bind(identity.userId, text, position ?? 0)
+      .bind(identity.userId, text, position ?? null, identity.userId)
       .first<PinnedTask>();
 
     if (!result) return errorResponse('Error creating pinned task');
