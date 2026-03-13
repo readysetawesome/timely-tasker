@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { todaysDateInt } from '../../App';
 import { IdentityResponse } from '../../../lib/Identity';
@@ -18,6 +18,7 @@ import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
+import { summariesReordered } from './Timer.slice';
 import { PinnedTask } from '../../../functions/pinnedTasks';
 
 export const dateDisplay = (date) => {
@@ -307,33 +308,22 @@ const Timer = ({
     }
   }, [todaySummaries]);
 
-  // displayOrder: user-set ordering for today. Stores {date, slots} so it auto-resets
-  // on navigation. displaySlots is derived synchronously (no useEffect) to avoid a
-  // render-cycle gap that would break the ArrowDown→addRow→focus-new-row sequence.
-  const [displayOrder, setDisplayOrder] = useState<{ date: number; slots: number[] } | null>(null);
-  const displaySlots = useMemo(() => {
-    const base = displayOrder?.date === date ? displayOrder.slots : [];
-    const valid = base.filter(s => s < rowCount);
-    const validSet = new Set(valid);
-    const missing: number[] = [];
-    for (let i = 0; i < rowCount; i++) {
-      if (!validSet.has(i)) missing.push(i);
-    }
-    return [...valid, ...missing];
-  }, [displayOrder, date, rowCount]);
+  const handleMoveRow = async (slot: number, dir: -1 | 1) => {
+    const sorted = Object.values(todaySummaries).sort((a, b) => a.slot - b.slot);
+    const idx = sorted.findIndex(s => s.slot === slot);
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
 
-  const handleMoveRow = useCallback((slot: number, dir: -1 | 1) => {
-    setDisplayOrder(prev => {
-      const current = prev?.date === date ? prev.slots : Array.from({ length: rowCount }, (_, i) => i);
-      const idx = current.indexOf(slot);
-      const newIdx = idx + dir;
-      if (idx < 0 || newIdx < 0 || newIdx >= current.length) return prev;
-      const next = [...current];
-      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
-      return { date, slots: next };
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date, rowCount]);
+    const reordered = [...sorted];
+    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
+
+    // Optimistic: assign new slot values based on position in reordered list
+    dispatch(summariesReordered(reordered.map((s, i) => ({ ...s, slot: i }))));
+
+    const orderedIds = reordered.map(s => s.id!);
+    const updated = await useApi.reorderSummaries(date, orderedIds);
+    dispatch(summariesReordered(updated));
+  };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -389,16 +379,23 @@ const Timer = ({
   const tickRowElements = new Array<JSX.Element>();
   const focusedRowElements = new Array<JSX.Element>();
 
-  for (let displayIdx = 0; displayIdx < displaySlots.length; displayIdx++) {
-    const slot = displaySlots[displayIdx];
+  // Sorted list of slots that have content — used to determine move-button availability
+  const sortedSummarySlots = useMemo(
+    () => Object.values(todaySummaries).sort((a, b) => a.slot - b.slot).map(s => s.slot),
+    [todaySummaries]
+  );
+
+  for (let slot = 0; slot < rowCount; slot++) {
     if (summariesSuccess && useLocal !== null) {
+      const summaryIdx = sortedSummarySlots.indexOf(slot);
+      const canReorder = (!isCloudMode || isToday) && summaryIdx !== -1;
       summaryElements.push(
         <TaskRowSummary
           key={slot}
           date={date}
           slot={slot}
           useApi={useApi}
-          isLastRow={displayIdx === displaySlots.length - 1}
+          isLastRow={slot === rowCount - 1}
           onAddRow={addRow}
           pinnedTasks={isCloudMode ? pinnedTasks : undefined}
           isToday={isToday}
@@ -406,8 +403,8 @@ const Timer = ({
           onPin={isCloudMode ? handlePin : undefined}
           onUnpin={isCloudMode ? handleUnpin : undefined}
           onUpdatePin={isCloudMode && (isToday || isTomorrow) ? handleUpdatePin : undefined}
-          onMoveUp={(!isCloudMode || isToday) && displayIdx > 0 ? () => handleMoveRow(slot, -1) : undefined}
-          onMoveDown={(!isCloudMode || isToday) && displayIdx < displaySlots.length - 1 ? () => handleMoveRow(slot, 1) : undefined}
+          onMoveUp={canReorder && summaryIdx > 0 ? () => handleMoveRow(slot, -1) : undefined}
+          onMoveDown={canReorder && summaryIdx < sortedSummarySlots.length - 1 ? () => handleMoveRow(slot, 1) : undefined}
         />
       );
       tickRowElements.push(

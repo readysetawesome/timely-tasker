@@ -470,13 +470,22 @@ describe('<Timer /> using localStorage', () => {
     cy.get('h2').should('contain', '3-22-2023');
   });
 
-  it('reorder buttons appear in localStorage mode and move rows', () => {
-    // In localStorage mode reorder is available on any viewed day (isCloudMode=false)
+  it('reorder buttons persist slot swap in localStorage', () => {
+    // Slot 0 = "replace jest with cypress" (id=75), slot 1 = "other stuff" (id=76)
     cy.get('[data-test-id="move-up-0"]').should('be.disabled');
     cy.get('[data-test-id="move-down-0"]').should('not.be.disabled');
     cy.get('[data-test-id="move-down-0"]').click();
-    cy.get('[data-test-id^="summary-text-"]').eq(0).should('have.attr', 'data-test-id', 'summary-text-1');
-    cy.get('[data-test-id^="summary-text-"]').eq(1).should('have.attr', 'data-test-id', 'summary-text-0');
+    // Slot values swapped: slot 0 now has "other stuff", slot 1 has "replace jest with cypress"
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'other stuff');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'replace jest with cypress');
+    // Verify persisted to localStorage: slot 0 key should have "other stuff"
+    cy.getAllLocalStorage().then((result) => {
+      const slot0 = JSON.parse(
+        result[Cypress.config('baseUrl') ?? ''][`TimelyTasker:${TODAYS_DATE}-0`] as string
+      );
+      expect(slot0.content).to.equal('other stuff');
+      expect(slot0.slot).to.equal(0);
+    });
   });
 
   it('work weekends toggle is unchecked by default and saves to localStorage', () => {

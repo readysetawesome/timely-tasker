@@ -73,6 +73,36 @@ export const onRequest: PagesFunction<Env, never> = async ({
 
   if (date?.length === 0) return errorResponse('Date is required');
 
+  if (request.method === 'PATCH') {
+    const { date: patchDate, orderedIds } = await request.json<{ date: number; orderedIds: number[] }>();
+    if (!Array.isArray(orderedIds)) return errorResponse('orderedIds array is required');
+    if (!patchDate) return errorResponse('date is required');
+
+    // Two-pass to avoid unique constraint violations on (userId, date, slot):
+    // first move all to negative temporaries, then to final positions.
+    const tempStmts = orderedIds.map((id, i) =>
+      env.DB.prepare('UPDATE Summaries SET slot = ? WHERE id = ? AND userId = ?')
+        .bind(-(i + 1), id, identity.userId)
+    );
+    const finalStmts = orderedIds.map((id, slot) =>
+      env.DB.prepare('UPDATE Summaries SET slot = ? WHERE id = ? AND userId = ?')
+        .bind(slot, id, identity.userId)
+    );
+    await env.DB.batch([...tempStmts, ...finalStmts]);
+
+    const { results } = await env.DB.prepare(
+      `SELECT ${FULL_JSON_OBJECT_SELECT} FROM Summaries WHERE userId = ? AND date = ? ORDER BY slot`
+    )
+      .bind(identity.userId, patchDate)
+      .all<Summary>();
+
+    results?.forEach((value) => {
+      value.TimerTicks = JSON.parse(value.TimerTicks as unknown as string);
+    });
+
+    return new Response(JSON.stringify(results ?? []), JsonHeader);
+  }
+
   if (request.method === 'POST') {
     // BEGIN CREATE/UPDATE REQUEST
     if (slot?.length === 0) return errorResponse('Slot is required');

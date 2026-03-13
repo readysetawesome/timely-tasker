@@ -51,6 +51,13 @@ const slice = createSlice({
       state.sessionExpired = true;
     },
 
+    summariesReordered: (state, action: PayloadAction<Summary[]>) => {
+      state.summaries = {};
+      action.payload.forEach((s) => {
+        state.summaries[s.slot] = s;
+      });
+    },
+
     summaryCreated: (state, action: PayloadAction<Summary>) => {
       state.summaries[action.payload.slot] = action.payload;
       state.summaryCreated = ApiStates.Success;
@@ -96,6 +103,7 @@ export const {
   summariesLoading,
   summariesError,
   sessionExpired,
+  summariesReordered,
   summaryCreated,
   summaryDeleted,
   summaryPending,

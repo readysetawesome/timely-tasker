@@ -148,6 +148,14 @@ const reorderPinnedTasks = (orderedIds: number[]): Promise<PinnedTask[]> =>
 
 export { getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks };
 
+const reorderSummaries = (date: number, orderedIds: number[]): Promise<Summary[]> =>
+  fetch(fetchPrefix + '/summaries', {
+    ...fetchOptions,
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ date, orderedIds }),
+  }).then((response) => response.json<Summary[]>());
+
 const exports = {
   greet,
   logout,
@@ -157,5 +165,6 @@ const exports = {
   createSummary,
   getPreferences,
   setPreference,
+  reorderSummaries,
 };
 export default exports;
