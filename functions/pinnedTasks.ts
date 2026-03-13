@@ -34,7 +34,10 @@ export const onRequest: PagesFunction<Env, never> = async ({
         .bind(id, identity.userId),
       env.DB.prepare(`UPDATE PinnedTasks SET position = (
           SELECT COUNT(*) FROM PinnedTasks p2
-          WHERE p2.userId = PinnedTasks.userId AND p2.position < PinnedTasks.position
+          WHERE p2.userId = PinnedTasks.userId AND (
+            p2.position < PinnedTasks.position OR
+            (p2.position = PinnedTasks.position AND p2.id < PinnedTasks.id)
+          )
         ) WHERE userId = ?`)
         .bind(identity.userId),
     ]);
@@ -60,17 +63,11 @@ export const onRequest: PagesFunction<Env, never> = async ({
     const { orderedIds } = await request.json<{ orderedIds: number[] }>();
     if (!Array.isArray(orderedIds)) return errorResponse('orderedIds array is required');
 
-    // Two-pass to avoid unique constraint conflicts during reorder:
-    // first move all to negative temporaries, then to final positions.
-    const tempStmts = orderedIds.map((id, i) =>
-      env.DB.prepare('UPDATE PinnedTasks SET position = ? WHERE id = ? AND userId = ?')
-        .bind(-(i + 1), id, identity.userId)
-    );
-    const finalStmts = orderedIds.map((id, position) =>
+    const stmts = orderedIds.map((id, position) =>
       env.DB.prepare('UPDATE PinnedTasks SET position = ? WHERE id = ? AND userId = ?')
         .bind(position, id, identity.userId)
     );
-    await env.DB.batch([...tempStmts, ...finalStmts]);
+    await env.DB.batch(stmts);
 
     const { results } = await env.DB.prepare(
       `SELECT id, text, position FROM PinnedTasks WHERE userId = ? ORDER BY position, id`
