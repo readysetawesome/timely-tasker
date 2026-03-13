@@ -741,6 +741,9 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="pin-delete-0"]').click();
     cy.wait('@deletePin').its('request.url').should('include', 'id=1');
     cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
+    // X button calls onClose
+    cy.get('[data-test-id="pins-panel-close"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('not.exist');
   });
 
   it('pins panel allows reordering pins via PATCH /pinnedTasks', () => {

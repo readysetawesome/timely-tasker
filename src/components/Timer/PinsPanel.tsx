@@ -22,7 +22,7 @@ const PinsPanel = ({ pins, onReorder, onDelete, onClose }: PinsPanelProps) => {
     <div className={styles.pins_panel} data-test-id="pins-panel">
       <div className={styles.pins_panel_header}>
         <span>Pinned tasks</span>
-        <button onClick={onClose} className={styles.pins_panel_close} title="Close">
+        <button onClick={onClose} className={styles.pins_panel_close} title="Close" data-test-id="pins-panel-close">
           ×
         </button>
       </div>
