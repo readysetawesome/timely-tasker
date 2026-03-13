@@ -8,7 +8,7 @@ nvm use --silent 2>/dev/null || true
 
 echo ""
 echo "▶ pre-push: running tests with coverage..."
-CYPRESS_COVERAGE=true npm test
+npm run test:quiet:coverage
 
 echo ""
 echo "▶ pre-push: checking diff coverage vs origin/main..."
