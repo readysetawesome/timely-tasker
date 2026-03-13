@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Node.js 22 environment
+      - name: Setup Node.js 24 environment
         uses: actions/setup-node@v3
         with:
-          node-version: 'lts/jod'
+          node-version: '24'
 
       - name: Install npm dependencies
         run: npm install
