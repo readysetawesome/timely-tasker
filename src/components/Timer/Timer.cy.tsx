@@ -725,8 +725,8 @@ describe('<Timer />', () => {
     // move-up brings it back
     cy.get('[data-test-id="pin-move-up-1"]').click();
     cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [1, 2] });
-    // close button hides the panel
-    cy.get('[data-test-id="pins-panel"]').find('button[title="Close"]').click();
+    // clicking outside the panel dismisses it
+    cy.get('body').click(0, 0);
     cy.get('[data-test-id="pins-panel"]').should('not.exist');
   });
 });

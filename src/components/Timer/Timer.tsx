@@ -149,6 +149,17 @@ const Timer = ({
   };
 
   const [showPinsPanel, setShowPinsPanel] = useState(false);
+  const pinsPanelWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showPinsPanel) return;
+    const handler = (e: MouseEvent) => {
+      if (pinsPanelWrapRef.current && !pinsPanelWrapRef.current.contains(e.target as Node)) {
+        setShowPinsPanel(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showPinsPanel]);
 
   const handleLogout = () => {
     RestApi.logout().then((res) => {
@@ -535,7 +546,7 @@ const Timer = ({
                   <span>Task</span>
                   <div className={styles.summary_header_actions}>
                     {isCloudMode && pinnedTasks.length > 0 && (
-                      <div className={styles.pins_panel_wrap}>
+                      <div className={styles.pins_panel_wrap} ref={pinsPanelWrapRef}>
                         <button
                           onClick={() => setShowPinsPanel((p) => !p)}
                           className={`${styles.copy_yesterday_btn}${showPinsPanel ? ` ${styles.copy_yesterday_btn_active}` : ''}`}
