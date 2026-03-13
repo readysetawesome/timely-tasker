@@ -14,7 +14,6 @@ import WeekTotal from './WeekTotal';
 import DailyGoal from './DailyGoal';
 import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks } from '../../RestApi';
 import PinsPanel from './PinsPanel';
-import PinIcon from './PinIcon';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
@@ -550,11 +549,11 @@ const Timer = ({
                       <div className={styles.pins_panel_wrap} ref={pinsPanelWrapRef}>
                         <button
                           onClick={() => setShowPinsPanel((p) => !p)}
-                          className={`${styles.copy_yesterday_btn}${showPinsPanel ? ` ${styles.copy_yesterday_btn_active}` : ''}${pinnedTasks.length > 0 ? ` ${styles.copy_yesterday_btn_has_pins}` : ''}`}
+                          className={`${styles.copy_yesterday_btn}${showPinsPanel ? ` ${styles.copy_yesterday_btn_active}` : ''}`}
                           data-test-id="pins-panel-toggle"
                           title="Pinned tasks"
                         >
-                          <PinIcon filled={pinnedTasks.length > 0} size={12} />
+                          📌
                         </button>
                         {showPinsPanel && (
                           <PinsPanel

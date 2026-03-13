@@ -1,7 +1,6 @@
 import styles from './Timer.module.scss';
 import React, { useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
-import PinIcon from './PinIcon';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSummary } from './Timer.selectors';
 import { Summary } from '../../../functions/summaries';
@@ -113,7 +112,7 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
           data-pinned={isPinned}
           data-readonly={!isInteractive}
         >
-          <PinIcon filled={isPinned} />
+          📌
         </button>
       )}
     </div>
