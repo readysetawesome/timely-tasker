@@ -416,6 +416,19 @@ describe('<Timer /> using localStorage', () => {
     });
   });
 
+  it('clearing summary text with no ticks removes it from localStorage', () => {
+    // slot 1 ("other stuff") has no ticks in the fixture
+    cy.get('[data-test-id="summary-text-1"]').clear();
+    cy.wait(900); // past 800ms debounce
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', '');
+    cy.getAllLocalStorage().then((result) => {
+      const slots = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:1679529600000'] as string
+      ) as number[];
+      expect(slots).not.to.include(1);
+    });
+  });
+
   it('renders tick marks from the data, they respond to clicks', () => {
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]').click();
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');

@@ -45,6 +45,7 @@ export type Summary = {
   date: number;
   slot: number;
   TimerTicks: Array<TimerTick>;
+  deleted?: boolean;
 };
 
 const errorResponse = (error: string) =>
@@ -92,6 +93,17 @@ export const onRequest: PagesFunction<Env, never> = async ({
     summary = results?.[0];
 
     if (summary) {
+      if (!text?.trim()) {
+        const { results: tickResults } = await env.DB.prepare(
+          `SELECT COUNT(*) as count FROM TimerTicks WHERE summaryId = ? AND distracted != -1`
+        ).bind(summary.id).all<{ count: number }>();
+        if ((tickResults?.[0]?.count ?? 0) === 0) {
+          await env.DB.prepare(`DELETE FROM Summaries WHERE id = ? AND userId = ?`)
+            .bind(summary.id, identity.userId).run();
+          return new Response(JSON.stringify({ deleted: true, slot: Number(slot), date: Number(date) }), JsonHeader);
+        }
+      }
+
       const {
         results: _results,
         success,

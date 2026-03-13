@@ -202,6 +202,30 @@ describe('<Timer />', () => {
     cy.get(`[data-test-id='summary-text-2'][value='${targetText}']`);
   });
 
+  it('clearing summary text with no ticks removes it from state (server delete)', () => {
+    // slot 1 ("other stuff") has no ticks — server deletes the row
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=1`, {
+      body: { deleted: true, slot: 1, date: TODAYS_DATE },
+    }).as('deleteSummary');
+    cy.get('[data-test-id="summary-text-1"]').clear();
+    cy.wait('@deleteSummary');
+    // grid row stays (always 12 rows), but pin button is gone (no content) and value is empty
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', '');
+    cy.get('[data-test-id="pin-btn-1"]').should('not.exist');
+  });
+
+  it('clearing summary text with ticks blanks content but keeps the row active', () => {
+    // slot 0 has ticks — server keeps the row, just clears content
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { id: 75, content: '', date: TODAYS_DATE, slot: 0, TimerTicks: [{ tickNumber: 31, distracted: 0 }] },
+    }).as('blankSummary');
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.wait('@blankSummary');
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
+    // ticks still rendered because the summary is still in Redux state
+    cy.get('[data-test-id="0-31"][data-tick-state="focused"]').should('exist');
+  });
+
   it('ticking a box should not erase the newly entered summary', () => {
     cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=Hi&slot=3`, {
       fixture: 'summarySlotThree',

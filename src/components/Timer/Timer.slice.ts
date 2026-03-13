@@ -55,6 +55,10 @@ const slice = createSlice({
       state.summaries[action.payload.slot] = action.payload;
       state.summaryCreated = ApiStates.Success;
     },
+    summaryDeleted: (state, action: PayloadAction<{ slot: number }>) => {
+      delete state.summaries[action.payload.slot];
+      state.summaryCreated = ApiStates.Success;
+    },
     summaryPending: (state) => {
       state.summaryCreated = ApiStates.InProgress;
     },
@@ -93,6 +97,7 @@ export const {
   summariesError,
   sessionExpired,
   summaryCreated,
+  summaryDeleted,
   summaryPending,
   summaryError,
   tickUpdated,

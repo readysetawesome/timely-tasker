@@ -36,6 +36,7 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
   const handleSummaryChange = useMemo(() => {
     return debounce((newText: string | undefined) => {
       if (newText !== undefined && summary?.content !== newText) {
+        if (!newText.trim() && !summary?.id) return; // don't create blank rows
         setSummary({
           TimerTicks: summary?.TimerTicks || [],
           slot,
