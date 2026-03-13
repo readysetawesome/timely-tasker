@@ -1,6 +1,7 @@
 import { RequestInitCfProperties } from '@cloudflare/workers-types';
 import { Summary } from '../functions/summaries';
 import { UserPreferences } from '../functions/preferences';
+import { PinnedTask } from '../functions/pinnedTasks';
 import { IdentityResponse } from '../lib/Identity';
 import { TickChangeEvent } from './components/Timer/Timer.slice';
 
@@ -110,6 +111,26 @@ const setPreference = <K extends keyof UserPreferences>(
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ [key]: value }),
   }).then((response) => response.json<UserPreferences>());
+
+const getPinnedTasks = (): Promise<PinnedTask[]> =>
+  fetch(fetchPrefix + '/pinnedTasks', fetchOptions)
+    .then((response) => response.json<PinnedTask[]>());
+
+const setPinnedTask = (text: string): Promise<PinnedTask> =>
+  fetch(fetchPrefix + '/pinnedTasks', {
+    ...fetchOptions,
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text }),
+  }).then((response) => response.json<PinnedTask>());
+
+const removePinnedTask = (id: number): Promise<void> =>
+  fetch(fetchPrefix + `/pinnedTasks?id=${id}`, {
+    ...fetchOptions,
+    method: 'DELETE',
+  }).then(() => undefined);
+
+export { getPinnedTasks, setPinnedTask, removePinnedTask };
 
 const exports = {
   greet,

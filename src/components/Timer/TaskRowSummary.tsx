@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSummary } from './Timer.selectors';
 import { Summary } from '../../../functions/summaries';
+import { PinnedTask } from '../../../functions/pinnedTasks';
 import { setSummary } from './Timer.actions';
 import { StorageApiType } from '../../LocalStorageApi';
 
@@ -13,9 +14,12 @@ export interface TaskRowSummaryProps {
   useApi: StorageApiType;
   isLastRow?: boolean;
   onAddRow?: () => void;
+  pinnedTasks?: PinnedTask[];
+  onPin?: (text: string) => void;
+  onUnpin?: (id: number) => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, onPin, onUnpin }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
@@ -50,12 +54,25 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSumm
     if (el) { el.focus(); el.select(); }
   };
 
+  const currentText = text === undefined ? summary?.content || '' : text;
+  const pinnedTask = pinnedTasks?.find((p) => p.text === currentText);
+  const isPinned = !!pinnedTask;
+  const showPinButton = !!onPin && currentText.trim().length > 0;
+
+  const handlePinClick = () => {
+    if (isPinned && pinnedTask) {
+      onUnpin?.(pinnedTask.id);
+    } else {
+      onPin?.(currentText);
+    }
+  };
+
   return (
     <div className={styles.summary_cell}>
       <input
         className={styles.summary_input_container}
         type="text"
-        value={text === undefined ? summary?.content || '' : text}
+        value={currentText}
         onChange={(e) => [
           setText(e.target.value),
           handleSummaryChange(e.target.value),
@@ -64,6 +81,17 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSumm
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
+      {showPinButton && (
+        <button
+          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}`}
+          onClick={handlePinClick}
+          title={isPinned ? 'Unpin task' : 'Pin task — auto-fills on new days'}
+          data-test-id={`pin-btn-${slot}`}
+          data-pinned={isPinned}
+        >
+          📌
+        </button>
+      )}
     </div>
   );
 };

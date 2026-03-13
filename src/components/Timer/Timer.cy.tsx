@@ -28,6 +28,7 @@ beforeEach(() => {
   ).as('getWeekSummaries');
   cy.intercept('GET', '/preferences', { body: {} }).as('getPreferences');
   cy.intercept('POST', '/preferences', (req) => { req.reply({ body: req.body }); }).as('setPreference');
+  cy.intercept('GET', '/pinnedTasks', { body: [] }).as('getPinnedTasks');
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
@@ -539,5 +540,73 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="daily-goal-input"]').type('{enter}');
     cy.wait('@setPreference').its('request.body').should('deep.equal', { dailyGoalHours: 8 });
     cy.get('[data-test-id="daily-goal-target"]').should('contain', '8h');
+  });
+
+  it('pin button exists in DOM for rows with text, absent for empty rows', () => {
+    // slot 0 has "replace jest with cypress", slot 1 has "other stuff", slot 2 is empty
+    cy.get('[data-test-id="pin-btn-0"]').should('exist');
+    cy.get('[data-test-id="pin-btn-1"]').should('exist');
+    cy.get('[data-test-id="pin-btn-2"]').should('not.exist');
+  });
+
+  it('pin button is not pinned by default', () => {
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'false');
+  });
+
+  it('pin button pins a task via POST /pinnedTasks and shows as active', () => {
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 1, text: 'replace jest with cypress', position: 0 } }).as('pinTask');
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@pinTask');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+  });
+
+  it('pin button unpins an already-pinned task via DELETE /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedTasksFilled');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries4');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinTask');
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummaries4']);
+
+    // Type the pinned text "Deep work" into slot 0 so it matches a pinned task
+    cy.get('[data-test-id="summary-text-0"]').clear().type('Deep work');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@unpinTask').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'false');
+  });
+
+  it('auto-populates pinned tasks on an empty day', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedTasksForEmpty');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: [] }).as('getEmptySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createPinnedSummary');
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getEmptySummaries']);
+    cy.wait('@createPinnedSummary');
+    cy.wait('@createPinnedSummary');
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'Deep work');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'Email / comms');
   });
 });

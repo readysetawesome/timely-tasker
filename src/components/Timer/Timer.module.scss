@@ -120,6 +120,10 @@ $tictac-gap: 2px;
     border-bottom: 1px solid var(--color-surface-border);
 
     &:last-child { border-bottom: none; }
+
+    &:not(:hover) .pin_btn:not(.pin_btn_active) {
+      opacity: 0;
+    }
   }
 
   .focused_header,
@@ -263,6 +267,26 @@ $tictac-gap: 2px;
   .tictac_clicked::after {
     animation: pulse-click 0.5s ease forwards;
   }
+}
+
+// ─── Pin button ───────────────────────────────────────────────────────────
+
+.pin_btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0 6px;
+  line-height: 1;
+  transition: opacity 0.15s;
+  filter: grayscale(1) opacity(0.5);
+
+  &:hover { filter: grayscale(0) opacity(1); }
+}
+
+.pin_btn_active {
+  filter: grayscale(0) opacity(1);
 }
 
 // ─── Summary input ────────────────────────────────────────────────────────

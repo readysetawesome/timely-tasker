@@ -12,11 +12,12 @@ import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
 import DailyGoal from './DailyGoal';
-import RestApi, { getRestSelectorsFor } from '../../RestApi';
+import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask } from '../../RestApi';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
+import { PinnedTask } from '../../../functions/pinnedTasks';
 
 export const dateDisplay = (date) => {
   date = new Date(date);
@@ -106,6 +107,25 @@ const Timer = ({
 
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
+  const [pinnedTasks, setPinnedTasksState] = useState<PinnedTask[]>([]);
+  const autoPopulatedDates = useRef<Set<number>>(new Set());
+
+  // Fetch pinned tasks once authenticated (cloud only)
+  useEffect(() => {
+    if (useLocal !== USELOCAL.NO || !displayName) return;
+    getPinnedTasks().then(setPinnedTasksState);
+  }, [useLocal, displayName]);
+
+  const handlePin = async (text: string) => {
+    const newPin = await setPinnedTask(text);
+    setPinnedTasksState((prev) => [...prev, newPin]);
+  };
+
+  const handleUnpin = async (id: number) => {
+    await removePinnedTask(id);
+    setPinnedTasksState((prev) => prev.filter((p) => p.id !== id));
+  };
+
   const handleLogout = () => {
     RestApi.logout().then((res) => {
       if (res.ok) {
@@ -155,6 +175,23 @@ const Timer = ({
   ]);
 
   const todaySummaries = useSelector(getSummaries);
+
+  // Auto-populate pinned tasks on new empty days (cloud only)
+  useEffect(() => {
+    if (useLocal !== USELOCAL.NO) return;
+    if (!summariesSuccess || loadingDate !== date) return;
+    if (Object.keys(todaySummaries).length > 0) return;
+    if (pinnedTasks.length === 0) return;
+    if (autoPopulatedDates.current.has(date)) return;
+
+    autoPopulatedDates.current.add(date);
+    const populate = async () => {
+      for (const [idx, pt] of pinnedTasks.entries()) {
+        await setSummary({ slot: idx, date, content: pt.text, TimerTicks: [] })(dispatch, useApi);
+      }
+    };
+    populate();
+  }, [summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
 
   const [copiedSummary, setCopiedSummary] = useState(false);
   const handleCopySummary = () => {
@@ -265,8 +302,14 @@ const Timer = ({
 
   for (let slot = 0; slot < rowCount; slot++) {
     if (summariesSuccess && useLocal !== null) {
+      const isCloudMode = useLocal === USELOCAL.NO;
       summaryElements.push(
-        <TaskRowSummary {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }} />
+        <TaskRowSummary
+          {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }}
+          pinnedTasks={isCloudMode ? pinnedTasks : undefined}
+          onPin={isCloudMode ? handlePin : undefined}
+          onUnpin={isCloudMode ? handleUnpin : undefined}
+        />
       );
       tickRowElements.push(
         <TaskRowTicks {...{ date, slot, key: slot, useApi }} />
