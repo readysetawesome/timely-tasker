@@ -26,6 +26,7 @@
     "test": "cypress run --component",
     "ci-cypress": "cypress run --component --config screenshotOnRunFailure=false,video=false",
     "lint": "eslint --ext .js,.ts ./src ./functions",
+    "check-coverage": "node scripts/check-diff-coverage.mjs",
     "migrate:preview": "wrangler d1 migrations apply DB --env preview --remote",
     "migrate:prod": "wrangler d1 migrations apply DB --remote"
   },
