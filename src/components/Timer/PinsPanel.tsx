@@ -5,10 +5,11 @@ import styles from './Timer.module.scss';
 interface PinsPanelProps {
   pins: PinnedTask[];
   onReorder: (orderedIds: number[]) => void;
+  onDelete: (id: number) => void;
   onClose: () => void;
 }
 
-const PinsPanel = ({ pins, onReorder, onClose }: PinsPanelProps) => {
+const PinsPanel = ({ pins, onReorder, onDelete, onClose }: PinsPanelProps) => {
   const move = (idx: number, dir: -1 | 1) => {
     const reordered = [...pins];
     const tmp = reordered[idx];
@@ -25,34 +26,45 @@ const PinsPanel = ({ pins, onReorder, onClose }: PinsPanelProps) => {
           ×
         </button>
       </div>
-      {pins.length === 0 && (
-        <div className={styles.pins_panel_empty}>No pinned tasks</div>
-      )}
-      {pins.map((pin, idx) => (
-        <div key={pin.id} className={styles.pins_panel_row} data-test-id={`pin-item-${idx}`}>
-          <div className={styles.pins_panel_arrows}>
+      {pins.length === 0 ? (
+        <div className={styles.pins_panel_empty}>
+          Pin recurring tasks using the pin icon next to any task — they'll auto-fill on future days.
+        </div>
+      ) : (
+        pins.map((pin, idx) => (
+          <div key={pin.id} className={styles.pins_panel_row} data-test-id={`pin-item-${idx}`}>
+            <div className={styles.pins_panel_arrows}>
+              <button
+                onClick={() => move(idx, -1)}
+                disabled={idx === 0}
+                className={styles.pins_panel_arrow}
+                title="Move up"
+                data-test-id={`pin-move-up-${idx}`}
+              >
+                ▲
+              </button>
+              <button
+                onClick={() => move(idx, 1)}
+                disabled={idx === pins.length - 1}
+                className={styles.pins_panel_arrow}
+                title="Move down"
+                data-test-id={`pin-move-down-${idx}`}
+              >
+                ▼
+              </button>
+            </div>
+            <span className={styles.pins_panel_text}>{pin.text}</span>
             <button
-              onClick={() => move(idx, -1)}
-              disabled={idx === 0}
-              className={styles.pins_panel_arrow}
-              title="Move up"
-              data-test-id={`pin-move-up-${idx}`}
+              onClick={() => onDelete(pin.id)}
+              className={styles.pins_panel_delete}
+              title="Remove pin"
+              data-test-id={`pin-delete-${idx}`}
             >
-              ▲
-            </button>
-            <button
-              onClick={() => move(idx, 1)}
-              disabled={idx === pins.length - 1}
-              className={styles.pins_panel_arrow}
-              title="Move down"
-              data-test-id={`pin-move-down-${idx}`}
-            >
-              ▼
+              ×
             </button>
           </div>
-          <span className={styles.pins_panel_text}>{pin.text}</span>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   );
 };

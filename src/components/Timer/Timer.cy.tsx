@@ -690,6 +690,49 @@ describe('<Timer />', () => {
     cy.wait('@updatePin').its('request.body').should('deep.equal', { id: 1, text: 'Deep work session' });
   });
 
+  it('pins panel toggle is visible in cloud mode even with no pins, shows empty state', () => {
+    // default intercept returns [] for pinnedTasks
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait('@getIdentity');
+    cy.get('[data-test-id="pins-panel-toggle"]').should('exist');
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pins-panel"]').should('contain', 'auto-fill');
+  });
+
+  it('pins panel allows deleting a pin via DELETE /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForDelete');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummariesForDelete');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('deletePin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForDelete']);
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Deep work');
+    cy.get('[data-test-id="pin-delete-0"]').click();
+    cy.wait('@deletePin').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
+  });
+
   it('pins panel allows reordering pins via PATCH /pinnedTasks', () => {
     cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForReorder');
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummariesReorder');

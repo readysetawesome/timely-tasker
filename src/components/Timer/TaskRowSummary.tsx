@@ -1,6 +1,7 @@
 import styles from './Timer.module.scss';
 import React, { useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
+import PinIcon from './PinIcon';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSummary } from './Timer.selectors';
 import { Summary } from '../../../functions/summaries';
@@ -105,14 +106,14 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
       />
       {showPinButton && (
         <button
-          className={`${styles.pin_btn}${isPinned && isInteractive ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
+          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
           onClick={handlePinClick}
           title={isPinned ? (isInteractive ? 'Unpin task' : 'Pinned task') : 'Pin task — auto-fills on new days'}
           data-test-id={`pin-btn-${slot}`}
           data-pinned={isPinned}
           data-readonly={!isInteractive}
         >
-          📌
+          <PinIcon filled={isPinned} />
         </button>
       )}
     </div>
