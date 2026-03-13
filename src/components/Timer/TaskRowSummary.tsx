@@ -104,7 +104,7 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
       />
       {showPinButton && (
         <button
-          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
+          className={`${styles.pin_btn}${isPinned && isInteractive ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
           onClick={handlePinClick}
           title={isPinned ? (isInteractive ? 'Unpin task' : 'Pinned task') : 'Pin task — auto-fills on new days'}
           data-test-id={`pin-btn-${slot}`}

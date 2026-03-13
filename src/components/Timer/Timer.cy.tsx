@@ -722,5 +722,11 @@ describe('<Timer />', () => {
     cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [2, 1] });
     cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
     cy.get('[data-test-id="pin-item-1"]').should('contain', 'Deep work');
+    // move-up brings it back
+    cy.get('[data-test-id="pin-move-up-1"]').click();
+    cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [1, 2] });
+    // close button hides the panel
+    cy.get('[data-test-id="pins-panel"]').find('button[title="Close"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('not.exist');
   });
 });
