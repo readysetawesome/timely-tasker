@@ -636,14 +636,17 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
   });
 
-  it('pin button is a read-only indicator on non-today days when text matches a pin', () => {
+  it('pin button is interactive on past days — can pin/unpin any row with content', () => {
     const YESTERDAY = TODAYS_DATE - ONE_DAY;
     const yesterdaySummaries = [
       { id: 100, slot: 0, date: YESTERDAY, content: 'Deep work', TimerTicks: [] },
+      { id: 101, slot: 1, date: YESTERDAY, content: 'Something new', TimerTicks: [] },
     ];
-    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedReadonly');
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedPastDay');
     cy.intercept('GET', `/summaries?date=${YESTERDAY}`, { body: yesterdaySummaries }).as('getYesterdaySummaries');
     cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 99, text: 'Something new', position: 2 } }).as('pinNew');
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinExisting');
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -654,9 +657,16 @@ describe('<Timer />', () => {
       </Provider>
     );
     cy.wait(['@getIdentity', '@getYesterdaySummaries']);
-    cy.get('[data-test-id="pin-btn-0"]').should('exist');
+    // matched pin shows as pinned and interactive
     cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
-    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-readonly', 'true');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-readonly', 'false');
+    // unpin it
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@unpinExisting').its('request.url').should('include', 'id=1');
+    // unmatched row also shows pin button and can be pinned
+    cy.get('[data-test-id="pin-btn-1"]').should('have.attr', 'data-pinned', 'false');
+    cy.get('[data-test-id="pin-btn-1"]').click();
+    cy.wait('@pinNew').its('request.body').should('deep.equal', { text: 'Something new' });
   });
 
   it('editing an auto-populated pinned task on today updates the pin via PUT /pinnedTasks', () => {

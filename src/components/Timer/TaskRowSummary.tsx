@@ -70,17 +70,16 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
   const pinnedTask = pinnedTasks?.find((p) => p.text === currentText);
   const isPinned = !!pinnedTask;
 
-  // Show pin button when: text has content AND in cloud mode AND (pinned match OR viewing today/tomorrow)
-  const showPinButton = !!pinnedTasks && currentText.trim().length > 0 && (isPinned || !!isToday || !!isTomorrow);
-  // Clicking only does something on today/tomorrow; on other days the button is a read-only indicator
-  const isInteractive = !!isToday || !!isTomorrow;
+  // Show pin button whenever there's content in cloud mode — any day
+  const showPinButton = !!pinnedTasks && currentText.trim().length > 0;
+  // Pin/unpin works on all days; rename-via-typing is limited to today/tomorrow (see handleSummaryChange)
+  const isInteractive = !!pinnedTasks;
 
   const handleFocus = () => {
     activePinIdRef.current = pinnedTask?.id ?? null;
   };
 
   const handlePinClick = () => {
-    if (!isInteractive) return; // read-only on non-today dates
     if (isPinned && pinnedTask) {
       onUnpin?.(pinnedTask.id);
     } else {
