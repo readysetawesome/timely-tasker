@@ -21,6 +21,7 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "start": "vite",
     "build": "vite build",
     "test": "cypress run --component",

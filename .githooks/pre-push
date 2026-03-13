@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+
+# Load nvm so the correct Node version is available
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm use --silent 2>/dev/null || true
+
+echo ""
+echo "▶ pre-push: running tests with coverage..."
+CYPRESS_COVERAGE=true npm test
+
+echo ""
+echo "▶ pre-push: checking diff coverage vs origin/main..."
+node scripts/check-diff-coverage.mjs
