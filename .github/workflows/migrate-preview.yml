@@ -1,0 +1,26 @@
+name: Migrate Preview DB
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch containing the migration(s) to apply'
+        required: true
+        default: 'main'
+
+jobs:
+  migrate-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Apply DB migrations (preview)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: d1 migrations apply DB --remote --env preview
