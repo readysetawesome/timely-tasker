@@ -778,8 +778,8 @@ describe('<Timer />', () => {
     // move-up brings it back
     cy.get('[data-test-id="pin-move-up-1"]').click();
     cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [1, 2] });
-    // clicking outside the panel dismisses it
-    cy.get('body').click(0, 0);
+    // mousedown outside the panel dismisses it (tests the document mousedown handler directly)
+    cy.get('[data-test-id="summary-text-0"]').trigger('mousedown');
     cy.get('[data-test-id="pins-panel"]').should('not.exist');
   });
 });
