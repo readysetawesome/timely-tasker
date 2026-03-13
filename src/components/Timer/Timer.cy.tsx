@@ -667,6 +667,8 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="pin-btn-1"]').should('have.attr', 'data-pinned', 'false');
     cy.get('[data-test-id="pin-btn-1"]').click();
     cy.wait('@pinNew').its('request.body').should('deep.equal', { text: 'Something new' });
+    // copy-yesterday button is hidden on past days
+    cy.get('[data-test-id="copy-yesterday-button"]').should('not.exist');
   });
 
   it('editing an auto-populated pinned task on today updates the pin via PUT /pinnedTasks', () => {

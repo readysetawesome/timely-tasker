@@ -565,15 +565,17 @@ const Timer = ({
                         )}
                       </div>
                     )}
-                    <button
-                      onClick={handleCopyYesterday}
-                      disabled={copyingYesterday}
-                      data-test-id="copy-yesterday-button"
-                      className={styles.copy_yesterday_btn}
-                      title="Copy yesterday's task names into empty slots"
-                    >
-                      {copyingYesterday ? '…' : '↑ yest.'}
-                    </button>
+                    {(!isCloudMode || isToday || isTomorrow) && (
+                      <button
+                        onClick={handleCopyYesterday}
+                        disabled={copyingYesterday}
+                        data-test-id="copy-yesterday-button"
+                        className={styles.copy_yesterday_btn}
+                        title="Copy yesterday's task names into empty slots"
+                      >
+                        {copyingYesterday ? '…' : '↓ yest.'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 {summaryElements}
