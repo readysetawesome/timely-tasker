@@ -295,6 +295,7 @@ $tictac-gap: 2px;
 .pin_btn_readonly {
   cursor: default;
   pointer-events: none;
+  filter: grayscale(0) opacity(1);
 }
 
 // ─── Pins panel ─────────────────────────────────────────────────────────────
