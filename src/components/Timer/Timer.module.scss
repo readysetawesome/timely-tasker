@@ -404,6 +404,25 @@ $tictac-gap: 2px;
   max-width: 140px;
 }
 
+// ─── Unpin prompt ─────────────────────────────────────────────────────────
+
+.unpin_prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+
+  span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 // ─── Summary input ────────────────────────────────────────────────────────
 
 .summary_input_container {

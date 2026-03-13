@@ -24,6 +24,7 @@ export interface TaskRowSummaryProps {
 
 const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
+  const [unpinPrompt, setUnpinPrompt] = useState<{ text: string; pinId: number } | null>(null);
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
 
@@ -88,16 +89,39 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
     }
   };
 
+  const handleUnpinConfirm = () => {
+    if (unpinPrompt) onUnpin?.(unpinPrompt.pinId);
+    setUnpinPrompt(null);
+  };
+
+  if (unpinPrompt) {
+    return (
+      <div className={styles.summary_cell}>
+        <div className={styles.unpin_prompt} data-test-id={`unpin-prompt-${slot}`}>
+          <span>Unpin "{unpinPrompt.text}"?</span>
+          <button className="tt-btn-ghost" onClick={handleUnpinConfirm} data-test-id={`unpin-confirm-${slot}`}>Unpin</button>
+          <button className="tt-btn-ghost" onClick={() => setUnpinPrompt(null)} data-test-id={`unpin-keep-${slot}`}>Keep</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.summary_cell}>
       <input
         className={styles.summary_input_container}
         type="text"
         value={currentText}
-        onChange={(e) => [
-          setText(e.target.value),
-          handleSummaryChange(e.target.value),
-        ]}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (!val && activePinIdRef.current !== null && isToday) {
+            setUnpinPrompt({ text: currentText, pinId: activePinIdRef.current });
+          } else if (val) {
+            setUnpinPrompt(null);
+          }
+          setText(val);
+          handleSummaryChange(val);
+        }}
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder="enter a summary"

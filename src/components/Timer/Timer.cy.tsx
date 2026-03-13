@@ -611,6 +611,65 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'false');
   });
 
+  it('clearing a pinned summary row prompts to unpin — confirm unpins', () => {
+    const pinnedSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForPrompt');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: pinnedSummaries }).as('getSummariesForPrompt');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { deleted: true, slot: 0, date: TODAYS_DATE },
+    }).as('deleteSummaryForPrompt');
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinFromPrompt');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForPrompt']);
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible').and('contain', 'Deep work');
+    cy.get('[data-test-id="unpin-confirm-0"]').click();
+    cy.wait('@unpinFromPrompt').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="unpin-prompt-0"]').should('not.exist');
+  });
+
+  it('clearing a pinned summary row prompts to unpin — keep dismisses prompt', () => {
+    const pinnedSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForKeep');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: pinnedSummaries }).as('getSummariesForKeep');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { deleted: true, slot: 0, date: TODAYS_DATE },
+    });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('shouldNotUnpin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForKeep']);
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible');
+    cy.get('[data-test-id="unpin-keep-0"]').click();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('not.exist');
+    // pin was NOT deleted
+    cy.get('@shouldNotUnpin.all').should('have.length', 0);
+  });
+
   it('auto-populates pinned tasks on an empty day', () => {
     cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedTasksForEmpty');
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: [] }).as('getEmptySummaries');
