@@ -130,7 +130,23 @@ const removePinnedTask = (id: number): Promise<void> =>
     method: 'DELETE',
   }).then(() => undefined);
 
-export { getPinnedTasks, setPinnedTask, removePinnedTask };
+const updatePinnedTaskText = (id: number, text: string): Promise<PinnedTask> =>
+  fetch(fetchPrefix + '/pinnedTasks', {
+    ...fetchOptions,
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ id, text }),
+  }).then((response) => response.json<PinnedTask>());
+
+const reorderPinnedTasks = (orderedIds: number[]): Promise<PinnedTask[]> =>
+  fetch(fetchPrefix + '/pinnedTasks', {
+    ...fetchOptions,
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ orderedIds }),
+  }).then((response) => response.json<PinnedTask[]>());
+
+export { getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks };
 
 const exports = {
   greet,

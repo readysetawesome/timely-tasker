@@ -1,5 +1,5 @@
 import styles from './Timer.module.scss';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSummary } from './Timer.selectors';
@@ -15,28 +15,39 @@ export interface TaskRowSummaryProps {
   isLastRow?: boolean;
   onAddRow?: () => void;
   pinnedTasks?: PinnedTask[];
+  isToday?: boolean;
   onPin?: (text: string) => void;
   onUnpin?: (id: number) => void;
+  onUpdatePin?: (id: number, newText: string) => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, onPin, onUnpin }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, onPin, onUnpin, onUpdatePin }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
 
+  // Capture the active pin id at focus time so rename works even as text diverges
+  const activePinIdRef = useRef<number | null>(null);
+  // Stable ref to onUpdatePin so it needn't be a useMemo dep
+  const onUpdatePinRef = useRef(onUpdatePin);
+  onUpdatePinRef.current = onUpdatePin;
+
   const handleSummaryChange = useMemo(() => {
-    return debounce((text: string | undefined) => {
-      if (text !== undefined && summary?.content !== text) {
+    return debounce((newText: string | undefined) => {
+      if (newText !== undefined && summary?.content !== newText) {
         setSummary({
           TimerTicks: summary?.TimerTicks || [],
           slot,
           date,
-          content: text,
+          content: newText,
           id: summary?.id,
         } as Summary)(dispatch, useApi);
       }
+      if (isToday && activePinIdRef.current !== null && newText && newText.trim()) {
+        onUpdatePinRef.current?.(activePinIdRef.current, newText);
+      }
     }, 800);
-  }, [date, dispatch, slot, summary, useApi]);
+  }, [date, dispatch, slot, summary, useApi, isToday]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -57,9 +68,18 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
   const currentText = text === undefined ? summary?.content || '' : text;
   const pinnedTask = pinnedTasks?.find((p) => p.text === currentText);
   const isPinned = !!pinnedTask;
-  const showPinButton = !!onPin && currentText.trim().length > 0;
+
+  // Show pin button when: text has content AND in cloud mode AND (pinned match OR viewing today)
+  const showPinButton = !!pinnedTasks && currentText.trim().length > 0 && (isPinned || !!isToday);
+  // Clicking only does something on today; on other days the button is a read-only indicator
+  const isInteractive = !!isToday;
+
+  const handleFocus = () => {
+    activePinIdRef.current = pinnedTask?.id ?? null;
+  };
 
   const handlePinClick = () => {
+    if (!isInteractive) return; // read-only on non-today dates
     if (isPinned && pinnedTask) {
       onUnpin?.(pinnedTask.id);
     } else {
@@ -77,17 +97,19 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
           setText(e.target.value),
           handleSummaryChange(e.target.value),
         ]}
+        onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
       {showPinButton && (
         <button
-          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}`}
+          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
           onClick={handlePinClick}
-          title={isPinned ? 'Unpin task' : 'Pin task — auto-fills on new days'}
+          title={isPinned ? (isInteractive ? 'Unpin task' : 'Pinned task') : 'Pin task — auto-fills on new days'}
           data-test-id={`pin-btn-${slot}`}
           data-pinned={isPinned}
+          data-readonly={!isInteractive}
         >
           📌
         </button>

@@ -14,6 +14,8 @@ const TIME_NOW = 1679587374481; // at 9 am
 const ONE_DAY = 86400000;
 // TODAYS_DATE is Thursday; week start (last Saturday) = 5 days prior
 const WEEK_START = TODAYS_DATE - 5 * ONE_DAY;
+// Timezone-adjusted clock so todaysDateInt() returns TODAYS_DATE on any host timezone
+const CLOCK_TIME = TIME_NOW - 420 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000;
 
 beforeEach(() => {
   cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
@@ -565,6 +567,7 @@ describe('<Timer />', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries4');
     cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
     cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinTask');
+    cy.clock(CLOCK_TIME);
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -594,6 +597,7 @@ describe('<Timer />', () => {
       const text = url.searchParams.get('text') ?? '';
       req.reply({ body: { id: 10 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
     }).as('createPinnedSummary');
+    cy.clock(CLOCK_TIME);
     mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -608,5 +612,115 @@ describe('<Timer />', () => {
     cy.wait('@createPinnedSummary');
     cy.get('[data-test-id="summary-text-0"]').should('have.value', 'Deep work');
     cy.get('[data-test-id="summary-text-1"]').should('have.value', 'Email / comms');
+  });
+
+  it('does not auto-populate pinned tasks on a non-today empty day', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedNonToday');
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, { body: [] }).as('getYesterdayEmpty');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*').as('createSummary');
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdayEmpty']);
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(300);
+    cy.get('@createSummary.all').should('have.length', 0);
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
+  });
+
+  it('pin button is a read-only indicator on non-today days when text matches a pin', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    const yesterdaySummaries = [
+      { id: 100, slot: 0, date: YESTERDAY, content: 'Deep work', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedReadonly');
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, { body: yesterdaySummaries }).as('getYesterdaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdaySummaries']);
+    cy.get('[data-test-id="pin-btn-0"]').should('exist');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-readonly', 'true');
+  });
+
+  it('editing an auto-populated pinned task on today updates the pin via PUT /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForUpdate');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: [] }).as('getEmptyForUpdate');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createSummary');
+    cy.intercept('PUT', '/pinnedTasks', (req) => {
+      req.reply({ body: { id: req.body.id, text: req.body.text, position: 0 } });
+    }).as('updatePin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getEmptyForUpdate']);
+    cy.wait(['@createSummary', '@createSummary']);
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'Deep work');
+    cy.get('[data-test-id="summary-text-0"]').focus().type(' session');
+    cy.tick(1000); // advance past 800ms debounce (clock is frozen by cy.clock)
+    cy.wait('@updatePin').its('request.body').should('deep.equal', { id: 1, text: 'Deep work session' });
+  });
+
+  it('pins panel allows reordering pins via PATCH /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForReorder');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummariesReorder');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('PATCH', '/pinnedTasks', (req) => {
+      req.reply({
+        body: req.body.orderedIds.map((id: number, position: number) => ({
+          id,
+          text: id === 1 ? 'Deep work' : 'Email / comms',
+          position,
+        })),
+      });
+    }).as('reorderPins');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesReorder']);
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Deep work');
+    cy.get('[data-test-id="pin-item-1"]').should('contain', 'Email / comms');
+    cy.get('[data-test-id="pin-move-down-0"]').click();
+    cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [2, 1] });
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
+    cy.get('[data-test-id="pin-item-1"]').should('contain', 'Deep work');
   });
 });

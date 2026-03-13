@@ -37,6 +37,7 @@ describe('<Timer /> no localStorage setting', () => {
   it('clicking sign in with google from storage prompt begins auth flow', () => {
     cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+    cy.intercept('GET', '/pinnedTasks', { body: [] });
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getIdentity');
     cy.get('[data-test-id=use-cloud-storage]').should('not.exist');

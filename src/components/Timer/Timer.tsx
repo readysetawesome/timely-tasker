@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { todaysDateInt } from '../../App';
 import { IdentityResponse } from '../../../lib/Identity';
@@ -12,7 +12,8 @@ import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
 import DailyGoal from './DailyGoal';
-import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask } from '../../RestApi';
+import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks } from '../../RestApi';
+import PinsPanel from './PinsPanel';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
@@ -76,6 +77,11 @@ const Timer = ({
   const isSessionExpired = useSelector(getSessionExpired);
   const dispatch = useDispatch();
 
+  // useMemo keyed on date so isToday only recomputes on navigation, not on every render.
+  // This prevents cy.clock().restore() from invalidating the value mid-test.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const isToday = useMemo(() => date === todaysDateInt(), [date]);
+
   const [useLocal, setUseLocal] = useState(localStorage.getItem(LOCAL_STORAGE));
   useEffect(() => {
     if (useLocal !== null && useLocal !== localStorage.getItem(LOCAL_STORAGE)) {
@@ -125,6 +131,23 @@ const Timer = ({
     await removePinnedTask(id);
     setPinnedTasksState((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const handleUpdatePin = async (id: number, text: string) => {
+    const updated = await updatePinnedTaskText(id, text);
+    setPinnedTasksState((prev) => prev.map((p) => (p.id === id ? updated : p)));
+  };
+
+  const handleReorderPins = async (orderedIds: number[]) => {
+    // Optimistic update
+    setPinnedTasksState((prev) => {
+      const byId = new Map(prev.map((p) => [p.id, p]));
+      return orderedIds.map((id, position) => ({ ...byId.get(id)!, position }));
+    });
+    const updated = await reorderPinnedTasks(orderedIds);
+    setPinnedTasksState(updated);
+  };
+
+  const [showPinsPanel, setShowPinsPanel] = useState(false);
 
   const handleLogout = () => {
     RestApi.logout().then((res) => {
@@ -176,9 +199,10 @@ const Timer = ({
 
   const todaySummaries = useSelector(getSummaries);
 
-  // Auto-populate pinned tasks on new empty days (cloud only)
+  // Auto-populate pinned tasks on today when it's empty (cloud only)
   useEffect(() => {
     if (useLocal !== USELOCAL.NO) return;
+    if (!isToday) return;
     if (!summariesSuccess || loadingDate !== date) return;
     if (Object.keys(todaySummaries).length > 0) return;
     if (pinnedTasks.length === 0) return;
@@ -191,7 +215,7 @@ const Timer = ({
       }
     };
     populate();
-  }, [summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
+  }, [isToday, summariesSuccess, loadingDate, date, todaySummaries, pinnedTasks, useLocal, dispatch, useApi]);
 
   const [copiedSummary, setCopiedSummary] = useState(false);
   const handleCopySummary = () => {
@@ -260,7 +284,6 @@ const Timer = ({
   }, []);
 
   const [showPicker, setShowPicker] = useState(false);
-  const isToday = date === todaysDateInt();
   const [scrolledDate, setScrolledDate] = useState<number | null>(null);
   useEffect(() => {
     if (!summariesSuccess || date === scrolledDate) return;
@@ -296,19 +319,21 @@ const Timer = ({
     }
   }, [currentTime, isToday, summariesSuccess, date, scrolledDate, todaySummaries, loadingDate]);
 
+  const isCloudMode = useLocal === USELOCAL.NO;
   const summaryElements = new Array<JSX.Element>();
   const tickRowElements = new Array<JSX.Element>();
   const focusedRowElements = new Array<JSX.Element>();
 
   for (let slot = 0; slot < rowCount; slot++) {
     if (summariesSuccess && useLocal !== null) {
-      const isCloudMode = useLocal === USELOCAL.NO;
       summaryElements.push(
         <TaskRowSummary
           {...{ date, slot, key: slot, useApi, isLastRow: slot === rowCount - 1, onAddRow: addRow }}
           pinnedTasks={isCloudMode ? pinnedTasks : undefined}
+          isToday={isToday}
           onPin={isCloudMode ? handlePin : undefined}
           onUnpin={isCloudMode ? handleUnpin : undefined}
+          onUpdatePin={isCloudMode && isToday ? handleUpdatePin : undefined}
         />
       );
       tickRowElements.push(
@@ -506,15 +531,36 @@ const Timer = ({
               <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
                   <span>Task</span>
-                  <button
-                    onClick={handleCopyYesterday}
-                    disabled={copyingYesterday}
-                    data-test-id="copy-yesterday-button"
-                    className={styles.copy_yesterday_btn}
-                    title="Copy yesterday's task names into empty slots"
-                  >
-                    {copyingYesterday ? '…' : '↑ yest.'}
-                  </button>
+                  <div className={styles.summary_header_actions}>
+                    {isCloudMode && pinnedTasks.length > 0 && (
+                      <div className={styles.pins_panel_wrap}>
+                        <button
+                          onClick={() => setShowPinsPanel((p) => !p)}
+                          className={`${styles.copy_yesterday_btn}${showPinsPanel ? ` ${styles.copy_yesterday_btn_active}` : ''}`}
+                          data-test-id="pins-panel-toggle"
+                          title="Manage pin order"
+                        >
+                          📌
+                        </button>
+                        {showPinsPanel && (
+                          <PinsPanel
+                            pins={pinnedTasks}
+                            onReorder={handleReorderPins}
+                            onClose={() => setShowPinsPanel(false)}
+                          />
+                        )}
+                      </div>
+                    )}
+                    <button
+                      onClick={handleCopyYesterday}
+                      disabled={copyingYesterday}
+                      data-test-id="copy-yesterday-button"
+                      className={styles.copy_yesterday_btn}
+                      title="Copy yesterday's task names into empty slots"
+                    >
+                      {copyingYesterday ? '…' : '↑ yest.'}
+                    </button>
+                  </div>
                 </div>
                 {summaryElements}
               </div>
