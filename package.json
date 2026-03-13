@@ -25,6 +25,8 @@
     "start": "vite",
     "build": "vite build",
     "test": "cypress run --component",
+    "test:quiet": "cypress run --component --reporter min",
+    "test:quiet:coverage": "CYPRESS_COVERAGE=true cypress run --component --reporter min",
     "ci-cypress": "cypress run --component --config screenshotOnRunFailure=false,video=false",
     "lint": "eslint --ext .js,.ts ./src ./functions",
     "check-coverage": "node scripts/check-diff-coverage.mjs",
