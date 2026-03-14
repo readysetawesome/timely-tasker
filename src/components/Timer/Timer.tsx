@@ -628,6 +628,17 @@ const Timer = ({
                 <div key="headerspacer" className={styles.summary_header}>
                   <span>Task</span>
                   <div className={styles.summary_header_actions}>
+                    {(!isCloudMode || isToday || isTomorrow) && (
+                      <button
+                        onClick={handleCopyYesterday}
+                        disabled={copyingYesterday}
+                        data-test-id="copy-yesterday-button"
+                        className={styles.copy_yesterday_btn}
+                        title="Copy yesterday's task names into empty slots"
+                      >
+                        {copyingYesterday ? '…' : `↓ ${copyYesterdayLabel}`}
+                      </button>
+                    )}
                     {isCloudMode && (
                       <div className={styles.pins_panel_wrap} ref={pinsPanelWrapRef}>
                         <button
@@ -647,17 +658,6 @@ const Timer = ({
                           />
                         )}
                       </div>
-                    )}
-                    {(!isCloudMode || isToday || isTomorrow) && (
-                      <button
-                        onClick={handleCopyYesterday}
-                        disabled={copyingYesterday}
-                        data-test-id="copy-yesterday-button"
-                        className={styles.copy_yesterday_btn}
-                        title="Copy yesterday's task names into empty slots"
-                      >
-                        {copyingYesterday ? '…' : `↓ ${copyYesterdayLabel}`}
-                      </button>
                     )}
                   </div>
                 </div>
