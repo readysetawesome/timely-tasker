@@ -117,7 +117,7 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
       onDragOver={onDragOver ? (e) => { e.preventDefault(); onDragOver(); } : undefined}
       onDrop={onDrop ? (e) => { e.preventDefault(); onDrop(); } : undefined}
     >
-      {onDragStart && (
+      {onDragStart ? (
         <div
           className={styles.drag_handle}
           draggable
@@ -126,6 +126,8 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, 
           data-test-id={`drag-handle-${slot}`}
           title="Drag to reorder"
         >⠿</div>
+      ) : (
+        <div className={styles.drag_handle_spacer} />
       )}
       <input
         className={styles.summary_input_container}
