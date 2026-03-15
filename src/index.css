@@ -295,19 +295,27 @@ html, body {
   gap: 6px;
 }
 
-/* Desktop: collapse vertical stack into a single compact row */
+/* Desktop: match grid width, collapse to single row */
 @media (min-width: 900px) {
+  /* Constrain header to same width as the grid card */
+  .tt-header {
+    width: 90%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--color-surface-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
   .tt-header-center {
     flex-direction: row;
     align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  /* Pipe separator between groups */
-  .tt-header-center > * + * {
-    padding-left: 16px;
-    border-left: 1px solid var(--color-surface-border);
+    gap: 14px;
+    flex-wrap: nowrap;
+    width: 100%;
   }
 
   .tt-daily-goal {
@@ -318,15 +326,27 @@ html, body {
   }
 
   .tt-daily-goal-bar {
-    width: 80px;
+    width: 72px;
   }
 
+  /* Push weekends toggle + legend to the far right */
   .tt-work-weekends-toggle {
     margin-top: 0;
+    margin-left: auto;
   }
 
   .tt-tick-legend {
     margin-top: 0;
+  }
+
+  /* Install hint: match grid width, flat bar instead of floating pill */
+  .install-hint {
+    width: 90%;
+    max-width: 1400px;
+    left: auto;
+    transform: none;
+    border-radius: 8px;
+    justify-content: center;
   }
 }
 
