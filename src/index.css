@@ -295,6 +295,41 @@ html, body {
   gap: 6px;
 }
 
+/* Desktop: collapse vertical stack into a single compact row */
+@media (min-width: 900px) {
+  .tt-header-center {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Pipe separator between groups */
+  .tt-header-center > * + * {
+    padding-left: 16px;
+    border-left: 1px solid var(--color-surface-border);
+  }
+
+  .tt-daily-goal {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .tt-daily-goal-bar {
+    width: 80px;
+  }
+
+  .tt-work-weekends-toggle {
+    margin-top: 0;
+  }
+
+  .tt-tick-legend {
+    margin-top: 0;
+  }
+}
+
 /* Mobile: date nav row first; title hidden to save space */
 @media (max-width: 640px) {
   .tt-header {
