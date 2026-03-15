@@ -1,9 +1,10 @@
 import styles from './Timer.module.scss';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import debounce from 'lodash/debounce';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSummary } from './Timer.selectors';
 import { Summary } from '../../../functions/summaries';
+import { PinnedTask } from '../../../functions/pinnedTasks';
 import { setSummary } from './Timer.actions';
 import { StorageApiType } from '../../LocalStorageApi';
 
@@ -13,26 +14,47 @@ export interface TaskRowSummaryProps {
   useApi: StorageApiType;
   isLastRow?: boolean;
   onAddRow?: () => void;
+  pinnedTasks?: PinnedTask[];
+  isToday?: boolean;
+  isTomorrow?: boolean;
+  onPin?: (text: string) => void;
+  onUnpin?: (id: number) => void;
+  onUpdatePin?: (id: number, newText: string) => void;
+  onDragStart?: () => void;
+  onDragOver?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
 }
 
-const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSummaryProps) => {
+const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow, pinnedTasks, isToday, isTomorrow, onPin, onUnpin, onUpdatePin, onDragStart, onDragOver, onDrop, onDragEnd }: TaskRowSummaryProps) => {
   const [text, setText] = useState<string | undefined>();
+  const [unpinPrompt, setUnpinPrompt] = useState<{ text: string; pinId: number } | null>(null);
   const summary = useSelector((state) => getSummary(state, slot));
   const dispatch = useDispatch();
 
+  // Capture the active pin id at focus time so rename works even as text diverges
+  const activePinIdRef = useRef<number | null>(null);
+  // Stable ref to onUpdatePin so it needn't be a useMemo dep
+  const onUpdatePinRef = useRef(onUpdatePin);
+  onUpdatePinRef.current = onUpdatePin;
+
   const handleSummaryChange = useMemo(() => {
-    return debounce((text: string | undefined) => {
-      if (text !== undefined && summary?.content !== text) {
+    return debounce((newText: string | undefined) => {
+      if (newText !== undefined && summary?.content !== newText) {
+        if (!newText.trim() && !summary?.id) return; // don't create blank rows
         setSummary({
           TimerTicks: summary?.TimerTicks || [],
           slot,
           date,
-          content: text,
+          content: newText,
           id: summary?.id,
         } as Summary)(dispatch, useApi);
       }
+      if ((isToday || isTomorrow) && activePinIdRef.current !== null && newText && newText.trim()) {
+        onUpdatePinRef.current?.(activePinIdRef.current, newText);
+      }
     }, 800);
-  }, [date, dispatch, slot, summary, useApi]);
+  }, [date, dispatch, slot, summary, useApi, isToday]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -50,20 +72,94 @@ const TaskRowSummary = ({ slot, date, useApi, isLastRow, onAddRow }: TaskRowSumm
     if (el) { el.focus(); el.select(); }
   };
 
+  const currentText = text === undefined ? summary?.content || '' : text;
+  const pinnedTask = pinnedTasks?.find((p) => p.text === currentText);
+  const isPinned = !!pinnedTask;
+
+  // Show pin button whenever there's content in cloud mode — any day
+  const showPinButton = !!pinnedTasks && currentText.trim().length > 0;
+  // Pin/unpin works on all days; rename-via-typing is limited to today/tomorrow (see handleSummaryChange)
+  const isInteractive = !!pinnedTasks;
+
+  const handleFocus = () => {
+    activePinIdRef.current = pinnedTask?.id ?? null;
+  };
+
+  const handlePinClick = () => {
+    if (isPinned && pinnedTask) {
+      onUnpin?.(pinnedTask.id);
+    } else {
+      onPin?.(currentText);
+    }
+  };
+
+  const handleUnpinConfirm = () => {
+    if (unpinPrompt) onUnpin?.(unpinPrompt.pinId);
+    setUnpinPrompt(null);
+  };
+
+  if (unpinPrompt) {
+    return (
+      <div className={styles.summary_cell}>
+        <div className={styles.unpin_prompt} data-test-id={`unpin-prompt-${slot}`}>
+          <span>Unpin "{unpinPrompt.text}"?</span>
+          <button className="tt-btn-ghost" onClick={handleUnpinConfirm} data-test-id={`unpin-confirm-${slot}`}>Unpin</button>
+          <button className="tt-btn-ghost" onClick={() => setUnpinPrompt(null)} data-test-id={`unpin-keep-${slot}`}>Keep</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.summary_cell}>
+    <div
+      className={styles.summary_cell}
+      data-test-id={`summary-cell-${slot}`}
+      onDragOver={onDragOver ? (e) => { e.preventDefault(); onDragOver(); } : undefined}
+      onDrop={onDrop ? (e) => { e.preventDefault(); onDrop(); } : undefined}
+    >
+      {onDragStart ? (
+        <div
+          className={styles.drag_handle}
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          data-test-id={`drag-handle-${slot}`}
+          title="Drag to reorder"
+        >⠿</div>
+      ) : (
+        <div className={styles.drag_handle_spacer} />
+      )}
       <input
         className={styles.summary_input_container}
         type="text"
-        value={text === undefined ? summary?.content || '' : text}
-        onChange={(e) => [
-          setText(e.target.value),
-          handleSummaryChange(e.target.value),
-        ]}
+        value={currentText}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (!val && activePinIdRef.current !== null && isToday) {
+            setUnpinPrompt({ text: currentText, pinId: activePinIdRef.current });
+          } else if (val) {
+            setUnpinPrompt(null);
+          }
+          setText(val);
+          handleSummaryChange(val);
+        }}
+        onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder="enter a summary"
         data-test-id={`summary-text-${slot}`}
       />
+      {showPinButton && (
+        <button
+          className={`${styles.pin_btn}${isPinned ? ` ${styles.pin_btn_active}` : ''}${!isInteractive ? ` ${styles.pin_btn_readonly}` : ''}`}
+          onClick={handlePinClick}
+          title={isPinned ? (isInteractive ? 'Unpin task' : 'Pinned task') : 'Pin task — auto-fills on new days'}
+          data-test-id={`pin-btn-${slot}`}
+          data-pinned={isPinned}
+          data-readonly={!isInteractive}
+        >
+          📌
+        </button>
+      )}
     </div>
   );
 };

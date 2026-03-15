@@ -295,6 +295,61 @@ html, body {
   gap: 6px;
 }
 
+/* Desktop: match grid width, collapse to single row */
+@media (min-width: 900px) {
+  /* Constrain header to same width as the grid card */
+  .tt-header {
+    width: 90%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--color-surface-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .tt-header-center {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .tt-daily-goal {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .tt-daily-goal-bar {
+    width: 72px;
+  }
+
+  /* Push weekends toggle + legend to the far right */
+  .tt-work-weekends-toggle {
+    margin-top: 0;
+    margin-left: auto;
+  }
+
+  .tt-tick-legend {
+    margin-top: 0;
+  }
+
+  /* Install hint: match grid width, flat bar instead of floating pill */
+  .install-hint {
+    width: 90%;
+    max-width: 1400px;
+    left: auto;
+    transform: none;
+    border-radius: 8px;
+    justify-content: center;
+  }
+}
+
 /* Mobile: date nav row first; title hidden to save space */
 @media (max-width: 640px) {
   .tt-header {
@@ -533,6 +588,24 @@ html, body {
 .tt-daily-goal-fill--met {
   background: var(--color-focused);
   box-shadow: 0 0 6px var(--color-focused-glow);
+}
+
+/* ─── Work weekends toggle ────────────────────────────────────────────────── */
+
+.tt-work-weekends-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  margin-top: 4px;
+  user-select: none;
+}
+
+.tt-work-weekends-toggle input {
+  cursor: pointer;
+  accent-color: var(--color-focused);
 }
 
 /* ─── Tick legend ─────────────────────────────────────────────────────────── */

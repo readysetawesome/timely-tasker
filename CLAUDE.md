@@ -5,12 +5,27 @@ Project context for Claude Code. See also [AGENTS.md](./AGENTS.md) and [ARCHITEC
 ## Commands
 
 ```bash
-npm test          # Run Cypress component tests (primary regression suite)
-npm run lint      # ESLint across src/ and functions/
-npm start         # Vite dev server (port 3000, no Cloudflare functions)
+npm run test:quiet        # Preferred for agents — failures only, no per-test ✓ noise
+npm run test:quiet:coverage  # Same + coverage instrumentation
+npm test                  # Full verbose output (useful for humans / CI)
+npm run lint              # ESLint across src/ and functions/
+npm start                 # Vite dev server (port 3000, no Cloudflare functions)
 npx wrangler pages dev --d1=DB --persist -- npm start  # Full local stack with D1
 npm run migrate:preview   # Apply pending migrations to timely-tasker-dev (preview)
 npm run migrate:prod      # Apply pending migrations to timely-tasker-prod (production)
+```
+
+### Agent command patterns
+
+```bash
+# Run only the spec relevant to your change
+npm run test:quiet -- --spec "src/components/Timer/Timer.cy.tsx"
+
+# Check coverage misses after a coverage run
+npm run check-coverage
+
+# Lint — errors only, skip formatting noise
+npm run lint -- --quiet
 ```
 
 ## What this app is
