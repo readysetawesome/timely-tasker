@@ -277,9 +277,10 @@ const Timer = ({
     });
   }, [useApi, useLocal, displayName]);
 
-  const isMonday = new Date(date).getUTCDay() === 1;
-  const skipWeekend = !worksWeekends && isMonday;
-  const prevWorkdayDate = skipWeekend ? date - 3 * ONE_DAY : date - ONE_DAY;
+  const dayOfWeek = new Date(date).getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const skipWeekend = !worksWeekends && (dayOfWeek === 0 || dayOfWeek === 1 || dayOfWeek === 6);
+  const prevWorkdayDaysBack = dayOfWeek === 6 ? 1 : dayOfWeek === 0 ? 2 : 3; // Sat→Fri, Sun→Fri, Mon→Fri
+  const prevWorkdayDate = skipWeekend ? date - prevWorkdayDaysBack * ONE_DAY : date - ONE_DAY;
   const copyYesterdayLabel = skipWeekend ? 'fri.' : 'yest.';
 
   const [copyingYesterday, setCopyingYesterday] = useState(false);

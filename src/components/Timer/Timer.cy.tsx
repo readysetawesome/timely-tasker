@@ -913,7 +913,7 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
   });
 
-  it('shows "↓ fri." on Monday and switches to "↓ yest." when work weekends toggled on', () => {
+  it('shows "↓ fri." on Monday, Saturday, and Sunday (not Monday only) and switches to "↓ yest." when work weekends toggled on', () => {
     const MONDAY = TODAYS_DATE - 3 * ONE_DAY; // March 23 (Thu) - 3 = March 20 (Mon)
     const MONDAY_CLOCK = MONDAY + new Date().getTimezoneOffset() * 60 * 1000;
     cy.intercept('GET', `/summaries?date=${MONDAY}`, { body: [] }).as('getMondaySummaries');
@@ -933,6 +933,46 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="work-weekends-toggle"] input').click();
     cy.wait('@setPreference').its('request.body').should('deep.equal', { worksWeekends: true });
     cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
+  });
+
+  it('shows "↓ fri." on Saturday when worksWeekends is false', () => {
+    const SATURDAY = TODAYS_DATE + 2 * ONE_DAY; // March 25 (Sat)
+    const SAT_WEEK_START = SATURDAY; // week starts on Saturday
+    const SAT_CLOCK = SATURDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${SATURDAY}`, { body: [] }).as('getSaturdaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${SAT_WEEK_START}&endDate=${SATURDAY - ONE_DAY}`, { body: [] });
+    cy.clock(SAT_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={SATURDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSaturdaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ fri.');
+  });
+
+  it('shows "↓ fri." on Sunday when worksWeekends is false', () => {
+    const SUNDAY = TODAYS_DATE + 3 * ONE_DAY; // March 26 (Sun)
+    const SUN_WEEK_START = TODAYS_DATE + 2 * ONE_DAY; // March 25 (Sat)
+    const SUN_CLOCK = SUNDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${SUNDAY}`, { body: [] }).as('getSundaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${SUN_WEEK_START}&endDate=${SUNDAY - ONE_DAY}`, { body: [] });
+    cy.clock(SUN_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={SUNDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSundaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ fri.');
   });
 
   it('on Monday copies from Friday (not Sunday) when worksWeekends is false', () => {
