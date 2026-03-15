@@ -444,13 +444,13 @@ describe('<Timer />', () => {
     cy.window().then((win) => {
       cy.stub(win.navigator.clipboard, 'writeText').resolves().as('clipboardWrite');
     });
-    cy.get('[data-test-id="copy-summary-button"]').click();
+    cy.get('[data-test-id="focused-header"]').click();
     cy.get('@clipboardWrite').should('have.been.calledOnce');
     cy.get('@clipboardWrite').should(
       'have.been.calledWith',
       'replace jest with cypress: 0.75h focused\nother task: 0.25h focused\nTotal: 1h focused'
     );
-    cy.get('[data-test-id="copy-summary-button"]').should('contain', 'Copied!');
+    cy.get('[data-test-id="focused-header"]').should('contain', 'Copied!');
   });
 
   it('copy summary button is disabled when no focused ticks exist', () => {
@@ -458,7 +458,7 @@ describe('<Timer />', () => {
     cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
     cy.get('[data-test-id="left-nav-clicker"]').click();
     cy.wait('@blankDay');
-    cy.get('[data-test-id="copy-summary-button"]').should('be.disabled');
+    cy.get('[data-test-id="focused-header"]').should('be.disabled');
   });
 
   it('navigates back to today from a previous date', () => {

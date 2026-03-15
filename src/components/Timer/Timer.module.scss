@@ -150,6 +150,52 @@ $tictac-gap: 2px;
     color: var(--color-text-muted);
     background: var(--color-surface-raised);
     border-bottom: 1px solid var(--color-surface-border);
+    // reset button styles
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    padding: 0;
+    cursor: default;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .focused_header_btn {
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:not(:disabled):hover {
+      background: rgba(6, 200, 176, 0.08);
+      color: var(--color-focused);
+
+      .focused_header_copy_hint {
+        opacity: 1;
+        color: var(--color-focused);
+      }
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+  }
+
+  .focused_header_copied {
+    color: var(--color-focused);
+    background: rgba(6, 200, 176, 0.1);
+  }
+
+  .focused_header_label {
+    line-height: 1;
+  }
+
+  .focused_header_copy_hint {
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    opacity: 0.4;
+    transition: opacity 0.15s, color 0.15s;
+    text-transform: lowercase;
+    line-height: 1;
   }
 
   .focused_total {

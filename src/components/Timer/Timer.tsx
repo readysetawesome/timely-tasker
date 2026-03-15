@@ -526,16 +526,6 @@ const Timer = ({
                 {showPicker && <DatePicker date={date} onClose={() => setShowPicker(false)} />}
               </div>
               {rightNavClicker}
-              {useLocal !== null && (
-                <button
-                  onClick={handleCopySummary}
-                  disabled={noFocusedTicks}
-                  data-test-id="copy-summary-button"
-                  className="nav-today nav-yesterday"
-                >
-                  {copiedSummary ? 'Copied!' : 'Copy summary'}
-                </button>
-              )}
             </h2>
           </div>
           {useLocal === USELOCAL.NO && (
@@ -669,9 +659,20 @@ const Timer = ({
                 {tickRowElements}
               </div>
               <div className={styles.focused_column}>
-                <div className={styles.focused_header} data-test-id="focused-header">
-                  Focused
-                </div>
+                <button
+                  className={`${styles.focused_header}${useLocal !== null ? ` ${styles.focused_header_btn}` : ''}${copiedSummary ? ` ${styles.focused_header_copied}` : ''}`}
+                  onClick={useLocal !== null ? handleCopySummary : undefined}
+                  disabled={useLocal !== null ? noFocusedTicks : undefined}
+                  data-test-id="focused-header"
+                  title={useLocal !== null ? 'Copy focused hours summary to clipboard' : undefined}
+                >
+                  <span className={styles.focused_header_label}>
+                    {copiedSummary ? '✓ Copied!' : 'Focused'}
+                  </span>
+                  {useLocal !== null && !copiedSummary && (
+                    <span className={styles.focused_header_copy_hint}>⎘ copy</span>
+                  )}
+                </button>
                 {focusedRowElements}
                 <TotalFocusedRow />
               </div>

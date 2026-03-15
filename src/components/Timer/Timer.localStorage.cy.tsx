@@ -390,7 +390,7 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('copy summary button is enabled when focused ticks exist', () => {
-    cy.get('[data-test-id="copy-summary-button"]').should('not.be.disabled');
+    cy.get('[data-test-id="focused-header"]').should('not.be.disabled');
   });
 
   it('shows drag hint on first visit and dismisses on X click', () => {
