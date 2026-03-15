@@ -632,7 +632,7 @@ describe('<Timer />', () => {
         </MemoryRouter>
       </Provider>
     );
-    cy.wait(['@getIdentity', '@getSummariesForPrompt']);
+    cy.wait(['@getIdentity', '@getSummariesForPrompt', '@getPinnedForPrompt']);
     cy.get('[data-test-id="summary-text-0"]').clear();
     cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible').and('contain', 'Deep work');
     cy.get('[data-test-id="unpin-confirm-0"]').click();
@@ -661,7 +661,7 @@ describe('<Timer />', () => {
         </MemoryRouter>
       </Provider>
     );
-    cy.wait(['@getIdentity', '@getSummariesForKeep']);
+    cy.wait(['@getIdentity', '@getSummariesForKeep', '@getPinnedForKeep']);
     cy.get('[data-test-id="summary-text-0"]').clear();
     cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible');
     cy.get('[data-test-id="unpin-keep-0"]').click();
