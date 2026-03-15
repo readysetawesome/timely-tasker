@@ -535,6 +535,24 @@ html, body {
   box-shadow: 0 0 6px var(--color-focused-glow);
 }
 
+/* ─── Work weekends toggle ────────────────────────────────────────────────── */
+
+.tt-work-weekends-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  margin-top: 4px;
+  user-select: none;
+}
+
+.tt-work-weekends-toggle input {
+  cursor: pointer;
+  accent-color: var(--color-focused);
+}
+
 /* ─── Tick legend ─────────────────────────────────────────────────────────── */
 
 .tt-tick-legend {

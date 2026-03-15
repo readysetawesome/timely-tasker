@@ -14,6 +14,18 @@ const safeTickSerializer = (key, value) => {
 
 const createSummary = (summary: Summary, storage = localStorage) =>
   new Promise<Summary>((resolve) => {
+    const summariesKey = localStoragePrefix + summary.date.toString();
+    const summaryKey = `${summariesKey}-${summary.slot}`;
+
+    const hasRealTicks = summary.TimerTicks?.some((t) => t.distracted !== -1);
+    if (!summary.content?.trim() && !hasRealTicks && summary.id) {
+      storage.removeItem(summaryKey);
+      const slots = JSON.parse(storage.getItem(summariesKey) ?? '[]') as number[];
+      storage.setItem(summariesKey, JSON.stringify(slots.filter((s) => s !== summary.slot)));
+      resolve({ ...summary, deleted: true });
+      return;
+    }
+
     summary.id =
       parseInt(storage.getItem(localStoragePrefix + 'lastSummaryId') ?? '0') +
       1;
@@ -22,14 +34,12 @@ const createSummary = (summary: Summary, storage = localStorage) =>
       summary.id.toString()
     );
 
-    const summariesKey = localStoragePrefix + summary.date.toString();
     const summariesStr = storage.getItem(summariesKey);
     const summarySlots = summariesStr
       ? (JSON.parse(summariesStr) as number[])
       : [];
 
     // store the individual row of summary + ticks
-    const summaryKey = `${summariesKey}-${summary.slot}`;
     storage.setItem(summaryKey, JSON.stringify(summary, safeTickSerializer));
 
     // store an array of summary slots for lookup, under this date's key
@@ -104,7 +114,37 @@ const setPreference = <K extends keyof UserPreferences>(
     resolve(updated);
   });
 
-const exports = { createTick, getSummaries, createSummary, getPreferences, setPreference };
+const reorderSummaries = (date: number, orderedIds: number[], storage = localStorage): Promise<Summary[]> =>
+  new Promise((resolve) => {
+    const summariesKey = localStoragePrefix + date.toString();
+    const existingSlots = JSON.parse(storage.getItem(summariesKey) ?? '[]') as number[];
+
+    // Build id → summary map from existing entries
+    const allById = new Map<number, Summary>();
+    existingSlots.forEach(slot => {
+      const s = JSON.parse(storage.getItem(`${summariesKey}-${slot}`) ?? 'null') as Summary | null;
+      if (s?.id != null) allById.set(s.id, s);
+    });
+
+    // Assign new slots: orderedIds[i] → slot=i
+    const reordered = orderedIds.map((id, newSlot) => ({ ...allById.get(id)!, slot: newSlot }));
+
+    // Summaries not in orderedIds keep their original slots
+    const reorderedIdSet = new Set(orderedIds);
+    const unchanged = existingSlots
+      .map(slot => JSON.parse(storage.getItem(`${summariesKey}-${slot}`) ?? 'null') as Summary | null)
+      .filter((s): s is Summary => s !== null && s.id != null && !reorderedIdSet.has(s.id!));
+
+    // Clear all existing slot entries and rewrite with new assignments
+    existingSlots.forEach(slot => storage.removeItem(`${summariesKey}-${slot}`));
+    const allUpdated = [...reordered, ...unchanged];
+    allUpdated.forEach(s => storage.setItem(`${summariesKey}-${s.slot}`, JSON.stringify(s, safeTickSerializer)));
+    storage.setItem(summariesKey, JSON.stringify(allUpdated.map(s => s.slot)));
+
+    resolve(reordered);
+  });
+
+const exports = { createTick, getSummaries, createSummary, getPreferences, setPreference, reorderSummaries };
 
 export type StorageApiType = typeof exports;
 

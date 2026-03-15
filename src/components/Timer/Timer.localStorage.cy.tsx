@@ -37,6 +37,7 @@ describe('<Timer /> no localStorage setting', () => {
   it('clicking sign in with google from storage prompt begins auth flow', () => {
     cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries');
+    cy.intercept('GET', '/pinnedTasks', { body: [] });
     cy.get('[data-test-id=use-cloud-storage]').click();
     cy.wait('@getIdentity');
     cy.get('[data-test-id=use-cloud-storage]').should('not.exist');
@@ -415,6 +416,19 @@ describe('<Timer /> using localStorage', () => {
     });
   });
 
+  it('clearing summary text with no ticks removes it from localStorage', () => {
+    // slot 1 ("other stuff") has no ticks in the fixture
+    cy.get('[data-test-id="summary-text-1"]').clear();
+    cy.wait(900); // past 800ms debounce
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', '');
+    cy.getAllLocalStorage().then((result) => {
+      const slots = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:1679529600000'] as string
+      ) as number[];
+      expect(slots).not.to.include(1);
+    });
+  });
+
   it('renders tick marks from the data, they respond to clicks', () => {
     cy.get('[data-test-id="0-31"][data-tick-state="focused"]').click();
     cy.get('[data-test-id="0-31"][data-tick-state="distracted"]');
@@ -456,6 +470,37 @@ describe('<Timer /> using localStorage', () => {
     cy.get('h2').should('contain', '3-22-2023');
   });
 
+  it('drag-and-drop persists slot swap in localStorage', () => {
+    // Slot 0 = "replace jest with cypress" (id=75), slot 1 = "other stuff" (id=76)
+    cy.get('[data-test-id="drag-handle-0"]').should('exist');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-1"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragend');
+    // Slot values swapped: slot 0 now has "other stuff", slot 1 has "replace jest with cypress"
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'other stuff');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'replace jest with cypress');
+    // Verify persisted to localStorage: slot 0 key should have "other stuff"
+    cy.getAllLocalStorage().then((result) => {
+      const slot0 = JSON.parse(
+        result[Cypress.config('baseUrl') ?? ''][`TimelyTasker:${TODAYS_DATE}-0`] as string
+      );
+      expect(slot0.content).to.equal('other stuff');
+      expect(slot0.slot).to.equal(0);
+    });
+  });
+
+  it('work weekends toggle is unchecked by default and saves to localStorage', () => {
+    cy.get('[data-test-id="work-weekends-toggle"] input').should('not.be.checked');
+    cy.get('[data-test-id="work-weekends-toggle"] input').click();
+    cy.get('[data-test-id="work-weekends-toggle"] input').should('be.checked');
+    cy.getAllLocalStorage().then((result) => {
+      const prefs = JSON.parse(
+        result[Cypress.config('baseUrl') ?? '']['TimelyTasker:Preferences'] as string
+      );
+      expect(prefs.worksWeekends).to.equal(true);
+    });
+  });
+
   it('switches cloud storage when clicked', () => {
     cy.intercept('GET', '/preferences', { body: {} });
     cy.intercept('GET', '/greet', { fixture: 'authorize' }).as('getAuthInfo');
@@ -466,6 +511,7 @@ describe('<Timer /> using localStorage', () => {
     cy.wait('@getAuthInfo');
   });
 });
+
 
 describe('<Timer /> drag hint already dismissed', () => {
   beforeEach(() => {

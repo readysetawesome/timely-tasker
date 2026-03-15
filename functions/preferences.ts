@@ -3,6 +3,7 @@ import { GetIdentity } from '../lib/Identity';
 
 export type UserPreferences = {
   dailyGoalHours?: number;
+  worksWeekends?: boolean;
 };
 
 const JsonHeader = {

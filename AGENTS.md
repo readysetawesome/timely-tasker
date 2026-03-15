@@ -113,7 +113,34 @@ Every new component needs its own `ComponentName.cy.tsx` spec covering all branc
 
 Treat production migration commands as high-risk operations.
 
-## 8. Known Footguns
+## 8. Agent Efficiency
+
+### Prefer quiet test output
+`npm run test:quiet` uses `--reporter min` and prints only failures + the spec summary table. Use this instead of `npm test` to avoid 96 lines of `✓` noise. Add `--spec` to limit to the file you changed:
+
+```bash
+npm run test:quiet -- --spec "src/components/Timer/Timer.cy.tsx"
+```
+
+### Coverage feedback loop
+```bash
+npm run test:quiet:coverage   # instrument + run
+npm run check-coverage        # print any missed lines in the diff
+```
+Only do the full coverage run once before committing — not after every edit.
+
+### Lint
+```bash
+npm run lint -- --quiet   # errors only, suppresses warnings
+```
+
+### Don't retry blindly
+If a test or command fails, read the error before re-running. Cypress prints the full assertion error and URL under `1 failing` — that's all you need.
+
+### Single-responsibility commits
+One logical change per commit. The pre-push hook runs the full test suite with coverage; keep commits small so a hook failure is cheap to fix.
+
+## 9. Known Footguns
 
 - `wrangler` config files are ignored by `.gitignore` (`*.toml`), so local setup may rely on developer-provided config.
 - OAuth callback flow depends on correctly configured Google credentials in runtime env vars.

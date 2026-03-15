@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS PinnedTasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId INTEGER NOT NULL REFERENCES Users(id),
+  text TEXT NOT NULL,
+  position INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS pinned_tasks_user_id ON PinnedTasks (userId);

@@ -4,6 +4,7 @@ import {
   summariesLoading,
   sessionExpired,
   summaryCreated,
+  summaryDeleted,
   summaryError,
   summaryPending,
   TickChangeEvent,
@@ -31,7 +32,7 @@ export const setSummary =
     dispatch(summaryPending());
     await useApi
       .createSummary(s)
-      .then((s: Summary) => dispatch(summaryCreated(s)))
+      .then((s: Summary) => s.deleted ? dispatch(summaryDeleted({ slot: s.slot })) : dispatch(summaryCreated(s)))
       .catch(() => dispatch(summaryError()));
   };
 

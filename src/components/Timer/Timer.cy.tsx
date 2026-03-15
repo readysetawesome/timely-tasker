@@ -14,6 +14,8 @@ const TIME_NOW = 1679587374481; // at 9 am
 const ONE_DAY = 86400000;
 // TODAYS_DATE is Thursday; week start (last Saturday) = 5 days prior
 const WEEK_START = TODAYS_DATE - 5 * ONE_DAY;
+// Timezone-adjusted clock so todaysDateInt() returns TODAYS_DATE on any host timezone
+const CLOCK_TIME = TIME_NOW - 420 * 60 * 1000 + new Date().getTimezoneOffset() * 60 * 1000;
 
 beforeEach(() => {
   cy.intercept('GET', '/greet', { fixture: 'identity' }).as('getIdentity');
@@ -28,6 +30,7 @@ beforeEach(() => {
   ).as('getWeekSummaries');
   cy.intercept('GET', '/preferences', { body: {} }).as('getPreferences');
   cy.intercept('POST', '/preferences', (req) => { req.reply({ body: req.body }); }).as('setPreference');
+  cy.intercept('GET', '/pinnedTasks', { body: [] }).as('getPinnedTasks');
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
@@ -197,6 +200,30 @@ describe('<Timer />', () => {
     cy.wait(['@createSummaryComplete']);
 
     cy.get(`[data-test-id='summary-text-2'][value='${targetText}']`);
+  });
+
+  it('clearing summary text with no ticks removes it from state (server delete)', () => {
+    // slot 1 ("other stuff") has no ticks — server deletes the row
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=1`, {
+      body: { deleted: true, slot: 1, date: TODAYS_DATE },
+    }).as('deleteSummary');
+    cy.get('[data-test-id="summary-text-1"]').clear();
+    cy.wait('@deleteSummary');
+    // grid row stays (always 12 rows), but pin button is gone (no content) and value is empty
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', '');
+    cy.get('[data-test-id="pin-btn-1"]').should('not.exist');
+  });
+
+  it('clearing summary text with ticks blanks content but keeps the row active', () => {
+    // slot 0 has ticks — server keeps the row, just clears content
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { id: 75, content: '', date: TODAYS_DATE, slot: 0, TimerTicks: [{ tickNumber: 31, distracted: 0 }] },
+    }).as('blankSummary');
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.wait('@blankSummary');
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
+    // ticks still rendered because the summary is still in Redux state
+    cy.get('[data-test-id="0-31"][data-tick-state="focused"]').should('exist');
   });
 
   it('ticking a box should not erase the newly entered summary', () => {
@@ -539,5 +566,447 @@ describe('<Timer />', () => {
     cy.get('[data-test-id="daily-goal-input"]').type('{enter}');
     cy.wait('@setPreference').its('request.body').should('deep.equal', { dailyGoalHours: 8 });
     cy.get('[data-test-id="daily-goal-target"]').should('contain', '8h');
+  });
+
+  it('pin button exists in DOM for rows with text, absent for empty rows', () => {
+    // slot 0 has "replace jest with cypress", slot 1 has "other stuff", slot 2 is empty
+    cy.get('[data-test-id="pin-btn-0"]').should('exist');
+    cy.get('[data-test-id="pin-btn-1"]').should('exist');
+    cy.get('[data-test-id="pin-btn-2"]').should('not.exist');
+  });
+
+  it('pin button is not pinned by default', () => {
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'false');
+  });
+
+  it('pin button pins a task via POST /pinnedTasks and shows as active', () => {
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 1, text: 'replace jest with cypress', position: 0 } }).as('pinTask');
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@pinTask');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+  });
+
+  it('pin button unpins an already-pinned task via DELETE /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedTasksFilled');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummaries4');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinTask');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummaries4']);
+
+    // Type the pinned text "Deep work" into slot 0 so it matches a pinned task
+    cy.get('[data-test-id="summary-text-0"]').clear().type('Deep work');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@unpinTask').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'false');
+  });
+
+  it('clearing a pinned summary row prompts to unpin — confirm unpins', () => {
+    const pinnedSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForPrompt');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: pinnedSummaries }).as('getSummariesForPrompt');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { deleted: true, slot: 0, date: TODAYS_DATE },
+    }).as('deleteSummaryForPrompt');
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinFromPrompt');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForPrompt']);
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible').and('contain', 'Deep work');
+    cy.get('[data-test-id="unpin-confirm-0"]').click();
+    cy.wait('@unpinFromPrompt').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="unpin-prompt-0"]').should('not.exist');
+  });
+
+  it('clearing a pinned summary row prompts to unpin — keep dismisses prompt', () => {
+    const pinnedSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForKeep');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: pinnedSummaries }).as('getSummariesForKeep');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', `/summaries?date=${TODAYS_DATE}&text=&slot=0`, {
+      body: { deleted: true, slot: 0, date: TODAYS_DATE },
+    });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('shouldNotUnpin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForKeep']);
+    cy.get('[data-test-id="summary-text-0"]').clear();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('be.visible');
+    cy.get('[data-test-id="unpin-keep-0"]').click();
+    cy.get('[data-test-id="unpin-prompt-0"]').should('not.exist');
+    // pin was NOT deleted
+    cy.get('@shouldNotUnpin.all').should('have.length', 0);
+  });
+
+  it('auto-populates pinned tasks on an empty day', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedTasksForEmpty');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: [] }).as('getEmptySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createPinnedSummary');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getEmptySummaries']);
+    cy.wait('@createPinnedSummary');
+    cy.wait('@createPinnedSummary');
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'Deep work');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'Email / comms');
+  });
+
+  it('does not auto-populate pinned tasks on a non-today empty day', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedNonToday');
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, { body: [] }).as('getYesterdayEmpty');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*').as('createSummary');
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdayEmpty']);
+    // eslint-disable-next-line cypress/no-unnecessary-waiting
+    cy.wait(300);
+    cy.get('@createSummary.all').should('have.length', 0);
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', '');
+  });
+
+  it('newly pinned task auto-populates into today even when today already has content', () => {
+    // Today already has 2 slots filled from previous auto-populate
+    const existingSummaries = [
+      { id: 10, slot: 0, date: TODAYS_DATE, content: 'Deep work', TimerTicks: [] },
+      { id: 11, slot: 1, date: TODAYS_DATE, content: 'Email / comms', TimerTicks: [] },
+    ];
+    // pinnedTasks starts with 2 pins matching today's content
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedExisting');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: existingSummaries }).as('getSummariesExisting');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    // A third pin is added (simulates pinning from a past day)
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 3, text: 'Deep focus', position: 2 } }).as('pinNew');
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 20 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createNewPinSummary');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesExisting']);
+    // Today is not empty so no auto-populate fires. Now simulate adding a new pin
+    // (from any day — here we use row 2 which is empty and has no text-match in existing pins)
+    cy.get('[data-test-id="summary-text-2"]').type('Deep focus');
+    cy.get('[data-test-id="pin-btn-2"]').click();
+    cy.wait('@pinNew');
+    // The new pin's text is not yet in today's grid, so it should be auto-populated into slot 2
+    cy.wait('@createNewPinSummary').its('request.url').should('include', 'text=Deep%20focus');
+  });
+
+  it('pin button is interactive on past days — can pin/unpin any row with content', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    const yesterdaySummaries = [
+      { id: 100, slot: 0, date: YESTERDAY, content: 'Deep work', TimerTicks: [] },
+      { id: 101, slot: 1, date: YESTERDAY, content: 'Something new', TimerTicks: [] },
+    ];
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedPastDay');
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, { body: yesterdaySummaries }).as('getYesterdaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/pinnedTasks', { body: { id: 99, text: 'Something new', position: 2 } }).as('pinNew');
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('unpinExisting');
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdaySummaries']);
+    // matched pin shows as pinned and interactive
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-pinned', 'true');
+    cy.get('[data-test-id="pin-btn-0"]').should('have.attr', 'data-readonly', 'false');
+    // unpin it
+    cy.get('[data-test-id="pin-btn-0"]').click();
+    cy.wait('@unpinExisting').its('request.url').should('include', 'id=1');
+    // unmatched row also shows pin button and can be pinned
+    cy.get('[data-test-id="pin-btn-1"]').should('have.attr', 'data-pinned', 'false');
+    cy.get('[data-test-id="pin-btn-1"]').click();
+    cy.wait('@pinNew').its('request.body').should('deep.equal', { text: 'Something new' });
+    // copy-yesterday button is hidden on past days
+    cy.get('[data-test-id="copy-yesterday-button"]').should('not.exist');
+  });
+
+  it('editing an auto-populated pinned task on today updates the pin via PUT /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForUpdate');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { body: [] }).as('getEmptyForUpdate');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: TODAYS_DATE, content: text, TimerTicks: [] } });
+    }).as('createSummary');
+    cy.intercept('PUT', '/pinnedTasks', (req) => {
+      req.reply({ body: { id: req.body.id, text: req.body.text, position: 0 } });
+    }).as('updatePin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getEmptyForUpdate']);
+    cy.wait(['@createSummary', '@createSummary']);
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'Deep work');
+    cy.get('[data-test-id="summary-text-0"]').focus().type(' session');
+    cy.tick(1000); // advance past 800ms debounce (clock is frozen by cy.clock)
+    cy.wait('@updatePin').its('request.body').should('deep.equal', { id: 1, text: 'Deep work session' });
+  });
+
+  it('pins panel toggle is visible in cloud mode even with no pins, shows empty state', () => {
+    // default intercept returns [] for pinnedTasks
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait('@getIdentity');
+    cy.get('[data-test-id="pins-panel-toggle"]').should('exist');
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pins-panel"]').should('contain', 'auto-fill');
+  });
+
+  it('pins panel allows deleting a pin via DELETE /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForDelete');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummariesForDelete');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('DELETE', '/pinnedTasks*', { body: { success: true } }).as('deletePin');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesForDelete']);
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Deep work');
+    cy.get('[data-test-id="pin-delete-0"]').click();
+    cy.wait('@deletePin').its('request.url').should('include', 'id=1');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
+    // X button calls onClose
+    cy.get('[data-test-id="pins-panel-close"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('not.exist');
+  });
+
+  it('pins panel allows reordering pins via PATCH /pinnedTasks', () => {
+    cy.intercept('GET', '/pinnedTasks', { fixture: 'pinnedTasks' }).as('getPinnedForReorder');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('getSummariesReorder');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${TODAYS_DATE - ONE_DAY}`, { body: [] });
+    cy.intercept('PATCH', '/pinnedTasks', (req) => {
+      req.reply({
+        body: req.body.orderedIds.map((id: number, position: number) => ({
+          id,
+          text: id === 1 ? 'Deep work' : 'Email / comms',
+          position,
+        })),
+      });
+    }).as('reorderPins');
+    cy.clock(CLOCK_TIME);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getSummariesReorder']);
+    cy.get('[data-test-id="pins-panel-toggle"]').click();
+    cy.get('[data-test-id="pins-panel"]').should('be.visible');
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Deep work');
+    cy.get('[data-test-id="pin-item-1"]').should('contain', 'Email / comms');
+    cy.get('[data-test-id="pin-move-down-0"]').click();
+    cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [2, 1] });
+    cy.get('[data-test-id="pin-item-0"]').should('contain', 'Email / comms');
+    cy.get('[data-test-id="pin-item-1"]').should('contain', 'Deep work');
+    // move-up brings it back
+    cy.get('[data-test-id="pin-move-up-1"]').click();
+    cy.wait('@reorderPins').its('request.body').should('deep.equal', { orderedIds: [1, 2] });
+    // mousedown outside the panel dismisses it (tests the document mousedown handler directly)
+    cy.get('[data-test-id="summary-text-0"]').trigger('mousedown');
+    cy.get('[data-test-id="pins-panel"]').should('not.exist');
+  });
+
+  it('shows "↓ yest." on non-Monday (Thursday in default test setup)', () => {
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
+  });
+
+  it('shows "↓ fri." on Monday and switches to "↓ yest." when work weekends toggled on', () => {
+    const MONDAY = TODAYS_DATE - 3 * ONE_DAY; // March 23 (Thu) - 3 = March 20 (Mon)
+    const MONDAY_CLOCK = MONDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    cy.intercept('GET', `/summaries?date=${MONDAY}`, { body: [] }).as('getMondaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${MONDAY - ONE_DAY}`, { body: [] });
+    cy.clock(MONDAY_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={MONDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getMondaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ fri.');
+    cy.get('[data-test-id="work-weekends-toggle"] input').click();
+    cy.wait('@setPreference').its('request.body').should('deep.equal', { worksWeekends: true });
+    cy.get('[data-test-id="copy-yesterday-button"]').should('contain', '↓ yest.');
+  });
+
+  it('on Monday copies from Friday (not Sunday) when worksWeekends is false', () => {
+    const MONDAY = TODAYS_DATE - 3 * ONE_DAY;
+    const FRIDAY = MONDAY - 3 * ONE_DAY;
+    const MONDAY_CLOCK = MONDAY + new Date().getTimezoneOffset() * 60 * 1000;
+    const fridaySummaries = [{ id: 200, slot: 5, date: FRIDAY, content: 'Friday task', TimerTicks: [] }];
+    cy.intercept('GET', `/summaries?date=${MONDAY}`, { body: [] }).as('getMondaySummaries');
+    cy.intercept('GET', `/summaries?date=${FRIDAY}`, { body: fridaySummaries }).as('getFridaySummaries');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${MONDAY - ONE_DAY}`, { body: [] });
+    cy.intercept('POST', '/summaries*', (req) => {
+      const url = new URL(req.url, 'http://localhost');
+      const slot = Number(url.searchParams.get('slot'));
+      const text = url.searchParams.get('text') ?? '';
+      req.reply({ body: { id: 10 + slot, slot, date: MONDAY, content: text, TimerTicks: [] } });
+    }).as('createSummary');
+    cy.clock(MONDAY_CLOCK);
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={MONDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getMondaySummaries']);
+    cy.get('[data-test-id="copy-yesterday-button"]').click();
+    cy.wait('@getFridaySummaries');
+    cy.wait('@createSummary');
+    cy.get('[data-test-id="summary-text-5"]').should('have.value', 'Friday task');
+  });
+
+  it('drag handles appear on today, persist slot swap via drag-and-drop, and restore on reverse drag', () => {
+    // Slot 0 = "replace jest with cypress" (id=75), slot 1 = "other stuff" (id=76)
+    cy.intercept('PATCH', '/summaries', (req) => {
+      const { orderedIds } = req.body;
+      const byId = new Map(summaries.map(s => [s.id, s]));
+      req.reply({ body: orderedIds.map((id: number, slot: number) => ({ ...byId.get(id), slot })) });
+    }).as('reorderSummaries');
+
+    cy.get('[data-test-id="drag-handle-0"]').should('exist');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-1"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-0"]').trigger('dragend');
+    cy.wait('@reorderSummaries').its('request.body').should('deep.equal', { date: TODAYS_DATE, orderedIds: [76, 75] });
+    // Slot values swapped: slot 0 now has "other stuff", slot 1 has "replace jest with cypress"
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'other stuff');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'replace jest with cypress');
+    // Drag slot 1 back to slot 0 to restore original order
+    cy.get('[data-test-id="drag-handle-1"]').trigger('dragstart');
+    cy.get('[data-test-id="summary-cell-0"]').trigger('dragover').trigger('drop');
+    cy.get('[data-test-id="drag-handle-1"]').trigger('dragend');
+    cy.wait('@reorderSummaries').its('request.body').should('deep.equal', { date: TODAYS_DATE, orderedIds: [75, 76] });
+    cy.get('[data-test-id="summary-text-0"]').should('have.value', 'replace jest with cypress');
+    cy.get('[data-test-id="summary-text-1"]').should('have.value', 'other stuff');
+  });
+
+  it('drag handles do not appear on past days', () => {
+    const YESTERDAY = TODAYS_DATE - ONE_DAY;
+    cy.intercept('GET', `/summaries?date=${YESTERDAY}`, {
+      body: [{ id: 99, slot: 0, date: YESTERDAY, content: 'Past task', TimerTicks: [] }],
+    }).as('getYesterdayForReorder');
+    cy.intercept('GET', `/summaries?startDate=${WEEK_START}&endDate=${YESTERDAY - ONE_DAY}`, { body: [] });
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={YESTERDAY} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+    cy.wait(['@getIdentity', '@getYesterdayForReorder']);
+    cy.get('[data-test-id="drag-handle-0"]').should('not.exist');
   });
 });
