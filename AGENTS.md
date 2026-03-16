@@ -140,7 +140,37 @@ If a test or command fails, read the error before re-running. Cypress prints the
 ### Single-responsibility commits
 One logical change per commit. The pre-push hook runs the full test suite with coverage; keep commits small so a hook failure is cheap to fix.
 
-## 9. Known Footguns
+## 9. Pull Request Requirements
+
+Every agent-created PR description **must include at least one screenshot** demonstrating the visible change. Use the Cloudflare preview deployment URL (`https://<branch-name>.timely-tasker.pages.dev`) or a local `npm start` capture.
+
+To embed a screenshot in a PR description via the `gh` CLI:
+
+```bash
+# 1. Take a screenshot (macOS)
+screencapture -x /tmp/pr-screenshot.png
+
+# 2. Upload it to GitHub and get a URL
+#    Paste the file into a GitHub comment/issue in-browser to get a CDN URL,
+#    then reference it in the PR body — OR use the GitHub API:
+UPLOAD_URL=$(gh api repos/readysetawesome/timely-tasker/issues \
+  --method POST -f title=tmp -f body=tmp --jq '.url')
+# Then upload via the web editor to get the CDN URL
+
+# 3. Edit the PR body to include the image
+gh pr edit <number> --body "$(cat <<'EOF'
+## Summary
+...
+
+## Screenshots
+![feature preview](https://user-images.githubusercontent.com/...)
+EOF
+)"
+```
+
+**Minimum bar:** one before/after pair or a single "after" screenshot showing the UI change in context.
+
+## 10. Known Footguns
 
 - `wrangler` config files are ignored by `.gitignore` (`*.toml`), so local setup may rely on developer-provided config.
 - OAuth callback flow depends on correctly configured Google credentials in runtime env vars.
