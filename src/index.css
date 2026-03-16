@@ -597,6 +597,12 @@ html, body {
   gap: 2px;
 }
 
+.tt-daily-goal-scope {
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
 .tt-daily-goal-set {
   font-size: 0.7rem;
   color: var(--color-text-muted);

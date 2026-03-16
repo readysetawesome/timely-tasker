@@ -55,6 +55,7 @@ const DailyGoal = ({ useApi }: DailyGoalProps) => {
   return (
     <div className="tt-daily-goal" data-test-id="daily-goal">
       <span className="tt-daily-goal-label">
+        <span className="tt-daily-goal-scope">today&nbsp;·&nbsp;</span>
         {totalHours}h&nbsp;/&nbsp;
         {editing ? (
           <input
