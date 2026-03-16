@@ -517,18 +517,11 @@ const Timer = ({
         <div className="tt-header-center">
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
-              <Link
-                data-test-id="left-nav-clicker"
-                className="nav-arrow"
-                to={`/timer?date=${date - ONE_DAY}`}
-              >
-                ‹
-              </Link>
               <div className="tt-day-strip">
                 <Link
                   to={`/timer?date=${date - ONE_DAY}`}
                   className={`tt-day-cell${(date - ONE_DAY) === todaysDateInt() ? ' tt-day-cell--today' : ''}`}
-                  data-test-id={(date - ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : undefined}
+                  data-test-id={(date - ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : 'left-nav-clicker'}
                 >
                   <span className="tt-day-name">{dayAbbrev(date - ONE_DAY)}</span>
                   <span className="tt-day-num">{dayNum(date - ONE_DAY)}</span>
@@ -549,22 +542,16 @@ const Timer = ({
                 <Link
                   to={`/timer?date=${date + ONE_DAY}`}
                   className={`tt-day-cell${(date + ONE_DAY) === todaysDateInt() ? ' tt-day-cell--today' : ''}`}
-                  data-test-id={(date + ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : undefined}
+                  data-test-id={(date + ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : 'right-nav-clicker'}
                 >
                   <span className="tt-day-name">{dayAbbrev(date + ONE_DAY)}</span>
                   <span className="tt-day-num">{dayNum(date + ONE_DAY)}</span>
                   {(date + ONE_DAY) === todaysDateInt() && <span className="tt-today-dot" />}
                 </Link>
               </div>
-              <Link
-                data-test-id="right-nav-clicker"
-                className="nav-arrow"
-                to={`/timer?date=${date + ONE_DAY}`}
-              >
-                ›
-              </Link>
             </h2>
           </div>
+          <div className="tt-header-sep" aria-hidden="true" />
           {useLocal === USELOCAL.NO && (
             <WeekTotal useApi={useApi} date={date} />
           )}

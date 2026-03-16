@@ -66,8 +66,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 16px;
-  border-bottom: 1px solid var(--color-surface-border);
+  padding: 4px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   background: var(--color-surface-raised);
 }
 
@@ -116,6 +116,10 @@ html, body {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   letter-spacing: 0.02em;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tt-topbar-btn-danger {
@@ -176,11 +180,10 @@ html, body {
 .tt-date-nav {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-surface-border);
-  border-radius: 8px;
-  padding: 4px 6px;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  padding: 0;
   margin: 0;
   font-size: inherit;
   font-weight: inherit;
@@ -189,25 +192,6 @@ html, body {
 
 .tt-date-label {
   /* selector kept for test targeting — visual treatment via .tt-day-cell */
-}
-
-.nav-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  font-size: 1.4rem;
-  line-height: 1;
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
-
-  &:hover {
-    background: var(--color-surface-overlay);
-    color: var(--color-text-primary);
-  }
 }
 
 /* ─── Day strip ──────────────────────────────────────────────────────────── */
@@ -221,7 +205,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4px 14px;
+  padding: 4px 12px;
   border-radius: 6px;
   border: 1px solid transparent;
   text-decoration: none;
@@ -263,7 +247,7 @@ html, body {
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.75;
   line-height: 1;
 }
 
@@ -287,13 +271,17 @@ html, body {
   position: relative;
 }
 
+.tt-header-sep {
+  display: none;
+}
+
 /* ─── Month label (topbar center) ───────────────────────────────────────── */
 
 .tt-month-label {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   color: var(--color-text-secondary);
   text-decoration: none;
   padding: 3px 10px;
@@ -369,15 +357,15 @@ html, body {
     margin-right: auto;
     border: 1px solid var(--color-surface-border);
     border-radius: 8px;
-    padding: 6px 12px;
-    margin-bottom: 8px;
+    padding: 6px 16px;
+    margin-bottom: 4px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   }
 
   .tt-header-center {
     flex-direction: row;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: nowrap;
     width: 100%;
   }
@@ -390,7 +378,15 @@ html, body {
   }
 
   .tt-daily-goal-bar {
-    width: 72px;
+    width: 96px;
+  }
+
+  .tt-header-sep {
+    display: block;
+    width: 1px;
+    height: 26px;
+    background: var(--color-surface-border);
+    flex-shrink: 0;
   }
 
   /* Push weekends toggle + legend to the far right */
@@ -595,7 +591,7 @@ html, body {
 
 .tt-daily-goal-label {
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   gap: 2px;
