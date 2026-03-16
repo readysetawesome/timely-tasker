@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import Timer from './components/Timer/Timer';
 
@@ -39,46 +39,11 @@ function App({ useDate = todaysDateInt() }: AppProps) {
     return () => window.removeEventListener('keydown', handler);
   }, [date, navigate]);
 
-  const leftNavClicker = (
-    <Link
-      data-test-id="left-nav-clicker"
-      className="nav-arrow"
-      to={`/timer?date=${date - ONE_DAY_MILLIS}`}
-    >
-      ‹
-    </Link>
-  );
-
-  const rightNavClicker = (
-    <Link
-      data-test-id="right-nav-clicker"
-      className="nav-arrow"
-      to={`/timer?date=${date + ONE_DAY_MILLIS}`}
-    >
-      ›
-    </Link>
-  );
-
-  const todayNavClicker = date !== todaysDateInt() ? (
-    <Link
-      data-test-id="today-nav-clicker"
-      className="nav-today"
-      to={`/timer?date=${todaysDateInt()}`}
-    >
-      Today
-    </Link>
-  ) : null;
-
   return (
     <div className="App">
       <Timer
-        {...{
-          date,
-          currentTime: new Date(),
-          leftNavClicker,
-          rightNavClicker,
-          todayNavClicker,
-        }}
+        date={date}
+        currentTime={new Date()}
       />
     </div>
   );

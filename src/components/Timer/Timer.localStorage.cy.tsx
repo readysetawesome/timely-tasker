@@ -277,7 +277,7 @@ describe('<Timer /> using localStorage', () => {
   });
 
   it('renders the date', () => {
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
   it('renders loaded summary text in the <input>', () => {
@@ -454,11 +454,11 @@ describe('<Timer /> using localStorage', () => {
     // Mock clock at start so todaysDateInt() returns TODAYS_DATE on every re-render
     cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
     cy.get("[data-test-id='left-nav-clicker']").click();
-    cy.get('h2').should('contain', '3-22-2023');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
     cy.get("[data-test-id='summary-text-0']").should('have.value', '');
 
     cy.get("[data-test-id='today-nav-clicker']").click();
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
     cy.get("[data-test-id='summary-text-0']").should(
       'have.value',
       'replace jest with cypress'
@@ -467,7 +467,7 @@ describe('<Timer /> using localStorage', () => {
 
   it('ArrowLeft key navigates to the previous day in localStorage mode', () => {
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
-    cy.get('h2').should('contain', '3-22-2023');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
   });
 
   it('drag-and-drop persists slot swap in localStorage', () => {
