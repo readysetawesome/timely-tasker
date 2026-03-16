@@ -28,6 +28,9 @@ export const dateDisplay = (date) => {
   }-${date.getUTCDate()}-${date.getUTCFullYear()}`;
 };
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const dayDisplay = (date) => DAY_NAMES[new Date(date).getUTCDay()];
+
 const Header = () => {
   const items = new Array<JSX.Element>();
   for (let i = 0; i < 24; i++) {
@@ -522,6 +525,7 @@ const Timer = ({
                   onClick={() => setShowPicker(p => !p)}
                 >
                   {dateDisplay(date)}
+                  <span className="tt-day-of-week">{dayDisplay(date)}</span>
                 </button>
                 {showPicker && <DatePicker date={date} onClose={() => setShowPicker(false)} />}
               </div>
