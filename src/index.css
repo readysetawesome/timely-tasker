@@ -199,8 +199,24 @@ html, body {
   border: none;
   cursor: pointer;
   transition: color 150ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  line-height: 1.2;
 
   &:hover { color: var(--color-focused); }
+}
+
+.tt-day-of-week {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  line-height: 1;
+  opacity: 0.7;
 }
 
 .tt-date-label--offtoday {
