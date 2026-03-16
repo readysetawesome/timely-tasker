@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { todaysDateInt } from '../../App';
 import { IdentityResponse } from '../../../lib/Identity';
@@ -21,15 +21,17 @@ import { fetchSummaries, setSummary } from './Timer.actions';
 import { summariesReordered } from './Timer.slice';
 import { PinnedTask } from '../../../functions/pinnedTasks';
 
-export const dateDisplay = (date) => {
-  date = new Date(date);
-  return `${
-    date.getUTCMonth() + 1
-  }-${date.getUTCDate()}-${date.getUTCFullYear()}`;
-};
+export const dateDisplay = (date) =>
+  new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(date));
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-export const dayDisplay = (date) => DAY_NAMES[new Date(date).getUTCDay()];
+const dayAbbrev = (date: number) =>
+  new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'UTC' }).format(new Date(date));
+
+const dayNum = (date: number) =>
+  new Intl.DateTimeFormat('en-US', { day: 'numeric', timeZone: 'UTC' }).format(new Date(date));
+
+const monthYearDisplay = (date: number) =>
+  new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(date));
 
 const Header = () => {
   const items = new Array<JSX.Element>();
@@ -48,9 +50,6 @@ const Header = () => {
 export interface TimerProps {
   date: number;
   currentTime: Date;
-  leftNavClicker: ReactElement;
-  rightNavClicker: ReactElement;
-  todayNavClicker: ReactElement | null;
 }
 
 const LOCAL_STORAGE = 'TimelyTasker:UseLocalStorage';
@@ -62,9 +61,6 @@ const USELOCAL = {
 const Timer = ({
   date,
   currentTime,
-  leftNavClicker,
-  rightNavClicker,
-  todayNavClicker,
 }: TimerProps) => {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const summariesRestSelectors = getRestSelectorsFor(
@@ -490,14 +486,18 @@ const Timer = ({
             </>
           )}
         </div>
-        {useLocal === USELOCAL.NO && (
+        {useLocal === USELOCAL.NO ? (
           <Link
             to={`/month?date=${date}`}
-            className="tt-topbar-btn"
+            className="tt-month-label"
             data-test-id="month-view-link"
           >
-            Month
+            {monthYearDisplay(date)}
           </Link>
+        ) : (
+          <span className="tt-month-label tt-month-label--static">
+            {monthYearDisplay(date)}
+          </span>
         )}
         <a
           href="https://github.com/readysetawesome/timely-tasker"
@@ -517,19 +517,52 @@ const Timer = ({
         <div className="tt-header-center">
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
-              {todayNavClicker}
-              {leftNavClicker}
-              <div className="tt-date-label-wrap">
-                <button
-                  className={`tt-date-label${todayNavClicker ? ' tt-date-label--offtoday' : ''}`}
-                  onClick={() => setShowPicker(p => !p)}
+              <Link
+                data-test-id="left-nav-clicker"
+                className="nav-arrow"
+                to={`/timer?date=${date - ONE_DAY}`}
+              >
+                ‹
+              </Link>
+              <div className="tt-day-strip">
+                <Link
+                  to={`/timer?date=${date - ONE_DAY}`}
+                  className={`tt-day-cell${(date - ONE_DAY) === todaysDateInt() ? ' tt-day-cell--today' : ''}`}
+                  data-test-id={(date - ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : undefined}
                 >
-                  {dateDisplay(date)}
-                  <span className="tt-day-of-week">{dayDisplay(date)}</span>
-                </button>
-                {showPicker && <DatePicker date={date} onClose={() => setShowPicker(false)} />}
+                  <span className="tt-day-name">{dayAbbrev(date - ONE_DAY)}</span>
+                  <span className="tt-day-num">{dayNum(date - ONE_DAY)}</span>
+                  {(date - ONE_DAY) === todaysDateInt() && <span className="tt-today-dot" />}
+                </Link>
+                <div className="tt-day-cell-wrap">
+                  <button
+                    className={`tt-day-cell tt-day-cell--selected tt-date-label${isToday ? ' tt-day-cell--today' : ''}`}
+                    onClick={() => setShowPicker(p => !p)}
+                  >
+                    <span className="tt-day-name">{dayAbbrev(date)}</span>
+                    <span className="tt-day-num">{dayNum(date)}</span>
+                    {isToday && <span className="tt-today-dot" />}
+                    <span className="sr-only">{dateDisplay(date)}</span>
+                  </button>
+                  {showPicker && <DatePicker date={date} onClose={() => setShowPicker(false)} />}
+                </div>
+                <Link
+                  to={`/timer?date=${date + ONE_DAY}`}
+                  className={`tt-day-cell${(date + ONE_DAY) === todaysDateInt() ? ' tt-day-cell--today' : ''}`}
+                  data-test-id={(date + ONE_DAY) === todaysDateInt() ? 'today-nav-clicker' : undefined}
+                >
+                  <span className="tt-day-name">{dayAbbrev(date + ONE_DAY)}</span>
+                  <span className="tt-day-num">{dayNum(date + ONE_DAY)}</span>
+                  {(date + ONE_DAY) === todaysDateInt() && <span className="tt-today-dot" />}
+                </Link>
               </div>
-              {rightNavClicker}
+              <Link
+                data-test-id="right-nav-clicker"
+                className="nav-arrow"
+                to={`/timer?date=${date + ONE_DAY}`}
+              >
+                ›
+              </Link>
             </h2>
           </div>
           {useLocal === USELOCAL.NO && (

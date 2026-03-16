@@ -58,7 +58,7 @@ beforeEach(() => {
 
 describe('<Timer />', () => {
   it('renders the date', () => {
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
   it('logout clears session and shows storage selection without auto-redirecting', () => {
@@ -477,11 +477,11 @@ describe('<Timer />', () => {
 
     cy.get("[data-test-id='left-nav-clicker']").click();
     cy.wait(['@getSummariesPastForTodayNav']);
-    cy.get('h2').should('contain', '3-22-2023');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
 
     cy.get("[data-test-id='today-nav-clicker']").click();
     cy.wait(['@getSummariesTodayFromNav']);
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
   it('ArrowLeft key navigates to the previous day', () => {
@@ -489,7 +489,7 @@ describe('<Timer />', () => {
     cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
     cy.wait('@prevDaySummaries');
-    cy.get('h2').should('contain', '3-22-2023');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
   });
 
   it('ArrowRight key navigates to the next day', () => {
@@ -497,7 +497,7 @@ describe('<Timer />', () => {
     cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
     cy.get('body').trigger('keydown', { key: 'ArrowRight', bubbles: true });
     cy.wait('@nextDaySummaries');
-    cy.get('h2').should('contain', '3-24-2023');
+    cy.get('h2').should('contain', 'Fri, Mar 24');
   });
 
   it('t key navigates to today when on a different day', () => {
@@ -510,17 +510,17 @@ describe('<Timer />', () => {
 
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
     cy.wait('@prevDay');
-    cy.get('h2').should('contain', '3-22-2023');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
 
     cy.get('body').trigger('keydown', { key: 't', bubbles: true });
     cy.wait('@todaySummaries');
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
   it('keyboard shortcuts do not fire when a summary input is focused', () => {
     cy.get("[data-test-id='summary-text-0']").focus();
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
-    cy.get('h2').should('contain', '3-23-2023');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
   it('daily goal shows "Set daily goal" when no goal is stored', () => {

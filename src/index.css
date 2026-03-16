@@ -188,39 +188,7 @@ html, body {
 }
 
 .tt-date-label {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  text-decoration: none;
-  letter-spacing: 0.04em;
-  padding: 2px 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 150ms ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  line-height: 1.2;
-
-  &:hover { color: var(--color-focused); }
-}
-
-.tt-day-of-week {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  line-height: 1;
-  opacity: 0.7;
-}
-
-.tt-date-label--offtoday {
-  color: var(--color-text-secondary);
+  /* selector kept for test targeting — visual treatment via .tt-day-cell */
 }
 
 .nav-arrow {
@@ -242,26 +210,106 @@ html, body {
   }
 }
 
-.nav-today {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 5px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: var(--color-accent);
-  text-decoration: none;
-  border: 1px solid var(--color-accent-dim);
-  transition: background 150ms ease;
-  animation: nav-today-in 0.2s ease forwards;
+/* ─── Day strip ──────────────────────────────────────────────────────────── */
 
-  &:hover { background: rgba(91, 141, 238, 0.12); }
+.tt-day-strip {
+  display: flex;
+  gap: 2px;
 }
 
-@keyframes nav-today-in {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: translateX(0); }
+.tt-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  background: none;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  gap: 1px;
+
+  &:hover {
+    background: var(--color-surface-overlay);
+    color: var(--color-text-primary);
+  }
+}
+
+.tt-day-cell--selected {
+  background: var(--color-surface-overlay);
+  border-color: var(--color-surface-border);
+  color: var(--color-text-primary);
+  cursor: default;
+
+  &:hover {
+    background: var(--color-surface-overlay);
+    color: var(--color-text-primary);
+  }
+}
+
+.tt-day-cell--today .tt-day-num {
+  color: var(--color-focused);
+}
+
+.tt-day-cell--selected.tt-day-cell--today {
+  border-color: var(--color-focused-dim);
+}
+
+.tt-day-name {
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.tt-day-num {
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.tt-today-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-focused);
+  box-shadow: 0 0 6px var(--color-focused-glow);
+  margin-top: 1px;
+}
+
+.tt-day-cell-wrap {
+  position: relative;
+}
+
+/* ─── Month label (topbar center) ───────────────────────────────────────── */
+
+.tt-month-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+
+  &:not(.tt-month-label--static):hover {
+    color: var(--color-text-primary);
+    border-color: var(--color-surface-border);
+    background: var(--color-surface-overlay);
+  }
+}
+
+.tt-month-label--static {
+  cursor: default;
 }
 
 .tt-greeting {
@@ -818,12 +866,6 @@ html, body {
   transition: color 150ms ease;
 
   &:hover { color: var(--color-text-secondary); }
-}
-
-/* ─── Date label wrapper (positions the picker) ─────────────────────────── */
-
-.tt-date-label-wrap {
-  position: relative;
 }
 
 /* ─── Date picker ────────────────────────────────────────────────────────── */
