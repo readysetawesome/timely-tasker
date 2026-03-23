@@ -409,6 +409,27 @@ html, body {
     width: 100%;
   }
 
+  .tt-header-left,
+  .tt-header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .tt-header-left {
+    justify-content: flex-start;
+  }
+
+  .tt-header-right {
+    justify-content: flex-end;
+  }
+
+  .tt-date-cluster {
+    flex: 0 0 auto;
+  }
+
   .tt-daily-goal {
     flex-direction: row;
     align-items: center;

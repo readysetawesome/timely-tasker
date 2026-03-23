@@ -515,6 +515,37 @@ const Timer = ({
       {/* ── App header ── */}
       <div className="tt-header">
         <div className="tt-header-center">
+          {/* ── Left: legend + weekends toggle ── */}
+          <div className="tt-header-left">
+            {useLocal !== null && (
+              <div className="tt-tick-legend">
+                <span className="tt-tick-legend-item">
+                  <span className="tt-tick-swatch tt-tick-swatch--focused" />
+                  focused
+                </span>
+                <span className="tt-tick-legend-item">
+                  <span className="tt-tick-swatch tt-tick-swatch--distracted" />
+                  distracted
+                </span>
+              </div>
+            )}
+            {useLocal !== null && (
+              <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
+                <input
+                  type="checkbox"
+                  checked={worksWeekends}
+                  onChange={(e) => {
+                    const val = e.target.checked;
+                    setWorksWeekends(val);
+                    useApi.setPreference('worksWeekends', val);
+                  }}
+                />
+                I work weekends
+              </label>
+            )}
+          </div>
+
+          {/* ── Center: date nav ── */}
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
               <Link
@@ -575,39 +606,16 @@ const Timer = ({
               >»</Link>
             </h2>
           </div>
-          <div className="tt-header-sep" aria-hidden="true" />
-          {useLocal === USELOCAL.NO && (
-            <WeekTotal useApi={useApi} date={date} />
-          )}
-          {useLocal !== null && (
-            <DailyGoal useApi={useApi} />
-          )}
-          {useLocal !== null && (
-            <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
-              <input
-                type="checkbox"
-                checked={worksWeekends}
-                onChange={(e) => {
-                  const val = e.target.checked;
-                  setWorksWeekends(val);
-                  useApi.setPreference('worksWeekends', val);
-                }}
-              />
-              I work weekends
-            </label>
-          )}
-          {useLocal !== null && (
-            <div className="tt-tick-legend">
-              <span className="tt-tick-legend-item">
-                <span className="tt-tick-swatch tt-tick-swatch--focused" />
-                focused
-              </span>
-              <span className="tt-tick-legend-item">
-                <span className="tt-tick-swatch tt-tick-swatch--distracted" />
-                distracted
-              </span>
-            </div>
-          )}
+
+          {/* ── Right: hours tracking ── */}
+          <div className="tt-header-right">
+            {useLocal === USELOCAL.NO && (
+              <WeekTotal useApi={useApi} date={date} />
+            )}
+            {useLocal !== null && (
+              <DailyGoal useApi={useApi} />
+            )}
+          </div>
         </div>
       </div>
 
