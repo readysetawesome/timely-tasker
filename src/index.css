@@ -744,6 +744,7 @@ html, body {
   font-size: 0.7rem;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
+  opacity: 0.45;
 }
 
 .tt-tick-legend-item {

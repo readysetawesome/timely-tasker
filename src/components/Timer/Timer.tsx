@@ -555,11 +555,6 @@ const Timer = ({
                 title="Jump to today"
                 tabIndex={date > todaysDateInt() ? undefined : -1}
               >«</Link>
-              <Link
-                to={`/timer?date=${date - ONE_DAY}`}
-                className="tt-nav-step"
-                data-test-id="left-nav-arrow"
-              >‹</Link>
               <div className="tt-day-strip">
                 <Link
                   to={`/timer?date=${date - ONE_DAY}`}
@@ -593,11 +588,6 @@ const Timer = ({
                 </Link>
               </div>
               <Link
-                to={`/timer?date=${date + ONE_DAY}`}
-                className="tt-nav-step"
-                data-test-id="right-nav-arrow"
-              >›</Link>
-              <Link
                 to={`/timer?date=${todaysDateInt()}`}
                 className={`tt-nav-jump${date >= todaysDateInt() ? ' tt-nav-jump--hidden' : ''}`}
                 data-test-id={date < todaysDateInt() ? 'today-btn' : undefined}
@@ -613,7 +603,7 @@ const Timer = ({
               <WeekTotal useApi={useApi} date={date} />
             )}
             {useLocal !== null && (
-              <DailyGoal useApi={useApi} />
+              <DailyGoal useApi={useApi} dayLabel={isToday ? 'today' : dayAbbrev(date)} />
             )}
           </div>
         </div>
