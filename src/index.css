@@ -305,6 +305,11 @@ html, body {
   }
 }
 
+.tt-nav-jump--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .tt-header-sep {
   display: none;
 }

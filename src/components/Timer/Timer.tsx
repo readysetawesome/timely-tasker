@@ -517,14 +517,13 @@ const Timer = ({
         <div className="tt-header-center">
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
-              {date > todaysDateInt() && (
-                <Link
-                  to={`/timer?date=${todaysDateInt()}`}
-                  className="tt-nav-jump"
-                  data-test-id="today-btn"
-                  title="Jump to today"
-                >«</Link>
-              )}
+              <Link
+                to={`/timer?date=${todaysDateInt()}`}
+                className={`tt-nav-jump${date <= todaysDateInt() ? ' tt-nav-jump--hidden' : ''}`}
+                data-test-id={date > todaysDateInt() ? 'today-btn' : undefined}
+                title="Jump to today"
+                tabIndex={date > todaysDateInt() ? undefined : -1}
+              >«</Link>
               <Link
                 to={`/timer?date=${date - ONE_DAY}`}
                 className="tt-nav-step"
@@ -567,14 +566,13 @@ const Timer = ({
                 className="tt-nav-step"
                 data-test-id="right-nav-arrow"
               >›</Link>
-              {date < todaysDateInt() && (
-                <Link
-                  to={`/timer?date=${todaysDateInt()}`}
-                  className="tt-nav-jump"
-                  data-test-id="today-btn"
-                  title="Jump to today"
-                >»</Link>
-              )}
+              <Link
+                to={`/timer?date=${todaysDateInt()}`}
+                className={`tt-nav-jump${date >= todaysDateInt() ? ' tt-nav-jump--hidden' : ''}`}
+                data-test-id={date < todaysDateInt() ? 'today-btn' : undefined}
+                title="Jump to today"
+                tabIndex={date < todaysDateInt() ? undefined : -1}
+              >»</Link>
             </h2>
           </div>
           <div className="tt-header-sep" aria-hidden="true" />
