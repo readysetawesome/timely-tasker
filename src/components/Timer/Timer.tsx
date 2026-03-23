@@ -556,7 +556,7 @@ const Timer = ({
                 className="tt-today-btn"
                 data-test-id="today-btn"
               >
-                Today
+                {date > todaysDateInt() ? '← today' : 'today →'}
               </Link>
             )}
           </div>
