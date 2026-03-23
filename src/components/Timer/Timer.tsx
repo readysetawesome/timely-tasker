@@ -485,6 +485,20 @@ const Timer = ({
               </button>
             </>
           )}
+          {useLocal !== null && (
+            <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
+              <input
+                type="checkbox"
+                checked={worksWeekends}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setWorksWeekends(val);
+                  useApi.setPreference('worksWeekends', val);
+                }}
+              />
+              I work weekends
+            </label>
+          )}
         </div>
         {useLocal === USELOCAL.NO ? (
           <Link
@@ -528,20 +542,6 @@ const Timer = ({
                   distracted
                 </span>
               </div>
-            )}
-            {useLocal !== null && (
-              <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
-                <input
-                  type="checkbox"
-                  checked={worksWeekends}
-                  onChange={(e) => {
-                    const val = e.target.checked;
-                    setWorksWeekends(val);
-                    useApi.setPreference('worksWeekends', val);
-                  }}
-                />
-                I work weekends
-              </label>
             )}
           </div>
 
