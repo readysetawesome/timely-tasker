@@ -550,6 +550,15 @@ const Timer = ({
                 </Link>
               </div>
             </h2>
+            {!isToday && (
+              <Link
+                to={`/timer?date=${todaysDateInt()}`}
+                className="tt-today-btn"
+                data-test-id="today-btn"
+              >
+                Today
+              </Link>
+            )}
           </div>
           <div className="tt-header-sep" aria-hidden="true" />
           {useLocal === USELOCAL.NO && (
