@@ -484,6 +484,34 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
+  it('today-btn appears when 2+ days in the past and navigates to today', () => {
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
+    const oneDayAgo = TODAYS_DATE - ONE_DAY;
+    const twoDaysAgo = TODAYS_DATE - 2 * ONE_DAY;
+    cy.intercept('GET', `/summaries?date=${oneDayAgo}`, { fixture: 'summariesPast' }).as('oneDayBack');
+    cy.intercept('GET', `/summaries?date=${twoDaysAgo}`, { fixture: 'summariesPast' }).as('twoDaysBack');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('backToToday');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+
+    // Navigate back twice so today is no longer in the adjacent day strip
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait('@oneDayBack');
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait('@twoDaysBack');
+    cy.get('h2').should('contain', 'Tue, Mar 21');
+
+    // Today button must be visible when 2+ days away
+    cy.get("[data-test-id='today-btn']").should('be.visible');
+    cy.get("[data-test-id='today-btn']").click();
+    cy.wait('@backToToday');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
+
+    // Today button must NOT appear when on today
+    cy.get("[data-test-id='today-btn']").should('not.exist');
+  });
+
   it('ArrowLeft key navigates to the previous day', () => {
     cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, { body: [] }).as('prevDaySummaries');
     cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });

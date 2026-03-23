@@ -5,9 +5,10 @@ import { getTotalFocusedHours } from './Timer.selectors';
 
 interface DailyGoalProps {
   useApi: StorageApiType;
+  dayLabel: string;
 }
 
-const DailyGoal = ({ useApi }: DailyGoalProps) => {
+const DailyGoal = ({ useApi, dayLabel }: DailyGoalProps) => {
   const totalHours = useSelector(getTotalFocusedHours);
   const [goalHours, setGoalHours] = useState<number | null>(null);
   const [editing, setEditing] = useState(false);
@@ -55,7 +56,7 @@ const DailyGoal = ({ useApi }: DailyGoalProps) => {
   return (
     <div className="tt-daily-goal" data-test-id="daily-goal">
       <span className="tt-daily-goal-label">
-        <span className="tt-daily-goal-scope">today&nbsp;·&nbsp;</span>
+        <span className="tt-daily-goal-scope">{dayLabel}&nbsp;·&nbsp;</span>
         {totalHours}h&nbsp;/&nbsp;
         {editing ? (
           <input

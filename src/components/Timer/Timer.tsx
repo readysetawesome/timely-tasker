@@ -485,6 +485,20 @@ const Timer = ({
               </button>
             </>
           )}
+          {useLocal !== null && (
+            <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
+              <input
+                type="checkbox"
+                checked={worksWeekends}
+                onChange={(e) => {
+                  const val = e.target.checked;
+                  setWorksWeekends(val);
+                  useApi.setPreference('worksWeekends', val);
+                }}
+              />
+              I work weekends
+            </label>
+          )}
         </div>
         {useLocal === USELOCAL.NO ? (
           <Link
@@ -515,8 +529,32 @@ const Timer = ({
       {/* ── App header ── */}
       <div className="tt-header">
         <div className="tt-header-center">
+          {/* ── Left: legend + weekends toggle ── */}
+          <div className="tt-header-left">
+            {useLocal !== null && (
+              <div className="tt-tick-legend">
+                <span className="tt-tick-legend-item">
+                  <span className="tt-tick-swatch tt-tick-swatch--focused" />
+                  focused
+                </span>
+                <span className="tt-tick-legend-item">
+                  <span className="tt-tick-swatch tt-tick-swatch--distracted" />
+                  distracted
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* ── Center: date nav ── */}
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
+              <Link
+                to={`/timer?date=${todaysDateInt()}`}
+                className={`tt-nav-jump${date <= todaysDateInt() ? ' tt-nav-jump--hidden' : ''}`}
+                data-test-id={date > todaysDateInt() ? 'today-btn' : undefined}
+                title="Jump to today"
+                tabIndex={date > todaysDateInt() ? undefined : -1}
+              >«</Link>
               <div className="tt-day-strip">
                 <Link
                   to={`/timer?date=${date - ONE_DAY}`}
@@ -549,41 +587,25 @@ const Timer = ({
                   {(date + ONE_DAY) === todaysDateInt() && <span className="tt-today-dot" />}
                 </Link>
               </div>
+              <Link
+                to={`/timer?date=${todaysDateInt()}`}
+                className={`tt-nav-jump${date >= todaysDateInt() ? ' tt-nav-jump--hidden' : ''}`}
+                data-test-id={date < todaysDateInt() ? 'today-btn' : undefined}
+                title="Jump to today"
+                tabIndex={date < todaysDateInt() ? undefined : -1}
+              >»</Link>
             </h2>
           </div>
-          <div className="tt-header-sep" aria-hidden="true" />
-          {useLocal === USELOCAL.NO && (
-            <WeekTotal useApi={useApi} date={date} />
-          )}
-          {useLocal !== null && (
-            <DailyGoal useApi={useApi} />
-          )}
-          {useLocal !== null && (
-            <label className="tt-work-weekends-toggle" data-test-id="work-weekends-toggle">
-              <input
-                type="checkbox"
-                checked={worksWeekends}
-                onChange={(e) => {
-                  const val = e.target.checked;
-                  setWorksWeekends(val);
-                  useApi.setPreference('worksWeekends', val);
-                }}
-              />
-              I work weekends
-            </label>
-          )}
-          {useLocal !== null && (
-            <div className="tt-tick-legend">
-              <span className="tt-tick-legend-item">
-                <span className="tt-tick-swatch tt-tick-swatch--focused" />
-                focused
-              </span>
-              <span className="tt-tick-legend-item">
-                <span className="tt-tick-swatch tt-tick-swatch--distracted" />
-                distracted
-              </span>
-            </div>
-          )}
+
+          {/* ── Right: hours tracking ── */}
+          <div className="tt-header-right">
+            {useLocal === USELOCAL.NO && (
+              <WeekTotal useApi={useApi} date={date} />
+            )}
+            {useLocal !== null && (
+              <DailyGoal useApi={useApi} dayLabel={isToday ? 'today' : dayAbbrev(date)} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -649,7 +671,7 @@ const Timer = ({
                         disabled={copyingYesterday}
                         data-test-id="copy-yesterday-button"
                         className={styles.copy_yesterday_btn}
-                        title="Copy yesterday's task names into empty slots"
+                        title={`Copy ${copyYesterdayLabel === 'fri.' ? "friday's" : "yesterday's"} task names into empty slots`}
                       >
                         {copyingYesterday ? '…' : `↓ ${copyYesterdayLabel}`}
                       </button>

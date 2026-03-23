@@ -465,6 +465,24 @@ describe('<Timer /> using localStorage', () => {
     );
   });
 
+  it('today-btn appears when 2+ days in the past and navigates to today', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+
+    // Navigate back twice so today is no longer in the adjacent day strip
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.get('h2').should('contain', 'Wed, Mar 22');
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.get('h2').should('contain', 'Tue, Mar 21');
+
+    // Today button must be visible when 2+ days away
+    cy.get("[data-test-id='today-btn']").should('be.visible');
+    cy.get("[data-test-id='today-btn']").click();
+    cy.get('h2').should('contain', 'Thu, Mar 23');
+
+    // Today button must NOT appear when on today
+    cy.get("[data-test-id='today-btn']").should('not.exist');
+  });
+
   it('ArrowLeft key navigates to the previous day in localStorage mode', () => {
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
     cy.get('h2').should('contain', 'Wed, Mar 22');

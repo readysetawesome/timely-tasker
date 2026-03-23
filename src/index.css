@@ -69,6 +69,7 @@ html, body {
   padding: 4px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   background: var(--color-surface-raised);
+  position: relative;
 }
 
 .app-topbar-link {
@@ -180,7 +181,7 @@ html, body {
 .tt-date-nav {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   background: transparent;
   border: none;
   padding: 0;
@@ -271,6 +272,45 @@ html, body {
   position: relative;
 }
 
+.tt-nav-step,
+.tt-nav-jump {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 4px;
+  padding: 2px 0;
+  transition: color 150ms ease, background 150ms ease;
+  user-select: none;
+}
+
+.tt-nav-step {
+  color: var(--color-text-secondary);
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: var(--color-surface-overlay);
+  }
+}
+
+.tt-nav-jump {
+  color: var(--color-focused);
+
+  &:hover {
+    background: var(--color-focused-dim);
+    color: var(--color-text-primary);
+  }
+}
+
+.tt-nav-jump--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .tt-header-sep {
   display: none;
 }
@@ -278,6 +318,9 @@ html, body {
 /* ─── Month label (topbar center) ───────────────────────────────────────── */
 
 .tt-month-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 500;
@@ -368,6 +411,27 @@ html, body {
     gap: 12px;
     flex-wrap: nowrap;
     width: 100%;
+  }
+
+  .tt-header-left,
+  .tt-header-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .tt-header-left {
+    justify-content: flex-start;
+  }
+
+  .tt-header-right {
+    justify-content: flex-end;
+  }
+
+  .tt-date-cluster {
+    flex: 0 0 auto;
   }
 
   .tt-daily-goal {
@@ -666,6 +730,7 @@ html, body {
   color: var(--color-text-muted);
   cursor: pointer;
   margin-top: 4px;
+  margin-left: 20px;
   user-select: none;
 }
 
@@ -684,6 +749,7 @@ html, body {
   font-size: 0.7rem;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
+  opacity: 0.45;
 }
 
 .tt-tick-legend-item {
