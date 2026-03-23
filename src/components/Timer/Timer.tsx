@@ -681,7 +681,7 @@ const Timer = ({
                         disabled={copyingYesterday}
                         data-test-id="copy-yesterday-button"
                         className={styles.copy_yesterday_btn}
-                        title="Copy yesterday's task names into empty slots"
+                        title={`Copy ${copyYesterdayLabel === 'fri.' ? "friday's" : "yesterday's"} task names into empty slots`}
                       >
                         {copyingYesterday ? '…' : `↓ ${copyYesterdayLabel}`}
                       </button>
