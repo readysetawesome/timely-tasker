@@ -180,7 +180,7 @@ html, body {
 .tt-date-nav {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   background: transparent;
   border: none;
   padding: 0;
@@ -271,19 +271,33 @@ html, body {
   position: relative;
 }
 
-.tt-today-btn {
-  display: inline-block;
-  padding: 1px 7px;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+.tt-nav-step,
+.tt-nav-jump {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
   text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  border-radius: 4px;
+  padding: 2px 0;
+  transition: color 150ms ease, background 150ms ease;
+  user-select: none;
+}
+
+.tt-nav-step {
+  color: var(--color-text-secondary);
+
+  &:hover {
+    color: var(--color-text-primary);
+    background: var(--color-surface-overlay);
+  }
+}
+
+.tt-nav-jump {
   color: var(--color-focused);
-  border: 1px solid var(--color-focused-dim);
-  background: transparent;
-  transition: background 150ms ease, color 150ms ease;
 
   &:hover {
     background: var(--color-focused-dim);
@@ -540,10 +554,10 @@ html, body {
 
 .tt-date-cluster {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 3px 0;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* ─── Connecting interstitial ────────────────────────────────────────────── */

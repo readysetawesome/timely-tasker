@@ -517,6 +517,19 @@ const Timer = ({
         <div className="tt-header-center">
           <div className="tt-date-cluster">
             <h2 className="tt-date-nav">
+              {date > todaysDateInt() && (
+                <Link
+                  to={`/timer?date=${todaysDateInt()}`}
+                  className="tt-nav-jump"
+                  data-test-id="today-btn"
+                  title="Jump to today"
+                >«</Link>
+              )}
+              <Link
+                to={`/timer?date=${date - ONE_DAY}`}
+                className="tt-nav-step"
+                data-test-id="left-nav-arrow"
+              >‹</Link>
               <div className="tt-day-strip">
                 <Link
                   to={`/timer?date=${date - ONE_DAY}`}
@@ -549,16 +562,20 @@ const Timer = ({
                   {(date + ONE_DAY) === todaysDateInt() && <span className="tt-today-dot" />}
                 </Link>
               </div>
-            </h2>
-            {!isToday && (
               <Link
-                to={`/timer?date=${todaysDateInt()}`}
-                className="tt-today-btn"
-                data-test-id="today-btn"
-              >
-                {date > todaysDateInt() ? '← today' : 'today →'}
-              </Link>
-            )}
+                to={`/timer?date=${date + ONE_DAY}`}
+                className="tt-nav-step"
+                data-test-id="right-nav-arrow"
+              >›</Link>
+              {date < todaysDateInt() && (
+                <Link
+                  to={`/timer?date=${todaysDateInt()}`}
+                  className="tt-nav-jump"
+                  data-test-id="today-btn"
+                  title="Jump to today"
+                >»</Link>
+              )}
+            </h2>
           </div>
           <div className="tt-header-sep" aria-hidden="true" />
           {useLocal === USELOCAL.NO && (
