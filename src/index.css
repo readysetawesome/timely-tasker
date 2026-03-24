@@ -318,9 +318,6 @@ html, body {
 /* ─── Month label (topbar center) ───────────────────────────────────────── */
 
 .tt-month-label {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 500;
@@ -453,10 +450,14 @@ html, body {
     flex-shrink: 0;
   }
 
-  /* Push weekends toggle + legend to the far right */
   .tt-work-weekends-toggle {
     margin-top: 0;
-    margin-left: auto;
+  }
+
+  .tt-month-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .tt-tick-legend {
