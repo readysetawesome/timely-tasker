@@ -545,6 +545,32 @@ describe('<Timer />', () => {
     cy.get('h2').should('contain', 'Thu, Mar 23');
   });
 
+  it('auto-navigates to today when foregrounded after 6+ hours on a past date', () => {
+    const now = TIME_NOW - 420 * 60 * 1000;
+    cy.clock(now + new Date().getTimezoneOffset() * 60 * 1000);
+
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE - ONE_DAY}`, { fixture: 'summariesPast' }).as('prevDay');
+    cy.intercept('GET', `/summaries?date=${TODAYS_DATE}`, { fixture: 'summaries' }).as('backToday');
+    cy.intercept('GET', /\/summaries\?startDate=/, { body: [] });
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.wait('@prevDay');
+    cy.get('h2').should('contain', 'Wed, Mar 22');
+
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'hidden', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    cy.tick(6 * 60 * 60 * 1000);
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'visible', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    cy.wait('@backToday');
+    cy.get('h2').should('contain', 'Thu, Mar 23');
+  });
+
   it('keyboard shortcuts do not fire when a summary input is focused', () => {
     cy.get("[data-test-id='summary-text-0']").focus();
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
