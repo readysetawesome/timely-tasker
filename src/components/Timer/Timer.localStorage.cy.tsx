@@ -483,6 +483,62 @@ describe('<Timer /> using localStorage', () => {
     cy.get("[data-test-id='today-btn']").should('not.exist');
   });
 
+  it('auto-navigates to today when foregrounded after 6+ hours on a past date', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.get('h2').should('contain', 'Wed, Mar 22');
+
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'hidden', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    cy.tick(6 * 60 * 60 * 1000);
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'visible', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    cy.get('h2').should('contain', 'Thu, Mar 23');
+  });
+
+  it('auto-navigates to new today when foregrounded after midnight on any view', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+
+    // Hide while on today
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'hidden', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    // Advance 24h — todaysDateInt() now returns TODAYS_DATE + ONE_DAY (Fri Mar 24)
+    cy.tick(86400000);
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'visible', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    cy.get('h2').should('contain', 'Fri, Mar 24');
+  });
+
+  it('does not auto-navigate when foregrounded within 6 hours on the same day', () => {
+    cy.clock(TODAYS_DATE + new Date().getTimezoneOffset() * 60 * 1000);
+
+    cy.get("[data-test-id='left-nav-clicker']").click();
+    cy.get('h2').should('contain', 'Wed, Mar 22');
+
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'hidden', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+    cy.tick(2 * 60 * 60 * 1000); // only 2 hours
+    cy.document().then((doc) => {
+      Object.defineProperty(doc, 'visibilityState', { value: 'visible', configurable: true });
+      doc.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    cy.get('h2').should('contain', 'Wed, Mar 22');
+  });
+
   it('ArrowLeft key navigates to the previous day in localStorage mode', () => {
     cy.get('body').trigger('keydown', { key: 'ArrowLeft', bubbles: true });
     cy.get('h2').should('contain', 'Wed, Mar 22');
