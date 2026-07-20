@@ -1,11 +1,15 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { Summary } from '../../../functions/summaries';
 import { TimerTick } from './TaskRowTicks';
+import { CalendarEvent } from '../../RestApi';
 
 export const getSummaries = (store): { [slot: number]: Summary } =>
   store.timer.summaries;
+export const getCalendarEvents = (store): { [date: number]: CalendarEvent[] } =>
+  store.timer.calendarEvents;
 export const getLoadingDate = (store) => store.timer.loadingDate;
 export const getSessionExpired = (store): boolean => store.timer.sessionExpired;
+export const getCalendarLoading = (store) => store.timer.calendarLoading;
 
 export const getSummary = createSelector(
   [getSummaries, (state, slot: number) => slot],
@@ -47,5 +51,12 @@ export const getMatchingTicks = createSelector(
       });
     });
     return matching;
+  }
+);
+
+export const getCalendarEventsForDate = createSelector(
+  [getCalendarEvents, (state, date: number) => date],
+  (calendarEvents, date): CalendarEvent[] => {
+    return calendarEvents[date] || [];
   }
 );

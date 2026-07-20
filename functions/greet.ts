@@ -62,7 +62,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
   url.search = [
     ['client_id', env.GOOGLE_OAUTH_CLIENT],
     ['response_type', 'code'],
-    ['scope', 'openid email'],
+    ['scope', 'openid email https://www.googleapis.com/auth/calendar.readonly'],
     ['state', mySession],
     ['nonce', crypto.randomUUID()],
     ['redirect_uri', redirectUri],

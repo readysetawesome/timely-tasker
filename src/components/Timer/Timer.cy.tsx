@@ -31,6 +31,7 @@ beforeEach(() => {
   cy.intercept('GET', '/preferences', { body: {} }).as('getPreferences');
   cy.intercept('POST', '/preferences', (req) => { req.reply({ body: req.body }); }).as('setPreference');
   cy.intercept('GET', '/pinnedTasks', { body: [] }).as('getPinnedTasks');
+  cy.intercept('GET', '/calendar*', { body: { events: [], meta: { fetchedAt: new Date().toISOString(), count: 0 } } }).as('getCalendar');
 
   cy.window().then((win) =>
     win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')

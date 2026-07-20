@@ -1,5 +1,14 @@
 import { Env, TASKER_COOKIE, parseCookies, AppIdentity } from '../lib/Identity';
 
+interface GoogleTokenResponse {
+  id_token: string;
+  access_token: string;
+  expires_in: number;
+  refresh_token?: string;
+  scope: string;
+  token_type: string;
+}
+
 import jwtDecode from 'jwt-decode';
 
 const JsonHeader = {
@@ -47,7 +56,7 @@ export const onRequest: PagesFunction<Env, never> = async ({
       grant_type: 'authorization_code',
     }),
   });
-  const { id_token } = await tokenResponse.json<{ id_token: string }>();
+  const { id_token, access_token, expires_in, refresh_token } = await tokenResponse.json<GoogleTokenResponse>();
 
   // This is server context, we called google direct over TLS, no need to validate further
   if (id_token && id_token !== '') {
@@ -93,6 +102,18 @@ export const onRequest: PagesFunction<Env, never> = async ({
       return errorResponse(
         'unable to find newly inserted user/identity records'
       );
+
+    // Store OAuth tokens for calendar API access
+    const expiresAt = Date.now() + (expires_in - 5 * 60) * 1000;
+    await env.DB.prepare(`
+      INSERT INTO OAuthTokens (userId, provider, accessToken, refreshToken, expiresAt)
+      VALUES (?, 'google', ?, ?, ?)
+      ON CONFLICT(userId, provider) DO UPDATE SET
+        accessToken = excluded.accessToken,
+        refreshToken = excluded.refreshToken,
+        expiresAt = excluded.expiresAt,
+        updatedAt = CURRENT_TIMESTAMP
+    `).bind(user.id, access_token, refresh_token ?? '', expiresAt);
 
     // 3. insert new session based on securely random session id
     const mySession = crypto.randomUUID();
