@@ -47,6 +47,71 @@ const Header = () => {
   return <div className={styles.tictac_header_row}>{items}</div>;
 };
 
+// ─── Calendar Settings Panel Component ──────────────────────────────────────
+
+interface CalendarSettingsProps {
+  isConnected: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onClose: () => void;
+}
+
+const CalendarSettings = ({ isConnected, onConnect, onDisconnect, onClose }: CalendarSettingsProps) => {
+  return (
+    <div className={styles.calendar_panel} data-test-id="calendar-panel">
+      <div className={styles.calendar_panel_header}>
+        <span>Google Calendar</span>
+        <button onClick={onClose} className={styles.calendar_panel_close} title="Close" data-test-id="calendar-panel-close">
+          ×
+        </button>
+      </div>
+      <div className={styles.calendar_panel_body}>
+        {isConnected ? (
+          <>
+            <p className={styles.calendar_status_connected}>
+              <span className={styles.calendar_dot} />
+              Connected
+            </p>
+            <p className={styles.calendar_desc}>
+              Your calendar events will appear as colored markers on the timer grid.
+            </p>
+            <button
+              onClick={onDisconnect}
+              className={styles.calendar_disconnect_btn}
+              data-test-id="calendar-disconnect-btn"
+            >
+              Disconnect Calendar
+            </button>
+          </>
+        ) : (
+          <>
+            <p className={styles.calendar_desc}>
+              Import your Google Calendar events to see when you're busy on the timer grid.
+            </p>
+            <button
+              onClick={onConnect}
+              className={styles.calendar_connect_btn}
+              data-test-id="calendar-connect-btn"
+            >
+              Connect Google Calendar
+            </button>
+          </>
+        )}
+      </div>
+      <div className={styles.calendar_panel_footer}>
+        <a
+          href="https://github.com/readysetawesome/timely-tasker#readme"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.calendar_help_link}
+        >
+          Learn more
+        </a>
+      </div>
+    </div>
+  );
+};
+
 export interface TimerProps {
   date: number;
   currentTime: Date;
@@ -180,6 +245,27 @@ const Timer = ({
     RestApi.greet((res: IdentityResponse) => {
       if (res.authorizeUrl) window.location.href = res.authorizeUrl;
     });
+  };
+
+  const handleCalendarConnect = () => {
+    // Trigger re-auth with calendar scope
+    RestApi.greet((res: IdentityResponse) => {
+      if (res.authorizeUrl) window.location.href = res.authorizeUrl;
+    });
+  };
+
+  const handleCalendarDisconnect = () => {
+    setShowDisconnectConfirm(true);
+  };
+
+  const handleConfirmDisconnect = async () => {
+    setIsCalendarConnected(false);
+    setShowDisconnectConfirm(false);
+    setShowCalendarSettings(false);
+  };
+
+  const handleCancelDisconnect = () => {
+    setShowDisconnectConfirm(false);
   };
 
   useEffect(() => {
@@ -678,6 +764,40 @@ const Timer = ({
           )}
           {!summariesError && useLocal !== null && (
             <>
+              {/* ── Calendar Settings Modal ── */}
+              {showCalendarSettings && (
+                <div className={styles.calendar_settings_overlay} onClick={() => setShowCalendarSettings(false)}>
+                  <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+                    <CalendarSettings
+                      isConnected={isCalendarConnected}
+                      onConnect={handleCalendarConnect}
+                      onDisconnect={handleCalendarDisconnect}
+                      onClose={() => setShowCalendarSettings(false)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ── Disconnect Confirmation ── */}
+              {showDisconnectConfirm && (
+                <div className={styles.calendar_settings_overlay} onClick={handleCancelDisconnect} data-test-id="calendar-disconnect-overlay">
+                  <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.disconnect_prompt} data-test-id="calendar-disconnect-prompt">
+                      <h3>Disconnect Calendar?</h3>
+                      <p>Calendar events will no longer be imported from your Google Calendar.</p>
+                      <div className={styles.disconnect_actions}>
+                        <button onClick={handleCancelDisconnect} className={styles.btn_cancel} data-test-id="calendar-disconnect-cancel">
+                          Cancel
+                        </button>
+                        <button onClick={handleConfirmDisconnect} className={styles.btn_disconnect} data-test-id="calendar-disconnect-confirm">
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
                   <span>Task</span>
