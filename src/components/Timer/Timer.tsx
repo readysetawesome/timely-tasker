@@ -764,40 +764,6 @@ const Timer = ({
           )}
           {!summariesError && useLocal !== null && (
             <>
-              {/* ── Calendar Settings Modal ── */}
-              {showCalendarSettings && (
-                <div className={styles.calendar_settings_overlay} onClick={() => setShowCalendarSettings(false)}>
-                  <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
-                    <CalendarSettings
-                      isConnected={isCalendarConnected}
-                      onConnect={handleCalendarConnect}
-                      onDisconnect={handleCalendarDisconnect}
-                      onClose={() => setShowCalendarSettings(false)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* ── Disconnect Confirmation ── */}
-              {showDisconnectConfirm && (
-                <div className={styles.calendar_settings_overlay} onClick={handleCancelDisconnect} data-test-id="calendar-disconnect-overlay">
-                  <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
-                    <div className={styles.disconnect_prompt} data-test-id="calendar-disconnect-prompt">
-                      <h3>Disconnect Calendar?</h3>
-                      <p>Calendar events will no longer be imported from your Google Calendar.</p>
-                      <div className={styles.disconnect_actions}>
-                        <button onClick={handleCancelDisconnect} className={styles.btn_cancel} data-test-id="calendar-disconnect-cancel">
-                          Cancel
-                        </button>
-                        <button onClick={handleConfirmDisconnect} className={styles.btn_disconnect} data-test-id="calendar-disconnect-confirm">
-                          Disconnect
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className={styles.left_column} data-test-id="timer-left-column">
                 <div key="headerspacer" className={styles.summary_header}>
                   <span>Task</span>
@@ -864,6 +830,40 @@ const Timer = ({
         </div>
       </div>
       </DragProvider>
+
+      {/* ── Calendar Settings Modal ── */}
+      {showCalendarSettings && (
+        <div className={styles.calendar_settings_overlay} onClick={() => setShowCalendarSettings(false)}>
+          <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+            <CalendarSettings
+              isConnected={isCalendarConnected}
+              onConnect={handleCalendarConnect}
+              onDisconnect={handleCalendarDisconnect}
+              onClose={() => setShowCalendarSettings(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Disconnect Confirmation ── */}
+      {showDisconnectConfirm && (
+        <div className={styles.calendar_settings_overlay} onClick={handleCancelDisconnect} data-test-id="calendar-disconnect-overlay">
+          <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.disconnect_prompt} data-test-id="calendar-disconnect-prompt">
+              <h3>Disconnect Calendar?</h3>
+              <p>Calendar events will no longer be imported from your Google Calendar.</p>
+              <div className={styles.disconnect_actions}>
+                <button onClick={handleCancelDisconnect} className={styles.btn_cancel} data-test-id="calendar-disconnect-cancel">
+                  Cancel
+                </button>
+                <button onClick={handleConfirmDisconnect} className={styles.btn_disconnect} data-test-id="calendar-disconnect-confirm">
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
