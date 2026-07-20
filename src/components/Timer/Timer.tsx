@@ -114,6 +114,11 @@ const Timer = ({
 
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
+  // Calendar state
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [showCalendarSettings, setShowCalendarSettings] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
+
   const [pinnedTasks, setPinnedTasksState] = useState<PinnedTask[]>([]);
   const autoPopulatedPins = useRef<Set<string>>(new Set());
 
@@ -498,6 +503,18 @@ const Timer = ({
               />
               I work weekends
             </label>
+          )}
+          {useLocal === USELOCAL.NO && (
+            <button
+              onClick={() => setShowCalendarSettings(true)}
+              className="tt-btn tt-btn-ghost"
+              data-test-id="calendar-settings-btn"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#4285F4" style={{ marginRight: '4px' }}>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+              </svg>
+              {isCalendarConnected ? 'Calendar' : 'Connect Calendar'}
+            </button>
           )}
         </div>
         {useLocal === USELOCAL.NO ? (
