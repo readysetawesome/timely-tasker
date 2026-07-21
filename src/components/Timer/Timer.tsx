@@ -47,71 +47,6 @@ const Header = () => {
   return <div className={styles.tictac_header_row}>{items}</div>;
 };
 
-// ─── Calendar Settings Panel Component ──────────────────────────────────────
-
-interface CalendarSettingsProps {
-  isConnected: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
-  onClose: () => void;
-}
-
-const CalendarSettings = ({ isConnected, onConnect, onDisconnect, onClose }: CalendarSettingsProps) => {
-  return (
-    <div className={styles.calendar_panel} data-test-id="calendar-panel">
-      <div className={styles.calendar_panel_header}>
-        <span>Google Calendar</span>
-        <button onClick={onClose} className={styles.calendar_panel_close} title="Close" data-test-id="calendar-panel-close">
-          ×
-        </button>
-      </div>
-      <div className={styles.calendar_panel_body}>
-        {isConnected ? (
-          <>
-            <p className={styles.calendar_status_connected}>
-              <span className={styles.calendar_dot} />
-              Connected
-            </p>
-            <p className={styles.calendar_desc}>
-              Your calendar events will appear as colored markers on the timer grid.
-            </p>
-            <button
-              onClick={onDisconnect}
-              className={styles.calendar_disconnect_btn}
-              data-test-id="calendar-disconnect-btn"
-            >
-              Disconnect Calendar
-            </button>
-          </>
-        ) : (
-          <>
-            <p className={styles.calendar_desc}>
-              Import your Google Calendar events to see when you're busy on the timer grid.
-            </p>
-            <button
-              onClick={onConnect}
-              className={styles.calendar_connect_btn}
-              data-test-id="calendar-connect-btn"
-            >
-              Connect Google Calendar
-            </button>
-          </>
-        )}
-      </div>
-      <div className={styles.calendar_panel_footer}>
-        <a
-          href="https://github.com/readysetawesome/timely-tasker#readme"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.calendar_help_link}
-        >
-          Learn more
-        </a>
-      </div>
-    </div>
-  );
-};
-
 export interface TimerProps {
   date: number;
   currentTime: Date;
@@ -266,6 +201,63 @@ const Timer = ({
 
   const handleCancelDisconnect = () => {
     setShowDisconnectConfirm(false);
+  };
+
+  // Calendar settings panel component
+  const CalendarSettings = ({ isConnected, onConnect, onDisconnect, onClose }: { isConnected: boolean; onConnect: () => void; onDisconnect: () => void; onClose: () => void }) => {
+    return (
+      <div className={styles.calendar_panel} data-test-id="calendar-panel">
+        <div className={styles.calendar_panel_header}>
+          <span>Google Calendar</span>
+          <button onClick={onClose} className={styles.calendar_panel_close} title="Close" data-test-id="calendar-panel-close">
+            ×
+          </button>
+        </div>
+        <div className={styles.calendar_panel_body}>
+          {isConnected ? (
+            <>
+              <p className={styles.calendar_status_connected}>
+                <span className={styles.calendar_dot} />
+                Connected
+              </p>
+              <p className={styles.calendar_desc}>
+                Your calendar events will appear as colored markers on the timer grid.
+              </p>
+              <button
+                onClick={onDisconnect}
+                className={styles.calendar_disconnect_btn}
+                data-test-id="calendar-disconnect-btn"
+              >
+                Disconnect Calendar
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.calendar_desc}>
+                Import your Google Calendar events to see when you're busy on the timer grid.
+              </p>
+              <button
+                onClick={onConnect}
+                className={styles.calendar_connect_btn}
+                data-test-id="calendar-connect-btn"
+              >
+                Connect Google Calendar
+              </button>
+            </>
+          )}
+        </div>
+        <div className={styles.calendar_panel_footer}>
+          <a
+            href="https://github.com/readysetawesome/timely-tasker#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.calendar_help_link}
+          >
+            Learn more
+          </a>
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
