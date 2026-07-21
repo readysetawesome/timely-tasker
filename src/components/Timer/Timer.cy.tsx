@@ -8,6 +8,7 @@ import summarySlotThree from '../../../cypress/fixtures/summarySlotThree.json';
 import { Provider } from 'react-redux';
 import storeMaker from '../../store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import RestApi from '../../RestApi';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s  (Thu March 23, 2023)
 const TIME_NOW = 1679587374481; // at 9 am
@@ -1077,5 +1078,25 @@ describe('<Timer />', () => {
     );
     cy.wait(['@getIdentity', '@getYesterdayForReorder']);
     cy.get('[data-test-id="drag-handle-0"]').should('not.exist');
+  });
+
+  it('handles connect calendar button click', () => {
+    const greetStub = cy.stub(RestApi, 'greet').as('greetStub');
+
+    cy.mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    );
+
+    // Click the Connect Calendar button
+    cy.get('[data-test-id="calendar-settings-btn"]').click();
+
+    // Verify that RestApi.greet was called
+    cy.get('@greetStub').should('have.been.calledOnce');
   });
 });
