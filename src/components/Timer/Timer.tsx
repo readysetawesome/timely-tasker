@@ -584,7 +584,10 @@ const Timer = ({
           )}
           {useLocal === USELOCAL.NO && (
             <button
-              onClick={() => setShowCalendarSettings(true)}
+              onClick={(e) => {
+                console.log('Calendar button clicked!');
+                setShowCalendarSettings(true);
+              }}
               className="tt-btn tt-btn-ghost"
               data-test-id="calendar-settings-btn"
             >
