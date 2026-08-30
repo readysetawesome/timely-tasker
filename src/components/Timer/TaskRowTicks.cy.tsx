@@ -227,4 +227,39 @@ describe('<TaskRowTicks />', () => {
     // Component should render without errors
     cy.get('[data-test-id="0-40"]').should('exist');
   });
+
+  it('merges overlapping events of the same color into single bar', () => {
+    // Two events with same colorId that overlap
+    const overlappingSameColorEvents: CalendarEvent[] = [
+      {
+        id: 'event1',
+        summary: 'Meeting 1',
+        start: formatDate(TODAYS_DATE, 10, 0),
+        end: formatDate(TODAYS_DATE, 11, 30),
+        allDay: false,
+        status: 'confirmed',
+        colorId: '4',
+      },
+      {
+        id: 'event2',
+        summary: 'Meeting 2',
+        start: formatDate(TODAYS_DATE, 11, 0),
+        end: formatDate(TODAYS_DATE, 12, 0),
+        allDay: false,
+        status: 'confirmed',
+        colorId: '4',
+      },
+    ];
+
+    mount(
+      <Provider store={storeMaker()}>
+        <TaskRowTicks slot={0} useApi={useApi} calendarEvents={overlappingSameColorEvents} />
+      </Provider>
+    );
+
+    // Both events are color 4 (green), so they should be merged into one bar
+    // from tick 40 (10:00) to tick 48 (12:00)
+    cy.get('[data-test-id="0-40"]').should('exist');
+    cy.get('[data-test-id="0-48"]').should('exist');
+  });
 });
