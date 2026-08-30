@@ -12,13 +12,13 @@ import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
 import DailyGoal from './DailyGoal';
-import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks } from '../../RestApi';
+import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks, getCalendarEvents } from '../../RestApi';
 import PinsPanel from './PinsPanel';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
+import { getLoadingDate, getSummaries, getSessionExpired, getCalendarLoading, getCalendarEventsForDate } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
-import { summariesReordered } from './Timer.slice';
+import { summariesLoading, summariesLoaded, summariesError, sessionExpired, summaryCreated, summaryDeleted, summaryPending, summaryError, calendarEventsLoading, calendarEventsLoaded, calendarEventsError, tickUpdated, summariesReordered } from './Timer.slice';
 import { PinnedTask } from '../../../functions/pinnedTasks';
 
 export const dateDisplay = (date) =>
@@ -75,6 +75,7 @@ const Timer = ({
   );
   const loadingDate = useSelector(getLoadingDate);
   const isSessionExpired = useSelector(getSessionExpired);
+  const calendarLoading = useSelector(getCalendarLoading);
   const dispatch = useDispatch();
 
   // useMemo keyed on date so isToday only recomputes on navigation, not on every render.
@@ -260,6 +261,15 @@ const Timer = ({
     );
   };
 
+  // Set isCalendarConnected when user is authenticated with OAuth tokens in D1
+  useEffect(() => {
+    if (useLocal === USELOCAL.NO && displayName) {
+      setIsCalendarConnected(true);
+    } else if (useLocal === USELOCAL.YES) {
+      setIsCalendarConnected(false);
+    }
+  }, [displayName, useLocal]);
+
   useEffect(() => {
     if (useLocal === USELOCAL.NO) {
       RestApi.greet((res: IdentityResponse) => {
@@ -292,7 +302,35 @@ const Timer = ({
     useLocal,
   ]);
 
+  // Fetch calendar events when date changes
+  useEffect(() => {
+    if (useLocal === USELOCAL.YES) return;
+    if (!displayName) return;
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayInt = startOfDay.getTime();
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const endOfDayInt = endOfDay.getTime();
+
+    dispatch(calendarEventsLoading(date));
+    getCalendarEvents(startOfDayInt, endOfDayInt)
+      .then((response) => {
+        dispatch(calendarEventsLoaded({ date, events: response.events }));
+      })
+      .catch((err) => {
+        if (err?.message === 'session_expired') {
+          dispatch(sessionExpired());
+        } else {
+          dispatch(calendarEventsError());
+        }
+      });
+  }, [date, displayName, dispatch, useLocal]);
+
   const todaySummaries = useSelector(getSummaries);
+  const todayCalendarEvents = useSelector((state) => getCalendarEventsForDate(state, date));
 
   // Auto-populate pinned tasks on today/tomorrow (cloud only).
   // The ref guards against re-populating the same pin after the store updates.
@@ -502,7 +540,7 @@ const Timer = ({
         />
       );
       tickRowElements.push(
-        <TaskRowTicks key={slot} date={date} slot={slot} useApi={useApi} />
+        <TaskRowTicks key={slot} date={date} slot={slot} useApi={useApi} calendarEvents={todayCalendarEvents} />
       );
       focusedRowElements.push(<TaskRowFocused key={slot} slot={slot} />);
     }

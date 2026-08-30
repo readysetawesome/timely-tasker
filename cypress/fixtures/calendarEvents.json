@@ -1,0 +1,44 @@
+{
+  "events": [
+    {
+      "id": "event1",
+      "summary": "Team Meeting",
+      "start": "2023-03-23T10:00:00Z",
+      "end": "2023-03-23T11:00:00Z",
+      "allDay": false,
+      "status": "confirmed",
+      "colorId": "4"
+    },
+    {
+      "id": "event2",
+      "summary": "Lunch Break",
+      "start": "2023-03-23T12:00:00Z",
+      "end": "2023-03-23T13:00:00Z",
+      "allDay": false,
+      "status": "confirmed",
+      "colorId": "1"
+    },
+    {
+      "id": "event3",
+      "summary": "Doctor Appointment",
+      "start": "2023-03-23T14:30:00Z",
+      "end": "2023-03-23T15:30:00Z",
+      "allDay": false,
+      "status": "tentative",
+      "colorId": "9"
+    },
+    {
+      "id": "event4",
+      "summary": "All Day Event",
+      "start": "2023-03-23T00:00:00Z",
+      "end": "2023-03-24T00:00:00Z",
+      "allDay": true,
+      "status": "confirmed",
+      "colorId": "2"
+    }
+  ],
+  "meta": {
+    "fetchedAt": "2023-03-23T09:00:00.000Z",
+    "count": 4
+  }
+}

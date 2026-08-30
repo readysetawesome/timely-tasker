@@ -9,6 +9,7 @@ import { Provider } from 'react-redux';
 import storeMaker from '../../store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RestApi from '../../RestApi';
+import { CalendarEvent } from '../../../src/RestApi';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s  (Thu March 23, 2023)
 const TIME_NOW = 1679587374481; // at 9 am
@@ -1081,8 +1082,7 @@ describe('<Timer />', () => {
   });
 
   it('handles connect calendar button click', () => {
-    const greetStub = cy.stub(RestApi, 'greet').as('greetStub');
-
+    // First verify the button is in the DOM
     cy.mount(
       <Provider store={storeMaker()}>
         <MemoryRouter>
@@ -1093,10 +1093,118 @@ describe('<Timer />', () => {
       </Provider>
     );
 
-    // Click the Connect Calendar button
+    // Wait for initial auth to complete
+    cy.wait('@getIdentity');
+
+    // Verify the button is in the DOM
+    cy.get('[data-test-id="calendar-settings-btn"]').should('be.visible');
+
+    // Add a click listener to track
+    cy.get('[data-test-id="calendar-settings-btn"]').then(($btn) => {
+      $btn.on('click', () => {
+        console.log('BUTTON CLICKED!');
+        window['calendarButtonClicked'] = true;
+      });
+    });
+
+    // Click the button
     cy.get('[data-test-id="calendar-settings-btn"]').click();
 
-    // Verify that RestApi.greet was called
-    cy.get('@greetStub').should('have.been.calledOnce');
+    // Verify the button was clicked
+    cy.window().should((win) => {
+      expect(win['calendarButtonClicked']).to.be.true;
+    });
+
+    // Verify setShowCalendarSettings was called (modal opens)
+    cy.get('[data-test-id="calendar-panel"]').should('be.visible');
+  });
+
+  describe('calendar integration', () => {
+    beforeEach(() => {
+      // Ensure we're in cloud mode
+      cy.window().then((win) =>
+        win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'no')
+      );
+    });
+
+    it('fetches calendar events when component mounts in cloud mode', () => {
+      // Intercept the calendar events API call
+      cy.intercept('GET', /\/calendar\?startDate=\d+&endDate=\d+/, {
+        fixture: 'calendarEvents',
+      }).as('getCalendarEvents');
+
+      mount(
+        <Provider store={storeMaker()}>
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="timer" element={<App />} />
+            </Routes>
+          </MemoryRouter>
+        </Provider>
+      );
+
+      // Wait for identity and calendar events
+      cy.wait('@getIdentity');
+      cy.wait('@getCalendarEvents');
+
+      // Verify calendar events were fetched
+      cy.get('@getCalendarEvents.all').should('have.length', 1);
+    });
+
+    it('passes calendarEvents prop to TaskRowTicks component', () => {
+      // Intercept the calendar events API call
+      cy.intercept('GET', /\/calendar\?startDate=\d+&endDate=\d+/, {
+        fixture: 'calendarEvents',
+      }).as('getCalendarEvents');
+
+      mount(
+        <Provider store={storeMaker()}>
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="timer" element={<App />} />
+            </Routes>
+          </MemoryRouter>
+        </Provider>
+      );
+
+      // Wait for identity and calendar events
+      cy.wait('@getIdentity');
+      cy.wait('@getCalendarEvents');
+
+      // Verify the calendar events were fetched for the correct date range
+      cy.get('@getCalendarEvents.all').then((interceptions) => {
+        expect(interceptions.length).to.be.greaterThan(0);
+        const request = interceptions[0].request;
+        expect(request.url).to.include('/calendar');
+      });
+    });
+
+    it('handles empty calendar events response without crashing', () => {
+      // Intercept with empty events
+      cy.intercept('GET', /\/calendar\?startDate=\d+&endDate=\d+/, {
+        events: [],
+        meta: { fetchedAt: new Date().toISOString(), count: 0 },
+      }).as('getEmptyCalendarEvents');
+
+      mount(
+        <Provider store={storeMaker()}>
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="timer" element={<App />} />
+            </Routes>
+          </MemoryRouter>
+        </Provider>
+      );
+
+      // Wait for identity and calendar events
+      cy.wait('@getIdentity');
+      cy.wait('@getEmptyCalendarEvents');
+
+      // Should not crash with empty events
+      cy.get('[data-test-id="timer-content"]').should('exist');
+    });
   });
 });

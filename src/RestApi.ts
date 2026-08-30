@@ -200,6 +200,7 @@ const exports = {
   createSummary,
   getPreferences,
   setPreference,
+  getCalendarEvents,
   reorderSummaries,
 };
 export default exports;
