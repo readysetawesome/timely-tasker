@@ -38,41 +38,110 @@ export interface TaskRowTicksProps {
 const TaskRowTicks = ({ slot, useApi, calendarEvents = [] }: TaskRowTicksProps) => {
   const ticks = new Array<JSX.Element>();
 
-  // Build tick-to-event mapping for this slot's date
-  const tickEvents: Record<number, CalendarEvent[]> = {};
+  // Group events by continuous time ranges for rendering as bars
+  // Each bar represents a continuous event (or overlapping events with same color)
+  const eventBars: Array<{
+    startTick: number;
+    endTick: number;
+    events: CalendarEvent[];
+    color: string;
+  }> = [];
+
+  // Track which ticks are already covered by bars to avoid overlap
+  const coveredTicks = new Set<number>();
+
   calendarEvents.forEach((event) => {
     const start = new Date(event.start).getTime();
     const end = new Date(event.end).getTime();
     const eventStartTick = Math.floor((start % 86400000) / (15 * 60000));
     const eventEndTick = Math.floor((end % 86400000) / (15 * 60000));
+    const color = getCalendarColor(event.colorId);
+
+    // Find the range of ticks this event covers
+    const ticksToCover = [];
     for (let t = Math.max(0, eventStartTick); t < Math.min(96, eventEndTick); t++) {
-      if (!tickEvents[t]) tickEvents[t] = [];
-      tickEvents[t].push(event);
+      ticksToCover.push(t);
+    }
+
+    if (ticksToCover.length > 0) {
+      eventBars.push({
+        startTick: ticksToCover[0],
+        endTick: ticksToCover[ticksToCover.length - 1],
+        events: [event],
+        color,
+      });
+      ticksToCover.forEach((t) => coveredTicks.add(t));
     }
   });
 
+  // Merge overlapping bars of the same color
+  const mergedBars: typeof eventBars = [];
+  eventBars.sort((a, b) => a.startTick - b.startTick);
+
+  for (const bar of eventBars) {
+    const existing = mergedBars.find(
+      (b) => b.color === bar.color && b.endTick >= bar.startTick - 1
+    );
+    if (existing) {
+      existing.endTick = Math.max(existing.endTick, bar.endTick);
+      existing.events.push(...bar.events);
+    } else {
+      mergedBars.push({ ...bar });
+    }
+  }
+
+  // Remove duplicate events from merged bars
+  mergedBars.forEach((bar) => {
+    bar.events = bar.events.filter(
+      (e, i, a) => a.findIndex((x) => x.id === e.id) === i
+    );
+  });
+
+  // Render ticks with calendar event bars
   for (let tickNumber = 0; tickNumber < 96; tickNumber++) {
-    const eventsForTick = tickEvents[tickNumber] || [];
+    // Find any bars that cover this tick
+    const coveringBars = mergedBars.filter(
+      (bar) => tickNumber >= bar.startTick && tickNumber <= bar.endTick
+    );
+
     ticks.push(
       <div className={styles.tictac_cell} key={tickNumber}>
-        {eventsForTick.length > 0 && (
-          <div className={styles.calendar_marker}>
-            {eventsForTick.map((evt, idx) => (
-              <span
-                key={idx}
-                className={styles.calendar_marker_dot}
-                style={{ backgroundColor: getCalendarColor(evt.colorId) }}
-                title={`${evt.summary} (${formatTime(evt.start)} - ${formatTime(evt.end)})`}
-              />
-            ))}
-          </div>
+        {/* Render calendar event bars - only once per continuous bar */}
+        {tickNumber === 0 && (
+          <>
+            {mergedBars.map((bar, idx) => {
+              const barWidth = bar.endTick - bar.startTick + 1;
+              const leftOffset = bar.startTick;
+              return (
+                <div
+                  key={`bar-${idx}`}
+                  className={styles.calendar_event_bar}
+                  style={{
+                    left: `${leftOffset * 18}px`, // 18px per tick
+                    width: `${barWidth * 18 - 2}px`, // -2 for gap
+                    backgroundColor: bar.color,
+                  }}
+                  title={`${bar.events.map((e) => e.summary).join(', ')} (${formatTime(bar.events[0].start)} - ${formatTime(bar.events[bar.events.length - 1].end)})`}
+                >
+                  <div className={styles.calendar_event_tooltip}>
+                    <div className={styles.calendar_event_time}>
+                      {formatTime(bar.events[0].start)} - {formatTime(bar.events[bar.events.length - 1].end)}
+                    </div>
+                    <div className={styles.calendar_event_summary}>
+                      {bar.events.length === 1 ? bar.events[0].summary : `${bar.events.length} events`}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
         <Tick
           {...{
             slot,
             tickNumber,
             useApi,
-            hasCalendarMarker: eventsForTick.length > 0,
+            hasCalendarMarker: coveringBars.length > 0,
           }}
         />
       </div>
