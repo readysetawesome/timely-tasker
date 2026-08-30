@@ -116,7 +116,10 @@ const Timer = ({
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
 
   // Calendar state
-  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [isCalendarConnected, setIsCalendarConnected] = useState(() => {
+    // Check localStorage for calendar connection flag
+    return localStorage.getItem('TimelyTasker:CalendarConnected') === 'true';
+  });
   const [showCalendarSettings, setShowCalendarSettings] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
@@ -184,7 +187,9 @@ const Timer = ({
   };
 
   const handleCalendarConnect = () => {
-    // Trigger re-auth with calendar scope
+    // Set localStorage flag and trigger re-auth with calendar scope
+    localStorage.setItem('TimelyTasker:CalendarConnected', 'true');
+    setIsCalendarConnected(true);
     RestApi.greet((res: IdentityResponse) => {
       if (res.authorizeUrl) window.location.href = res.authorizeUrl;
     });
@@ -195,6 +200,7 @@ const Timer = ({
   };
 
   const handleConfirmDisconnect = async () => {
+    localStorage.removeItem('TimelyTasker:CalendarConnected');
     setIsCalendarConnected(false);
     setShowDisconnectConfirm(false);
     setShowCalendarSettings(false);
@@ -261,14 +267,9 @@ const Timer = ({
     );
   };
 
-  // Set isCalendarConnected when user is authenticated with OAuth tokens in D1
-  useEffect(() => {
-    if (useLocal === USELOCAL.NO && displayName) {
-      setIsCalendarConnected(true);
-    } else if (useLocal === USELOCAL.YES) {
-      setIsCalendarConnected(false);
-    }
-  }, [displayName, useLocal]);
+  // Note: isCalendarConnected starts as false. A proper implementation would
+  // call an API endpoint to check for calendar tokens in D1. For now, the user
+  // just sees the "Connect" button and can click it to trigger OAuth with calendar scope.
 
   useEffect(() => {
     if (useLocal === USELOCAL.NO) {
@@ -622,10 +623,7 @@ const Timer = ({
           )}
           {useLocal === USELOCAL.NO && (
             <button
-              onClick={(e) => {
-                console.log('Calendar button clicked!');
-                setShowCalendarSettings(true);
-              }}
+              onClick={() => setShowCalendarSettings(true)}
               className="tt-btn tt-btn-ghost"
               data-test-id="calendar-settings-btn"
             >
