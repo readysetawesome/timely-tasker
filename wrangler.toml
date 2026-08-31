@@ -18,18 +18,3 @@ binding = "DB"
 database_name = "timely-tasker-dev"
 database_id = "f6f204f2-aa00-4c10-a3ed-84cc98537a3d"
 
-[observability]
-enabled = false
-head_sampling_rate = 1
-redact_query_string = false
-
-[observability.logs]
-enabled = true
-head_sampling_rate = 1
-persist = true
-invocation_logs = true
-
-[observability.traces]
-enabled = false
-persist = true
-head_sampling_rate = 1
