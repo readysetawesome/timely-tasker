@@ -148,6 +148,41 @@ const reorderPinnedTasks = (orderedIds: number[]): Promise<PinnedTask[]> =>
 
 export { getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks };
 
+// Calendar API types
+export interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  status?: 'confirmed' | 'tentative' | 'cancelled';
+  colorId?: string;
+  location?: string;
+  description?: string;
+}
+
+export interface CalendarApiResponse {
+  events: CalendarEvent[];
+  meta: {
+    fetchedAt: string;
+    count: number;
+  };
+}
+
+const getCalendarEvents = (startDate: number, endDate: number) =>
+  fetch(
+    fetchPrefix + `/calendar?startDate=${startDate}&endDate=${endDate}`,
+    fetchOptions
+  )
+    .then((response) => response.json<CalendarApiResponse | { error: string }>())
+    .then((data) => {
+      if (!Array.isArray(data) && data?.error === 'invalid user session')
+        throw new Error('session_expired');
+      return data as CalendarApiResponse;
+    });
+
+export { getCalendarEvents };
+
 const reorderSummaries = (date: number, orderedIds: number[]): Promise<Summary[]> =>
   fetch(fetchPrefix + '/summaries', {
     ...fetchOptions,
@@ -165,6 +200,7 @@ const exports = {
   createSummary,
   getPreferences,
   setPreference,
+  getCalendarEvents,
   reorderSummaries,
 };
 export default exports;

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import RestApi from '../../RestApi';
 import { Summary } from '../../../functions/summaries';
+import { CalendarEvent } from '../../RestApi';
 import styles from './MonthView.module.scss';
 
 const ONE_DAY = 86400000;
@@ -78,10 +79,12 @@ const taskNames = (summaries: Summary[]) =>
 interface DayData {
   date: number;
   summaries: Summary[];
+  calendarEvents: CalendarEvent[];
 }
 
 interface RangeApi {
   getSummariesRange: (startDate: number, endDate: number) => Promise<Summary[]>;
+  getCalendarEvents?: (startDate: number, endDate: number) => Promise<any>;
 }
 
 interface MonthViewProps {
@@ -99,24 +102,54 @@ const MonthView = ({ useApi: propApi }: MonthViewProps) => {
   const [days, setDays] = useState<DayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setSessionExpired(false);
+    setCalendarError(null);
 
     const allDays: number[] = [];
     for (let d = monthStart; d <= monthEnd; d += ONE_DAY) allDays.push(d);
 
-    useApi
-      .getSummariesRange(monthStart, monthEnd)
-      .then((summaries) => {
+    Promise.all([
+      useApi.getSummariesRange(monthStart, monthEnd),
+      useApi.getCalendarEvents?.(monthStart, monthEnd).catch((err) => {
+        console.warn('Calendar fetch failed:', err);
+        setCalendarError((err as Error).message);
+        return null;
+      }),
+    ])
+      .then(([summaries, calendarData]) => {
         const byDate = new Map<number, Summary[]>();
         summaries.forEach((s) => {
           const bucket = byDate.get(s.date) ?? [];
           bucket.push(s);
           byDate.set(s.date, bucket);
         });
-        setDays(allDays.map((d) => ({ date: d, summaries: byDate.get(d) ?? [] })));
+
+        const eventsByDate = new Map<number, CalendarEvent[]>();
+        if (calendarData?.events) {
+          calendarData.events.forEach((event: CalendarEvent) => {
+            const start = new Date(event.start).getTime();
+            const end = new Date(event.end).getTime();
+            for (let d = monthStart; d <= monthEnd; d += ONE_DAY) {
+              if (start < d + ONE_DAY && end > d) {
+                const dayEvents = eventsByDate.get(d) ?? [];
+                dayEvents.push(event);
+                eventsByDate.set(d, dayEvents);
+              }
+            }
+          });
+        }
+
+        setDays(
+          allDays.map((d) => ({
+            date: d,
+            summaries: byDate.get(d) ?? [],
+            calendarEvents: eventsByDate.get(d) ?? [],
+          }))
+        );
         setLoading(false);
       })
       .catch((err) => {
@@ -186,12 +219,13 @@ const MonthView = ({ useApi: propApi }: MonthViewProps) => {
             <span className={styles.hoursCol}>Focused</span>
             <span className={styles.tasksCol}>Tasks</span>
           </div>
-          {days.map(({ date, summaries }) => {
+          {days.map(({ date, summaries, calendarEvents }) => {
             const fh = focusedHours(summaries);
             const names = taskNames(summaries);
             const hs = hourStates(summaries);
             const isEmpty = summaries.length === 0;
             const isToday = date === today;
+            const hasCalendarEvents = calendarEvents.length > 0;
             return (
               <Link
                 key={date}
@@ -211,9 +245,25 @@ const MonthView = ({ useApi: propApi }: MonthViewProps) => {
                 <span className={styles.tasksCol}>
                   {names.length > 0 ? names.join(', ') : ''}
                 </span>
+                {hasCalendarEvents && (
+                  <span className={styles.calendarCol} aria-hidden>
+                    {calendarEvents.map((event, idx) => (
+                      <span
+                        key={idx}
+                        className={styles.calendarEvent}
+                        title={`${event.summary} (${new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`}
+                      />
+                    ))}
+                  </span>
+                )}
               </Link>
             );
           })}
+          {calendarError && (
+            <div className={styles.calendarError}>
+              Calendar events unavailable: {calendarError}
+            </div>
+          )}
         </div>
       )}
     </div>

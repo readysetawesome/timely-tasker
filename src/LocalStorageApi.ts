@@ -2,6 +2,7 @@ import { Summary } from '../functions/summaries';
 import { UserPreferences } from '../functions/preferences';
 import { synthesizeTick } from './components/Timer/Timer.actions';
 import { TickChangeEvent } from './components/Timer/Timer.slice';
+import { CalendarEvent } from './RestApi';
 
 export const localStoragePrefix = 'TimelyTasker:';
 const PREFERENCES_KEY = localStoragePrefix + 'Preferences';
@@ -144,7 +145,12 @@ const reorderSummaries = (date: number, orderedIds: number[], storage = localSto
     resolve(reordered);
   });
 
-const exports = { createTick, getSummaries, createSummary, getPreferences, setPreference, reorderSummaries };
+const getCalendarEvents = /* istanbul ignore next */ (): Promise<{ events: CalendarEvent[]; meta: { fetchedAt: string; count: number } }> =>
+  new Promise((resolve) => {
+    resolve({ events: [], meta: { fetchedAt: new Date().toISOString(), count: 0 } });
+  });
+
+const exports = { createTick, getSummaries, createSummary, getPreferences, setPreference, reorderSummaries, getCalendarEvents };
 
 export type StorageApiType = typeof exports;
 

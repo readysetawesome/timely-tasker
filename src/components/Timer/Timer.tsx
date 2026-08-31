@@ -12,13 +12,13 @@ import DragHint from './DragHint';
 import InstallHint from './InstallHint';
 import WeekTotal from './WeekTotal';
 import DailyGoal from './DailyGoal';
-import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks } from '../../RestApi';
+import RestApi, { getRestSelectorsFor, getPinnedTasks, setPinnedTask, removePinnedTask, updatePinnedTaskText, reorderPinnedTasks, getCalendarEvents } from '../../RestApi';
 import PinsPanel from './PinsPanel';
 import LocalStorageApi from '../../LocalStorageApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLoadingDate, getSummaries, getSessionExpired } from './Timer.selectors';
+import { getLoadingDate, getSummaries, getSessionExpired, getCalendarLoading, getCalendarEventsForDate } from './Timer.selectors';
 import { fetchSummaries, setSummary } from './Timer.actions';
-import { summariesReordered } from './Timer.slice';
+import { summariesLoading, summariesLoaded, summariesError, sessionExpired, summaryCreated, summaryDeleted, summaryPending, summaryError, calendarEventsLoading, calendarEventsLoaded, calendarEventsError, tickUpdated, summariesReordered } from './Timer.slice';
 import { PinnedTask } from '../../../functions/pinnedTasks';
 
 export const dateDisplay = (date) =>
@@ -75,6 +75,7 @@ const Timer = ({
   );
   const loadingDate = useSelector(getLoadingDate);
   const isSessionExpired = useSelector(getSessionExpired);
+  const calendarLoading = useSelector(getCalendarLoading);
   const dispatch = useDispatch();
 
   // useMemo keyed on date so isToday only recomputes on navigation, not on every render.
@@ -113,6 +114,14 @@ const Timer = ({
   }, [displayName]);
 
   const useApi = useLocal === USELOCAL.YES ? LocalStorageApi : RestApi;
+
+  // Calendar state
+  const [isCalendarConnected, setIsCalendarConnected] = useState(() => {
+    // Check localStorage for calendar connection flag
+    return localStorage.getItem('TimelyTasker:CalendarConnected') === 'true';
+  });
+  const [showCalendarSettings, setShowCalendarSettings] = useState(false);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const [pinnedTasks, setPinnedTasksState] = useState<PinnedTask[]>([]);
   const autoPopulatedPins = useRef<Set<string>>(new Set());
@@ -177,6 +186,91 @@ const Timer = ({
     });
   };
 
+  const handleCalendarConnect = () => {
+    // Set localStorage flag and trigger re-auth with calendar scope
+    localStorage.setItem('TimelyTasker:CalendarConnected', 'true');
+    setIsCalendarConnected(true);
+    RestApi.greet((res: IdentityResponse) => {
+      if (res.authorizeUrl) window.location.href = res.authorizeUrl;
+    });
+  };
+
+  const handleCalendarDisconnect = () => {
+    setShowDisconnectConfirm(true);
+  };
+
+  const handleConfirmDisconnect = async () => {
+    localStorage.removeItem('TimelyTasker:CalendarConnected');
+    setIsCalendarConnected(false);
+    setShowDisconnectConfirm(false);
+    setShowCalendarSettings(false);
+  };
+
+  const handleCancelDisconnect = () => {
+    setShowDisconnectConfirm(false);
+  };
+
+  // Calendar settings panel component
+  const CalendarSettings = ({ isConnected, onConnect, onDisconnect, onClose }: { isConnected: boolean; onConnect: () => void; onDisconnect: () => void; onClose: () => void }) => {
+    return (
+      <div className={styles.calendar_panel} data-test-id="calendar-panel">
+        <div className={styles.calendar_panel_header}>
+          <span>Google Calendar</span>
+          <button onClick={onClose} className={styles.calendar_panel_close} title="Close" data-test-id="calendar-panel-close">
+            ×
+          </button>
+        </div>
+        <div className={styles.calendar_panel_body}>
+          {isConnected ? (
+            <>
+              <p className={styles.calendar_status_connected}>
+                <span className={styles.calendar_dot} />
+                Connected
+              </p>
+              <p className={styles.calendar_desc}>
+                Your calendar events will appear as colored markers on the timer grid.
+              </p>
+              <button
+                onClick={onDisconnect}
+                className={styles.calendar_disconnect_btn}
+                data-test-id="calendar-disconnect-btn"
+              >
+                Disconnect Calendar
+              </button>
+            </>
+          ) : (
+            <>
+              <p className={styles.calendar_desc}>
+                Import your Google Calendar events to see when you're busy on the timer grid.
+              </p>
+              <button
+                onClick={onConnect}
+                className={styles.calendar_connect_btn}
+                data-test-id="calendar-connect-btn"
+              >
+                Connect Google Calendar
+              </button>
+            </>
+          )}
+        </div>
+        <div className={styles.calendar_panel_footer}>
+          <a
+            href="https://github.com/readysetawesome/timely-tasker#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.calendar_help_link}
+          >
+            Learn more
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  // Note: isCalendarConnected starts as false. A proper implementation would
+  // call an API endpoint to check for calendar tokens in D1. For now, the user
+  // just sees the "Connect" button and can click it to trigger OAuth with calendar scope.
+
   useEffect(() => {
     if (useLocal === USELOCAL.NO) {
       RestApi.greet((res: IdentityResponse) => {
@@ -209,7 +303,35 @@ const Timer = ({
     useLocal,
   ]);
 
+  // Fetch calendar events when date changes
+  useEffect(() => {
+    if (useLocal === USELOCAL.YES) return;
+    if (!displayName) return;
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDayInt = startOfDay.getTime();
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const endOfDayInt = endOfDay.getTime();
+
+    dispatch(calendarEventsLoading(date));
+    getCalendarEvents(startOfDayInt, endOfDayInt)
+      .then((response) => {
+        dispatch(calendarEventsLoaded({ date, events: response.events }));
+      })
+      .catch((err) => {
+        if (err?.message === 'session_expired') {
+          dispatch(sessionExpired());
+        } else {
+          dispatch(calendarEventsError());
+        }
+      });
+  }, [date, displayName, dispatch, useLocal]);
+
   const todaySummaries = useSelector(getSummaries);
+  const todayCalendarEvents = useSelector((state) => getCalendarEventsForDate(state, date));
 
   // Auto-populate pinned tasks on today/tomorrow (cloud only).
   // The ref guards against re-populating the same pin after the store updates.
@@ -419,7 +541,7 @@ const Timer = ({
         />
       );
       tickRowElements.push(
-        <TaskRowTicks key={slot} date={date} slot={slot} useApi={useApi} />
+        <TaskRowTicks key={slot} date={date} slot={slot} useApi={useApi} calendarEvents={todayCalendarEvents} />
       );
       focusedRowElements.push(<TaskRowFocused key={slot} slot={slot} />);
     }
@@ -498,6 +620,18 @@ const Timer = ({
               />
               I work weekends
             </label>
+          )}
+          {useLocal === USELOCAL.NO && (
+            <button
+              onClick={() => setShowCalendarSettings(true)}
+              className="tt-btn tt-btn-ghost"
+              data-test-id="calendar-settings-btn"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#4285F4" style={{ marginRight: '4px' }}>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+              </svg>
+              {isCalendarConnected ? 'Calendar' : 'Connect Calendar'}
+            </button>
           )}
         </div>
         {useLocal === USELOCAL.NO ? (
@@ -727,6 +861,40 @@ const Timer = ({
         </div>
       </div>
       </DragProvider>
+
+      {/* ── Calendar Settings Modal ── */}
+      {showCalendarSettings && (
+        <div className={styles.calendar_settings_overlay} onClick={() => setShowCalendarSettings(false)}>
+          <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+            <CalendarSettings
+              isConnected={isCalendarConnected}
+              onConnect={handleCalendarConnect}
+              onDisconnect={handleCalendarDisconnect}
+              onClose={() => setShowCalendarSettings(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Disconnect Confirmation ── */}
+      {showDisconnectConfirm && (
+        <div className={styles.calendar_settings_overlay} onClick={handleCancelDisconnect} data-test-id="calendar-disconnect-overlay">
+          <div className={styles.calendar_settings_panel} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.disconnect_prompt} data-test-id="calendar-disconnect-prompt">
+              <h3>Disconnect Calendar?</h3>
+              <p>Calendar events will no longer be imported from your Google Calendar.</p>
+              <div className={styles.disconnect_actions}>
+                <button onClick={handleCancelDisconnect} className={styles.btn_cancel} data-test-id="calendar-disconnect-cancel">
+                  Cancel
+                </button>
+                <button onClick={handleConfirmDisconnect} className={styles.btn_disconnect} data-test-id="calendar-disconnect-confirm">
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -4,19 +4,24 @@ import { Summary } from '../../../functions/summaries';
 import { ApiStates, RestApiStatus } from '../../RestApi';
 import { TimerTick } from './TaskRowTicks';
 import { TickState } from './Tick';
+import { CalendarEvent } from '../../RestApi';
 
 export interface TimerState {
   summaries: { [slot: number]: Summary };
+  calendarEvents: { [date: number]: CalendarEvent[] };
   loadingDate?: number;
   summariesLoading: RestApiStatus;
   summaryCreated: RestApiStatus;
+  calendarLoading: RestApiStatus;
   sessionExpired: boolean;
 }
 
 const initialState = {
   summaries: {},
+  calendarEvents: {},
   summariesLoading: ApiStates.Initial,
   summaryCreated: ApiStates.Initial,
+  calendarLoading: ApiStates.Initial,
   sessionExpired: false,
 } as TimerState;
 
@@ -95,6 +100,23 @@ const slice = createSlice({
         TimerTicks: tickArray,
       };
     },
+
+    calendarEventsLoaded: (
+      state,
+      action: PayloadAction<{ date: number; events: CalendarEvent[] }>
+    ) => {
+      state.calendarEvents[action.payload.date] = action.payload.events;
+      state.calendarLoading = ApiStates.Success;
+    },
+
+    calendarEventsLoading: (state, action: PayloadAction<number>) => {
+      state.calendarLoading = ApiStates.InProgress;
+      state.loadingDate = action.payload;
+    },
+
+    calendarEventsError: (state) => {
+      state.calendarLoading = ApiStates.Error;
+    },
   },
 });
 
@@ -109,5 +131,8 @@ export const {
   summaryPending,
   summaryError,
   tickUpdated,
+  calendarEventsLoaded,
+  calendarEventsLoading,
+  calendarEventsError,
 } = slice.actions;
 export default slice.reducer;

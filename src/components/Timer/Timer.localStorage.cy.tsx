@@ -11,6 +11,7 @@ import storeMaker from '../../store';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Api, { localStoragePrefix } from '../../LocalStorageApi';
 import { Summary } from '../../../functions/summaries';
+import { CalendarEvent } from '../../../src/RestApi';
 
 const TODAYS_DATE = 1679529600000; // at the zero h:m:s
 
@@ -562,5 +563,41 @@ describe('<Timer /> drag hint already dismissed', () => {
   it('does not show drag hint when already dismissed', () => {
     cy.wait(1000);
     cy.get('.drag-hint').should('not.exist');
+  });
+});
+
+describe('<Timer /> calendar integration in localStorage mode', () => {
+  beforeEach(() => {
+    cy.window().then((win) => {
+      win.localStorage.setItem('TimelyTasker:UseLocalStorage', 'yes');
+    });
+
+    mount(
+      <Provider store={storeMaker()}>
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<App useDate={TODAYS_DATE} />} />
+            <Route path="/timer" element={<App useDate={TODAYS_DATE} />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    ).as('mountedComponent');
+  });
+
+  it('does not fetch calendar events in localStorage mode', () => {
+    // Intercept the calendar API - should NOT be called in localStorage mode
+    cy.intercept('GET', /\/calendar\?startDate=\d+&endDate=\d+/, {
+      fixture: 'calendarEvents',
+    }).as('getCalendarEvents');
+
+    // Navigate to month view (this would trigger calendar fetch in cloud mode)
+    cy.get("[data-test-id='month-view-link']").should('not.exist');
+
+    // Verify calendar events were NOT fetched (in localStorage mode, no requests should be made)
+    cy.get('@getCalendarEvents.all').should('have.length', 0);
+  });
+
+  it('does not show month view link in localStorage mode', () => {
+    cy.get("[data-test-id='month-view-link']").should('not.exist');
   });
 });

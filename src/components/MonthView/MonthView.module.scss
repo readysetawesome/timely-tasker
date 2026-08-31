@@ -154,6 +154,37 @@ $dot-size: 6px;
   text-overflow: ellipsis;
 }
 
+.calendarCol {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  padding-left: 8px;
+  border-left: 1px solid var(--color-surface-border);
+}
+
+.calendarEvent {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.calendarError {
+  text-align: center;
+  color: var(--color-distracted);
+  font-size: 0.75rem;
+  padding: 12px;
+  background: rgba(214, 136, 85, 0.05);
+  border-radius: 4px;
+  margin: 0 16px;
+}
+
 .loading {
   text-align: center;
   color: var(--color-text-muted);
